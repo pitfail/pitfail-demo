@@ -1,4 +1,4 @@
-name         := "Yahoo Finance Prototype"
+name         := "Pitfail"
 
 version      := "1.0"
 
