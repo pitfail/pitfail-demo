@@ -6,10 +6,17 @@ import net.liftweb.json.{DefaultFormats,JsonParser}
 import scala.math.BigDecimal
 import scala.collection.mutable.{Map => MMap}
 
+class NoSuchSymbolException(val symbol: String) extends Exception(
+  "There is no stock with ticker symbol '%s'".format(symbol))
+
+class ExchangeMismatchException(val expectedExchange: String,
+                                val actualExchange: String) extends Exception(
+  "Expected exchange '%s'; got '%s'.".format(expectedExchange, actualExchange))
+
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
   def getStock(exchange: String, symbol: String): Stock = {
     val url: URL = buildURL("http://query.yahooapis.com/v1/public/yql", Map(
-      "q"      -> buildYQL(exchange, symbol),
+      "q"      -> buildYQL(symbol),
       "format" -> "json",
       "env"    -> "store://datatables.org/alltableswithkeys"
     ), "ASCII")
@@ -17,18 +24,25 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
     val response = queryService.query(url)
 
     implicit val formats = DefaultFormats
-    val root = JsonParser.parse(response)
-    val count = (root\"query"\"count").extract[Int]
-    val quote = root\"query"\"results"\"quote"
+    val responseRoot = JsonParser.parse(response)
+    val responseQuote = responseRoot\"query"\"results"\"quote"
+    val responseExchange = (responseQuote\"StockExchange").extract[String]
+    val responseSymbol = (responseQuote\"Symbol").extract[String]
+    val responsePrice  = BigDecimal((responseQuote\"LastTradePriceOnly").extract[String])
 
-    val price  = BigDecimal((quote\"LastTradePriceOnly").extract[String])
+    if (exchange != responseExchange) {
+      throw new ExchangeMismatchException(exchange, responseExchange)
+    } else if (symbol != responseSymbol) {
+      throw new NoSuchSymbolException(symbol)
+    }
+
     val updateTime = new DateTime()
-    new Stock(exchange, symbol, price, updateTime)
+    new Stock(exchange, symbol, responsePrice, updateTime)
   }
 
   // Restrict exchange and symbol to be alphabetic.
-  private def buildYQL(exchange: String, symbol: String) =
-    "SELECT * FROM yahoo.finance.quoteslist WHERE symbol='"+exchange+":"+symbol+"'"
+  private def buildYQL(symbol: String) =
+    "SELECT StockExchange,Symbol,LastTradePriceOnly from yahoo.finance.quotes where symbol in ('"+symbol+"')"
 
   private def buildURL(baseUrl: String,
                params: Iterable[(String, String)],
