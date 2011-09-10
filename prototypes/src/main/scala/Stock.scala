@@ -75,24 +75,38 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
 class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends StockDatabase {
   val symbols: MMap[(String, String), (BigDecimal, DateTime)] = MMap()
 
+  if (database == null) {
+    throw new NullPointerException("Database must be non-null.")
+  } else if (timeout == null) {
+    throw new NullPointerException("Timeout must be non-null.")
+  }
+
   def getStock(exchange: String, symbol: String): Stock =
     (symbols get (exchange, symbol) match {
       case Some((price: BigDecimal, updateTime: DateTime)) => {
-        val stock = new Stock(exchange, symbol, price, updateTime)
-        val expired = isExpired(updateTime)
-        (Some(stock), expired)
+        if (isExpired(updateTime))
+          None
+        else
+          Some((price, updateTime))
       }
-      case _ => (None, true)
+      case _ => None
     }) match {
-      case (Some(stock), false) => stock
-      case (_, true) => database.getStock(exchange, symbol)
+      case Some((price: BigDecimal, updateTime: DateTime)) =>
+        new Stock(exchange, symbol, price, updateTime)
+      case None => {
+        val stock = database.getStock(exchange, symbol)
+        symbols((exchange, symbol)) = (stock.price, stock.updated)
+        stock
+      }
     }
 
-  private def isExpired(then: DateTime): Boolean =
-    timeout.compareTo(new Duration(then, new DateTime())) > 0
+  private def isExpired(then: DateTime): Boolean = {
+    println(new DateTime() + " ?= " + then)
+    timeout.compareTo(new Duration(then, new DateTime())) < 0
+  }
 }
 
-class Stock(val exchange: String, val symbol: String, val price: BigDecimal, val updated: DateTime) {
+case class Stock(val exchange: String, val symbol: String, val price: BigDecimal, val updated: DateTime) {
   override val toString = exchange + ":" + symbol
 }
 
