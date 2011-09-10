@@ -10,7 +10,7 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
   if (database == null)
     throw new NullPointerException("Database must be non-null.")
 
-  if (timeout == null) {
+  if (timeout == null)
     throw new NullPointerException("Timeout must be non-null.")
 
   def getStock(exchange: String, symbol: String): Stock =
