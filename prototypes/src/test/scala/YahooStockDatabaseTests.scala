@@ -1,5 +1,6 @@
 package com.github.pitfail
 
+import java.io.IOException
 import java.net.URL
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
@@ -42,14 +43,59 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     val queryService = new MockQueryService((_) => validQueryResponse)
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getStock("WrongExchange", "MSFT") } should produce [ExchangeMismatchException]
+    val ex = evaluating { database.getStock("WrongExchange", "MSFT") } should produce [ExchangeMismatchException]
+    ex.expectedExchange should equal ("WrongExchange")
+    ex.actualExchange should equal ("NasdaqNM")
   }
 
   test("getStock: Throws when stock is missing in response.") {
     val queryService = new MockQueryService((_) => validQueryResponse)
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getStock("NasdaqNM", "FAKESYMBOL") } should produce [NoSuchSymbolException]
+    val ex = evaluating { database.getStock("NasdaqNM", "FAKESYMBOL") } should produce [NoSuchSymbolException]
+    ex.symbol should equal ("FAKESYMBOL")
+  }
+
+  test("getStock: Throws when response is not HTTP 400.") {
+    val queryService = new MockQueryService((_) => throw new IOException("Fake Exception"))
+    val database = new YahooStockDatabase(queryService)
+
+    evaluating { database.getStock("MSFT", "NasdaqNM") } should produce [DatabaseException]
+  }
+
+  test("getStock: Throws when response is not JSON.") {
+    val queryService = new MockQueryService((_) => "{ Not Valid JSON ]")
+    val database = new YahooStockDatabase(queryService)
+
+    evaluating { database.getStock("MSFT", "NasdaqNM") } should produce [DatabaseException]
+  }
+
+  test("getStock: Throws when response is missing symbol.") {
+    val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"25.74","StockExchange":"NasdaqNM"}}}}""")
+    val database = new YahooStockDatabase(queryService)
+
+    evaluating { database.getStock("MSFT", "NasdaqNM") } should produce [DatabaseException]
+  }
+
+  test("getStock: Throws when response is missing exchange.") {
+    val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"25.74","Symbol":"MSFT"}}}}""")
+    val database = new YahooStockDatabase(queryService)
+
+    evaluating { database.getStock("MSFT", "NasdaqNM") } should produce [DatabaseException]
+  }
+
+  test("getStock: Throws when response is missing price.") {
+    val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"Symbol":"MSFT","StockExchange":"NasdaqNM"}}}}""")
+    val database = new YahooStockDatabase(queryService)
+
+    evaluating { database.getStock("MSFT", "NasdaqNM") } should produce [DatabaseException]
+  }
+
+  test("getStock: Throws when price is not a decimal number.") {
+    val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"NotADecimal","Symbol":"MSFT","StockExchange":"NasdaqNM"}}}}""")
+    val database = new YahooStockDatabase(queryService)
+
+    evaluating { database.getStock("MSFT", "NasdaqNM") } should produce [DatabaseException]
   }
 
   class MockQueryService(callback: URL => String) extends QueryService {

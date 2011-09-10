@@ -1,8 +1,9 @@
 package com.github.pitfail
 
+import java.io.IOException
 import java.net.{HttpURLConnection,URL,URLEncoder}
 import org.joda.time.{DateTime,Duration}
-import net.liftweb.json.{DefaultFormats,JsonParser}
+import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
 import scala.math.BigDecimal
 import scala.collection.mutable.{Map => MMap}
 
@@ -13,6 +14,8 @@ class ExchangeMismatchException(val expectedExchange: String,
                                 val actualExchange: String) extends Exception(
   "Expected exchange '%s'; got '%s'.".format(expectedExchange, actualExchange))
 
+class DatabaseException(message: String) extends Exception(message)
+
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
   def getStock(exchange: String, symbol: String): Stock = {
     val url: URL = buildURL("http://query.yahooapis.com/v1/public/yql", Map(
@@ -21,23 +24,37 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
       "env"    -> "store://datatables.org/alltableswithkeys"
     ), "ASCII")
 
-    val response = queryService.query(url)
+    try {
+      val response = queryService.query(url)
 
-    implicit val formats = DefaultFormats
-    val responseRoot = JsonParser.parse(response)
-    val responseQuote = responseRoot\"query"\"results"\"quote"
-    val responseExchange = (responseQuote\"StockExchange").extract[String]
-    val responseSymbol = (responseQuote\"Symbol").extract[String]
-    val responsePrice  = BigDecimal((responseQuote\"LastTradePriceOnly").extract[String])
+      implicit val formats = DefaultFormats
+      val responseRoot = JsonParser.parse(response)
+      val responseQuote = responseRoot\"query"\"results"\"quote"
+      val responseExchange = (responseQuote\"StockExchange").extract[String]
+      val responseSymbol = (responseQuote\"Symbol").extract[String]
+      val responsePrice  = BigDecimal((responseQuote\"LastTradePriceOnly").extract[String])
 
-    if (exchange != responseExchange) {
-      throw new ExchangeMismatchException(exchange, responseExchange)
-    } else if (symbol != responseSymbol) {
-      throw new NoSuchSymbolException(symbol)
+      if (exchange != responseExchange) {
+        throw new ExchangeMismatchException(exchange, responseExchange)
+      } else if (symbol != responseSymbol) {
+        throw new NoSuchSymbolException(symbol)
+      }
+
+      val updateTime = new DateTime()
+      new Stock(exchange, symbol, responsePrice, updateTime)
+    } catch {
+      case ex: IOException =>
+        throw new DatabaseException("Yahoo Finance query failed.")
+
+      case ex: JsonParser.ParseException =>
+        throw new DatabaseException("Yahoo Finance returned invalid JSON.")
+
+      case ex: MappingException =>
+        throw new DatabaseException("Yahoo Finance returned JSON with unexpected structured.")
+
+      case ex: NumberFormatException =>
+        throw new DatabaseException("Yahoo Finance returned an invalid stock price.")
     }
-
-    val updateTime = new DateTime()
-    new Stock(exchange, symbol, responsePrice, updateTime)
   }
 
   // Restrict exchange and symbol to be alphabetic.

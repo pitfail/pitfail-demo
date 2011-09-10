@@ -1,11 +1,19 @@
 package com.github.pitfail
 
+import java.io.IOException
 import scala.io.Source
 import java.net.{HttpURLConnection,URL,URLDecoder,URLEncoder}
 
-class HttpQueryService extends QueryService {
+class HttpQueryService(method: String) extends QueryService {
   def query(url: URL): String = {
     val connection = url.openConnection().asInstanceOf[HttpURLConnection]
+    connection.setRequestMethod(method)
+
+    val responseCode = connection.getResponseCode()
+    if (responseCode != HttpURLConnection.HTTP_OK) {
+      throw new IOException("Request returned response code %s.".format(responseCode))
+    }
+
     val responseStream = connection.getInputStream()
     Source.fromInputStream(responseStream).mkString
   }
