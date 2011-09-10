@@ -17,7 +17,7 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
       url.getHost() should equal ("query.yahooapis.com")
       url.getPath() should equal ("/v1/public/yql")
 
-      HttpQueryService.parseQuery(url.getQuery()) should equal(Map(
+      HttpQueryService.parseQuery(url.getQuery(), "ASCII") should equal(Map(
         "q"      -> "SELECT StockExchange,Symbol,LastTradePriceOnly from yahoo.finance.quotes where symbol in ('MSFT')",
         "format" -> "json",
         "env"    -> "store://datatables.org/alltableswithkeys"

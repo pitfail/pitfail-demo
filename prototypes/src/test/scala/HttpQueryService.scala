@@ -22,27 +22,26 @@ class HttpQueryServiceTests extends FunSuite with ShouldMatchers {
 
   test("buildQuery: Encodes values.") {
     val queryString = HttpQueryService.buildQuery(Map("a" -> "b c"), "ASCII")
-    println(queryString)
     queryString should equal ("a=b+c")
   }
 
   test("parseQuery: Parses key-value pair.") {
-    val params = HttpQueryService.parseQuery("a=b")
+    val params = HttpQueryService.parseQuery("a=b", "ASCII")
     params should equal (Map("a" -> "b"))
   }
 
   test("parseQuery: Parses delimited key-value pairs.") {
-    val params = HttpQueryService.parseQuery("a=b&c=d")
+    val params = HttpQueryService.parseQuery("a=b&c=d", "ASCII")
     params should equal (ListMap("a" -> "b", "c" -> "d"))
   }
 
   test("parseQuery: Decodes keys.") {
-    val params = HttpQueryService.parseQuery("a+b=c")
+    val params = HttpQueryService.parseQuery("a+b=c", "ASCII")
     params should equal (Map("a b" -> "c"))
   }
 
   test("parseQuery: Decodes values.") {
-    val params = HttpQueryService.parseQuery("a=b+c")
+    val params = HttpQueryService.parseQuery("a=b+c", "ASCII")
     params should equal (Map("a" -> "b c"))
   }
 }

@@ -3,6 +3,7 @@ package com.github.pitfail
 import java.io.IOException
 
 import java.net.{HttpURLConnection,URL,URLDecoder,URLEncoder}
+import scala.collection.immutable.ListMap
 import scala.collection.mutable.{Map => MMap}
 import scala.io.Source
 import scala.math.BigDecimal
@@ -18,20 +19,22 @@ class HttpQueryService(method: String) extends QueryService {
     }
 
     val responseStream = connection.getInputStream()
-    Source.fromInputStream(responseStream).mkString
+    val responseString = Source.fromInputStream(responseStream).mkString
+    connection.disconnect()
+    responseString
   }
 }
 
 object HttpQueryService {
-  def buildQuery(params: Map[String, String], encoding: String): String =
+  def buildQuery(params: Iterable[(String, String)], encoding: String): String =
     (params map {
       case (key, value) =>
         (URLEncoder.encode(key, encoding) + "=" + URLEncoder.encode(value, encoding))
     }).mkString("&")
 
-  def parseQuery(query: String): Map[String, String] =
-    (query.split("&") map (_.split("=") match {
+  def parseQuery(query: String, encoding: String): ListMap[String, String] =
+    ListMap((query.split("&") map (_.split("=") match {
         case Array(encodedKey, encodedValue) =>
-          (URLDecoder.decode(encodedKey, "ASCII"), URLDecoder.decode(encodedValue, "ASCII"))
-    })).toMap
+          (URLDecoder.decode(encodedKey, encoding), URLDecoder.decode(encodedValue, encoding))
+    })): _*)
 }
