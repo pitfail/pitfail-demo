@@ -5,7 +5,7 @@ import scala.math.BigDecimal
 import scala.collection.mutable.{Map => MMap}
 
 class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends StockDatabase {
-  val symbols: MMap[(String, String), (BigDecimal, DateTime)] = MMap()
+  val stocks: MMap[Stock, Quote] = MMap()
 
   if (database == null)
     throw new NullPointerException("Database must be non-null.")
@@ -13,25 +13,25 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
   if (timeout == null)
     throw new NullPointerException("Timeout must be non-null.")
 
-  def getStock(exchange: String, symbol: String): Stock =
-    (symbols get (exchange, symbol) match {
-      case Some((price: BigDecimal, updateTime: DateTime)) => {
-        if (isExpired(updateTime))
-          None
+  def getQuote(stock: Stock): Quote =
+    (stocks get(stock)) match {
+      case Some(quote: Quote) => {
+        if (isExpired(quote.updateTime))
+          updateQuote(stock)
         else
-          Some((price, updateTime))
+          quote
       }
-      case _ => None
-    }) match {
-      case Some((price: BigDecimal, updateTime: DateTime)) =>
-        new Stock(exchange, symbol, price, updateTime)
-      case None => {
-        val stock = database.getStock(exchange, symbol)
-        symbols((exchange, symbol)) = (stock.price, stock.updated)
-        stock
-      }
+      case None => updateQuote(stock)
     }
 
+  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = null
+
+  private def updateQuote(stock: Stock): Quote = {
+    val quote = database.getQuote(stock)
+    stocks(stock) = quote
+    quote
+  }
+  
   private def isExpired(then: DateTime): Boolean =
     timeout.compareTo(new Duration(then, new DateTime())) < 0
 }

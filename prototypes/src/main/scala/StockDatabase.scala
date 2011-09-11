@@ -1,7 +1,8 @@
 package com.github.pitfail
 
 trait StockDatabase {
-  def getStock(exchange: String, symbol: String): Stock
+  def getQuote(stock: Stock): Quote
+  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote]
 }
 
 class NoSuchSymbolException(val symbol: String) extends Exception(

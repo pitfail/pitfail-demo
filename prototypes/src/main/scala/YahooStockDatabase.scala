@@ -7,9 +7,9 @@ import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
 import scala.math.BigDecimal
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
-  def getStock(exchange: String, symbol: String): Stock = {
+  def getQuote(stock: Stock): Quote = {
     val queryString = HttpQueryService.buildQuery(Map(
-      "q"      -> buildYQL(symbol),
+      "q"      -> buildYQL(List(stock)),
       "format" -> "json",
       "env"    -> "store://datatables.org/alltableswithkeys"
     ), "ASCII")
@@ -25,14 +25,14 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
       val responseSymbol = (responseQuote\"Symbol").extract[String]
       val responsePrice  = BigDecimal((responseQuote\"LastTradePriceOnly").extract[String])
 
-      if (exchange != responseExchange)
-        throw new ExchangeMismatchException(exchange, responseExchange)
+      if (stock.exchange != responseExchange)
+        throw new ExchangeMismatchException(stock.exchange, responseExchange)
 
-      if (symbol != responseSymbol)
-        throw new NoSuchSymbolException(symbol)
+      if (stock.symbol != responseSymbol)
+        throw new NoSuchSymbolException(stock.symbol)
 
       val updateTime = new DateTime()
-      new Stock(exchange, symbol, responsePrice, updateTime)
+      new Quote(stock, responsePrice, updateTime)
     } catch {
       case ex: IOException =>
         throw new DatabaseException("Yahoo Finance query failed.")
@@ -48,9 +48,14 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
     }
   }
 
+  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = null
+
   // Restrict exchange and symbol to be alphabetic.
-  private def buildYQL(symbol: String) =
-    "SELECT StockExchange,Symbol,LastTradePriceOnly from yahoo.finance.quotes where symbol in ('"+symbol+"')"
+  private def buildYQL(symbols: Iterable[Stock]) = (
+    "SELECT StockExchange,Symbol,LastTradePriceOnly"
+      + " FROM yahoo.finance.quotes"
+      + " WHERE symbol in (" + (symbols map { "'%s'" format _.symbol }).mkString(",") + ")"
+  )
 }
 
 
