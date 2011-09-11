@@ -11,6 +11,16 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
   val validQueryResponse = """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"25.74","Symbol":"MSFT","StockExchange":"NasdaqNM"}}}}"""
   val testStock = Stock("NasdaqNM", "MSFT")
 
+  test("getQuote: Yahoo Finance service responds.") {
+    var queryService = new HttpQueryService("GET")
+    var database = new YahooStockDatabase(queryService)
+
+    var quote = database.getQuote(testStock)
+
+    quote.stock should equal (testStock)
+    quote.price should (be >= BigDecimal("0.00"))
+  }
+
   test("getQuote: Queries correct URL.") {
     val queryService = new MockQueryService((url) => {
       url.getProtocol() should equal ("http")
@@ -103,5 +113,13 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
 
   private class MockQueryService(callback: URL => String) extends QueryService {
     def query(url: URL): String = callback(url)
+  }
+
+  test("getQuotes: ???") {
+    val queryService = new HttpQueryService("GET")
+    val database = new YahooStockDatabase(queryService)
+
+    database.getQuotes(List(Stock("NasdaqNM", "MSFT")))
+    database.getQuotes(List(Stock("NasdaqNM", "MSFT"), Stock("NasdaqNM", "AAPL")))
   }
 }

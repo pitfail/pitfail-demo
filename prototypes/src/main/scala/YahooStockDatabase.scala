@@ -48,7 +48,36 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
     }
   }
 
-  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = null
+  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
+    val queryString = HttpQueryService.buildQuery(Map(
+      "q"      -> buildYQL(stocks),
+      "format" -> "json",
+      "env"    -> "store://datatables.org/alltableswithkeys"
+    ), "ASCII")
+    val url = new URL("http://query.yahooapis.com/v1/public/yql?" + queryString)
+
+    val now = new DateTime()
+    val response = queryService.query(url)
+
+    implicit val formats = DefaultFormats
+    val root = JsonParser.parse(response)
+    val count = (root\"query"\"count").extract[Int] 
+
+    // When the response contains only one quote the quote array is omitted.
+    val quoteElements = if (count == 1)
+        List(root\"query"\"results"\"quote")
+      else
+        (root\"query"\"results"\"quote").children
+
+    val priceMap = (quoteElements map { (quoteElement) => {
+        val quoteExchange = (quoteElement\"StockExchange").extract[String]
+        val quoteSymbol = (quoteElement\"Symbol").extract[String]
+        val quotePrice = (quoteElement\"LastTradePriceOnly").extract[String]
+        (Stock(quoteExchange, quoteSymbol), BigDecimal(quotePrice))
+      }}).toMap
+    
+    stocks map { (stock) => Quote(stock, priceMap(stock), now) }
+  }
 
   // Restrict exchange and symbol to be alphabetic.
   private def buildYQL(symbols: Iterable[Stock]) = (
