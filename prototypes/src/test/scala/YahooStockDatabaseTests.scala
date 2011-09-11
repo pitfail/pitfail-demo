@@ -55,9 +55,8 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     val database = new YahooStockDatabase(queryService)
     val stock = Stock("WrongExchange", "MSFT")
 
-    val ex = evaluating { database.getQuote(stock) } should produce [ExchangeMismatchException]
-    ex.expectedExchange should equal ("WrongExchange")
-    ex.actualExchange should equal ("NasdaqNM")
+    val ex = evaluating { database.getQuote(stock) } should produce [NoSuchStockException]
+    ex.stock should equal (stock)
   }
 
   test("getQuote: Throws when stock is missing in response.") {
@@ -65,8 +64,8 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     val database = new YahooStockDatabase(queryService)
     val stock = Stock("NasdaqNM", "FAKESYMBOL")
 
-    val ex = evaluating { database.getQuote(stock) } should produce [NoSuchSymbolException]
-    ex.symbol should equal ("FAKESYMBOL")
+    val ex = evaluating { database.getQuote(stock) } should produce [NoSuchStockException]
+    ex.stock should equal (stock)
   }
 
   test("getQuote: Throws when response is not HTTP 200.") {
