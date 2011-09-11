@@ -5,7 +5,7 @@ import scala.math.BigDecimal
 import scala.collection.mutable.{Map => MMap}
 
 class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends StockDatabase {
-  val stocks: MMap[Stock, Quote] = MMap()
+  val cache: MMap[Stock, Quote] = MMap()
 
   if (database == null)
     throw new NullPointerException("Database must be non-null.")
@@ -14,24 +14,48 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
     throw new NullPointerException("Timeout must be non-null.")
 
   def getQuote(stock: Stock): Quote =
-    (stocks get(stock)) match {
+    getQuotes(List(stock)).head
+
+  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
+    val now = new DateTime()
+ 
+    // Split cached stocks from those that need refreshing.
+    (stocks.foldLeft( (List[Quote](), List[Stock]()) )(
+      (lists, stock) => {
+        lists match {
+          case (quotes: List[Quote], stocks: List[Stock]) => {
+            getCachedQuote(stock, now) match {
+              case Some(quote: Quote) => (quotes :+ quote, stocks)
+              case None => (quotes, stocks :+ stock)
+    }}}})) match {
+      case (cachedQuotes: List[Quote], stocks: List[Stock]) =>
+        val updatedQuotes = database.getQuotes(stocks)
+        println("Cached = " + cachedQuotes)
+        println("Updated = " + updatedQuotes)
+        cachedQuotes ++ updatedQuotes
+    }
+  }
+
+  private def getCachedQuote(stock: Stock, now: DateTime): Option[Quote] =
+    (cache get stock) match {
       case Some(quote: Quote) => {
-        if (isExpired(quote.updateTime))
-          updateQuote(stock)
-        else
-          quote
+        if (isExpired(quote, now))
+          None
+        else {
+          println("Cached!: " + quote)
+          Some(quote)
+        }
       }
-      case None => updateQuote(stock)
+      case None => None
     }
 
-  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = null
 
   private def updateQuote(stock: Stock): Quote = {
     val quote = database.getQuote(stock)
-    stocks(stock) = quote
+    cache(stock) = quote
     quote
   }
   
-  private def isExpired(then: DateTime): Boolean =
-    timeout.compareTo(new Duration(then, new DateTime())) < 0
+  private def isExpired(quote: Quote, now: DateTime): Boolean =
+    timeout.compareTo(new Duration(quote.updateTime, now)) < 0
 }

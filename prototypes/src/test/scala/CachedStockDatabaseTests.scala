@@ -24,10 +24,10 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
     // Arrange:
     var queried: Boolean = false
     val expectedQuote = Quote(testStock, BigDecimal("1.23"), new DateTime())
-    val database = new MockStockDatabase((stock: Stock) => {
-      stock should equal (testStock)
+    val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
+      stocks should equal (List(testStock))
       queried = true
-      expectedQuote
+      List(expectedQuote)
     })
     val cache = new CachedStockDatabase(database, new Duration(1))
 
@@ -43,10 +43,10 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
     // Arrange:
     var queryCount: Int = 0
     val expectedQuote = Quote(testStock, BigDecimal("1.23"), new DateTime(0L))
-    val database = new MockStockDatabase((stock: Stock) => {
-      stock should equal (testStock)
+    val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
+      stocks should equal (List(testStock))
       queryCount += 1
-      expectedQuote
+      List(expectedQuote)
     })
     val cache = new CachedStockDatabase(database, Duration.ZERO)
 
@@ -64,10 +64,10 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
     // Arrange:
     var queryCount: Int = 0
     val expectedQuote = Quote(testStock, BigDecimal("1.23"), new DateTime())
-    val database = new MockStockDatabase((stock: Stock) => {
-      stock should equal (testStock)
+    val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
+      stocks should equal (List(testStock))
       queryCount += 1
-      expectedQuote
+      List(expectedQuote)
     })
     val cache = new CachedStockDatabase(database, new Duration(100000))
 
@@ -81,9 +81,9 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
     actualQuote2 should equal (expectedQuote)
   }
 
-  private class MockStockDatabase(callback: Stock => Quote) extends StockDatabase {
-    def getQuote(stock: Stock): Quote = callback(stock)
+  private class MockStockDatabase(callback: Iterable[Stock] => Iterable[Quote]) extends StockDatabase {
+    def getQuote(stock: Stock): Quote = null
 
-    def getQuotes(stock: Iterable[Stock]): Iterable[Quote] = null
+    def getQuotes(stock: Iterable[Stock]): Iterable[Quote] = callback(stock)
   }
 }
