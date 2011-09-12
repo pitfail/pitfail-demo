@@ -28,11 +28,10 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
               case Some(quote: Quote) => (quotes :+ quote, stocks)
               case None => (quotes, stocks :+ stock)
     }}}})) match {
-      case (cachedQuotes: List[Quote], stocks: List[Stock]) =>
-        val updatedQuotes = database.getQuotes(stocks)
-        println("Cached = " + cachedQuotes)
-        println("Updated = " + updatedQuotes)
+      case (cachedQuotes: List[Quote], missingStocks: List[Stock]) => {
+        val updatedQuotes = if (missingStocks.isEmpty) List() else updateQuotes(missingStocks)
         cachedQuotes ++ updatedQuotes
+      }
     }
   }
 
@@ -41,19 +40,19 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
       case Some(quote: Quote) => {
         if (isExpired(quote, now))
           None
-        else {
-          println("Cached!: " + quote)
+        else
           Some(quote)
-        }
       }
       case None => None
     }
 
 
-  private def updateQuote(stock: Stock): Quote = {
-    val quote = database.getQuote(stock)
-    cache(stock) = quote
-    quote
+  private def updateQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
+    val quotes = database.getQuotes(stocks)
+    quotes map { (quote) => {
+      cache(quote.stock) = quote
+      quote
+    }}
   }
   
   private def isExpired(quote: Quote, now: DateTime): Boolean =

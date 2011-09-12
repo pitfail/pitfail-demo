@@ -20,7 +20,7 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
     evaluating { new CachedStockDatabase(database, null) } should produce [NullPointerException]
   }
 
-  test("getQuote: Queries if not in cache.") {
+  test("getQuotes: Queries if not in cache.") {
     // Arrange:
     var queried: Boolean = false
     val expectedQuote = Quote(testStock, BigDecimal("1.23"), new DateTime())
@@ -32,14 +32,14 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
     val cache = new CachedStockDatabase(database, new Duration(1))
 
     // Act:
-    val actualQuote = cache.getQuote(testStock)
+    val actualQuotes = cache.getQuotes(List(testStock))
 
     // Assert:
     queried should equal (true)
-    actualQuote should equal (expectedQuote)
+    actualQuotes should equal (List(expectedQuote))
   }
 
-  test("getQuote: Queries if cache is expired.") {
+  test("getQuotes: Queries if cache is expired.") {
     // Arrange:
     var queryCount: Int = 0
     val expectedQuote = Quote(testStock, BigDecimal("1.23"), new DateTime(0L))
@@ -51,39 +51,40 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
     val cache = new CachedStockDatabase(database, Duration.ZERO)
 
     // Act:
-    val actualQuote1 = cache.getQuote(testStock)
-    val actualQuote2 = cache.getQuote(testStock)
+    val actualQuotes1 = cache.getQuotes(List(testStock))
+    val actualQuotes2 = cache.getQuotes(List(testStock))
 
     // Assert:
     queryCount should equal (2)
-    actualQuote1 should equal (expectedQuote)
-    actualQuote2 should equal (expectedQuote)
+    actualQuotes1 should equal (List(expectedQuote))
+    actualQuotes2 should equal (List(expectedQuote))
   }
 
-  test("getQuote: Uses cache if not expired.") {
+  test("getQuotes: Uses cache if not expired.") {
     // Arrange:
     var queryCount: Int = 0
     val expectedQuote = Quote(testStock, BigDecimal("1.23"), new DateTime())
     val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
-      stocks should equal (List(testStock))
+      queryCount match {
+        case 0 => { stocks should equal (List(testStock)) }
+        case 1 => { stocks should equal (List()) }
+        case _ => { fail() }
+      }
       queryCount += 1
       List(expectedQuote)
     })
     val cache = new CachedStockDatabase(database, new Duration(100000))
 
     // Act:
-    val actualQuote1 = cache.getQuote(testStock)
-    val actualQuote2 = cache.getQuote(testStock)
+    val actualQuotes1 = cache.getQuotes(List(testStock))
+    val actualQuotes2 = cache.getQuotes(List(testStock))
 
     // Assert:
-    queryCount should equal (1)
-    actualQuote1 should equal (expectedQuote)
-    actualQuote2 should equal (expectedQuote)
+    actualQuotes1 should equal (List(expectedQuote))
+    actualQuotes2 should equal (List(expectedQuote))
   }
 
   private class MockStockDatabase(callback: Iterable[Stock] => Iterable[Quote]) extends StockDatabase {
-    def getQuote(stock: Stock): Quote = null
-
     def getQuotes(stock: Iterable[Stock]): Iterable[Quote] = callback(stock)
   }
 }

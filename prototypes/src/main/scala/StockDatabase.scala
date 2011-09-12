@@ -1,7 +1,6 @@
 package com.github.pitfail
 
 trait StockDatabase {
-  def getQuote(stock: Stock): Quote
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote]
 }
 
