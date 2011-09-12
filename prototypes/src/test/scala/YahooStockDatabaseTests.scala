@@ -15,7 +15,7 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     var queryService = new HttpQueryService("GET")
     var database = new YahooStockDatabase(queryService)
 
-    var quotes = database.getQuotes(List(testStock))
+    var quotes = database.getQuotes(Iterable(testStock))
 
     quotes.head.stock should equal (testStock)
     quotes.head.price should (be >= BigDecimal("0.00"))
@@ -37,14 +37,14 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     })
 
     val database = new YahooStockDatabase(queryService)
-    val stock = database.getQuotes(List(testStock))
+    val stock = database.getQuotes(Iterable(testStock))
   }
 
   test("getQuotes: Returns stock with correct attributes.") {
     val queryService = new MockQueryService((_) => validQueryResponse)
     val database = new YahooStockDatabase(queryService)
 
-    val quotes = database.getQuotes(List(testStock))
+    val quotes = database.getQuotes(Iterable(testStock))
 
     quotes.head.stock should equal (testStock)
     quotes.head.price should equal (BigDecimal("25.74"))
@@ -55,7 +55,7 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     val database = new YahooStockDatabase(queryService)
     val stock = Stock("WrongExchange", "MSFT")
 
-    val ex = evaluating { database.getQuotes(List(stock)) } should produce [NoSuchStockException]
+    val ex = evaluating { database.getQuotes(Iterable(stock)) } should produce [NoSuchStockException]
     ex.stock should equal (stock)
   }
 
@@ -64,7 +64,7 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     val database = new YahooStockDatabase(queryService)
     val stock = Stock("NasdaqNM", "FAKESYMBOL")
 
-    val ex = evaluating { database.getQuotes(List(stock)) } should produce [NoSuchStockException]
+    val ex = evaluating { database.getQuotes(Iterable(stock)) } should produce [NoSuchStockException]
     ex.stock should equal (stock)
   }
 
@@ -72,42 +72,42 @@ class YahooStockDatabaseTests extends FunSuite with ShouldMatchers {
     val queryService = new MockQueryService((_) => throw new IOException("Fake Exception"))
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getQuotes(List(testStock)) } should produce [DatabaseException]
+    evaluating { database.getQuotes(Iterable(testStock)) } should produce [DatabaseException]
   }
 
   test("getQuotes: Throws when response is not JSON.") {
     val queryService = new MockQueryService((_) => "{ Not Valid JSON ]")
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getQuotes(List(testStock)) } should produce [DatabaseException]
+    evaluating { database.getQuotes(Iterable(testStock)) } should produce [DatabaseException]
   }
 
   test("getQuotes: Throws when response is missing symbol.") {
     val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"25.74","StockExchange":"NasdaqNM"}}}}""")
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getQuotes(List(testStock)) } should produce [DatabaseException]
+    evaluating { database.getQuotes(Iterable(testStock)) } should produce [DatabaseException]
   }
 
   test("getQuotes: Throws when response is missing exchange.") {
     val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"25.74","Symbol":"MSFT"}}}}""")
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getQuotes(List(testStock)) } should produce [DatabaseException]
+    evaluating { database.getQuotes(Iterable(testStock)) } should produce [DatabaseException]
   }
 
   test("getQuotes: Throws when response is missing price.") {
     val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"Symbol":"MSFT","StockExchange":"NasdaqNM"}}}}""")
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getQuotes(List(testStock)) } should produce [DatabaseException]
+    evaluating { database.getQuotes(Iterable(testStock)) } should produce [DatabaseException]
   }
 
   test("getQuotes: Throws when price is not a decimal number.") {
     val queryService = new MockQueryService((_) => """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"NotADecimal","Symbol":"MSFT","StockExchange":"NasdaqNM"}}}}""")
     val database = new YahooStockDatabase(queryService)
 
-    evaluating { database.getQuotes(List(testStock)) } should produce [DatabaseException]
+    evaluating { database.getQuotes(Iterable(testStock)) } should produce [DatabaseException]
   }
 
   private class MockQueryService(callback: URL => String) extends QueryService {

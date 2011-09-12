@@ -7,8 +7,6 @@ import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
 import scala.math.BigDecimal
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
-  def getQuote(stock: Stock): Quote = getQuotes(List(stock)).head
-
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
     val queryString = HttpQueryService.buildQuery(Map(
       "q"      -> buildYQL(stocks),

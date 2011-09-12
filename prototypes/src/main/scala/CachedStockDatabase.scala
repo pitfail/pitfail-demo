@@ -13,9 +13,6 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
   if (timeout == null)
     throw new NullPointerException("Timeout must be non-null.")
 
-  def getQuote(stock: Stock): Quote =
-    getQuotes(List(stock)).head
-
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
     val now = new DateTime()
  
