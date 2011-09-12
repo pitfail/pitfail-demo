@@ -17,7 +17,7 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
   }
 
   test("constructor: Throws when timeout is null.") {
-    val database = new MockStockDatabase((_) => throw new UnsupportedOperationException())
+    val database = new MockStockDatabase(_ => throw new UnsupportedOperationException())
     evaluating { new CachedStockDatabase(database, null) } should produce [NullPointerException]
   }
 
@@ -108,7 +108,7 @@ class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
       }
       queryCount += 1
 
-      stocks map { quoteMap(_) }
+      stocks map quoteMap
     })
     val cache = new CachedStockDatabase(database, new Duration(100000))
 

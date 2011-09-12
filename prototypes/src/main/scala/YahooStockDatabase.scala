@@ -8,6 +8,8 @@ import scala.math.BigDecimal
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
+    if (stocks.isEmpty) return Iterable()
+
     val queryString = HttpQueryService.buildQuery(Map(
       "q"      -> buildYQL(stocks),
       "format" -> "json",
