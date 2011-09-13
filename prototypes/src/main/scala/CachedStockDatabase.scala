@@ -39,23 +39,6 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
     }
   }
 
-  private def applyToQuoteOrElse[T](now: DateTime, stock: Stock, op: Quote => T, other: => T) : T =
-    applyToQuote(now, stock, { _ match {
-      case Some(quote) => op(quote)
-      case None        => other
-    }})
-
-  private def applyToQuote[T](now: DateTime, stock: Stock, op: Option[Quote] => T): T =
-    (cache get stock) match {
-      case Some(quote: Quote) => {
-        if (isExpired(quote, now))
-          op(None)
-        else
-          op(Some(quote))
-      }
-      case None => op(None)
-    }
-
   private def getCachedQuote(stock: Stock, now: DateTime): Option[Quote] =
     (cache get stock) match {
       case Some(quote: Quote) => {
