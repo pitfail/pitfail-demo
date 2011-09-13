@@ -13,23 +13,27 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
   if (timeout == null)
     throw new NullPointerException("Timeout must be non-null.")
 
+  private def have_stock(stock: Stock, now: DateTime) = {
+    getCachedQuote(stock, now) match {
+      case Some(quote: Quote) => true
+      case None               => false
+    }
+  }
+
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
     val now = new DateTime()
- 
-    // Split cached stocks from those that need refreshing.
-    (stocks.foldLeft( (List[Quote](), List[Stock]()) )(
-      (lists, stock) => {
-        lists match {
-          case (quotes: List[Quote], stocks: List[Stock]) => {
-            getCachedQuote(stock, now) match {
-              case Some(quote: Quote) => (quotes :+ quote, stocks)
-              case None => (quotes, stocks :+ stock)
-    }}}})) match {
-      case (cachedQuotes: List[Quote], missingStocks: List[Stock]) => {
-        val updatedQuotes = if (missingStocks.isEmpty) List() else updateQuotes(missingStocks)
-        cachedQuotes ++ updatedQuotes
-      }
-    }
+
+    val (cached, missing) = stocks partition { have_stock(_, now) }
+
+    val new_quotes =
+      if (!missing.isEmpty)
+        updateQuotes(missing)
+      else
+        Iterable[Quote]()
+
+    val cached_quotes = cached map { getCachedQuote(_, now) get }
+
+    cached_quotes ++ new_quotes
   }
 
   private def getCachedQuote(stock: Stock, now: DateTime): Option[Quote] =
