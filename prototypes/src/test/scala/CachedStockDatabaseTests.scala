@@ -8,81 +8,120 @@ import org.scalatest.matchers.ShouldMatchers
 import scala.math.BigDecimal
 
 class CachedStockDatabaseTests extends FunSuite with ShouldMatchers {
+  val testStock1 = Stock("NasdaqNM", "MSFT")
+  val testStock2 = Stock("NasdaqNM", "AAPL")
+
   test("constructor: Throws when database is null.") {
     val timeout = new Duration(1000)
     evaluating { new CachedStockDatabase(null, timeout) } should produce [NullPointerException]
   }
 
   test("constructor: Throws when timeout is null.") {
-    val database = new MockStockDatabase((exchange, symbol) => throw new UnsupportedOperationException())
+    val database = new MockStockDatabase(_ => throw new UnsupportedOperationException())
     evaluating { new CachedStockDatabase(database, null) } should produce [NullPointerException]
   }
 
-  test("getStock: Queries if not in cache.") {
+  test("getQuotes: No stocks yields no quotes.") {
+    val database = new MockStockDatabase(stocks => fail())
+    val cache = new CachedStockDatabase(database, new Duration(1))
+
+    val quotes = cache.getQuotes(Iterable())
+    quotes should equal (Iterable())
+  }
+
+  test("getQuotes: Queries if not in cache.") {
     // Arrange:
     var queried: Boolean = false
-    val expectedStock = new Stock("NasdaqNM", "MSFT", BigDecimal("1.23"), new DateTime())
-    val database = new MockStockDatabase((exchange, symbol) => {
-      symbol should equal (expectedStock.symbol)
-      exchange should equal (expectedStock.exchange)
+    val expectedQuote = Quote(testStock1, BigDecimal("1.23"), new DateTime())
+    val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
+      stocks should equal (Iterable(testStock1))
       queried = true
-      expectedStock
+      Iterable(expectedQuote)
     })
     val cache = new CachedStockDatabase(database, new Duration(1))
 
     // Act:
-    val actualStock = cache.getStock("NasdaqNM", "MSFT")
+    val actualQuotes = cache.getQuotes(Iterable(testStock1))
 
     // Assert:
     queried should equal (true)
-    actualStock should equal (expectedStock)
+    actualQuotes should equal (Iterable(expectedQuote))
   }
 
-  test("getStock: Queries if cache is expired.") {
+  test("getQuotes: Queries if cache is expired.") {
     // Arrange:
     var queryCount: Int = 0
-    val expectedStock = new Stock("NasdaqNM", "MSFT", BigDecimal("1.23"), new DateTime(0L))
-    val database = new MockStockDatabase((exchange, symbol) => {
-      symbol should equal (expectedStock.symbol)
-      exchange should equal (expectedStock.exchange)
+    val expectedQuote = Quote(testStock1, BigDecimal("1.23"), new DateTime(0L))
+    val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
+      stocks should equal (Iterable(testStock1))
       queryCount += 1
-      expectedStock
+      Iterable(expectedQuote)
     })
     val cache = new CachedStockDatabase(database, Duration.ZERO)
 
     // Act:
-    val actualStock1 = cache.getStock("NasdaqNM", "MSFT")
-    val actualStock2 = cache.getStock("NasdaqNM", "MSFT")
+    val actualQuotes1 = cache.getQuotes(Iterable(testStock1))
+    val actualQuotes2 = cache.getQuotes(Iterable(testStock1))
 
     // Assert:
     queryCount should equal (2)
-    actualStock1 should equal (expectedStock)
-    actualStock2 should equal (expectedStock)
+    actualQuotes1 should equal (Iterable(expectedQuote))
+    actualQuotes2 should equal (Iterable(expectedQuote))
   }
 
-  test("getStock: Uses cache if not expired.") {
+  test("getQuotes: Uses cache if not expired.") {
     // Arrange:
     var queryCount: Int = 0
-    val expectedStock = new Stock("NasdaqNM", "MSFT", BigDecimal("1.23"), new DateTime())
-    val database = new MockStockDatabase((exchange, symbol) => {
-      symbol should equal ("MSFT")
-      exchange should equal ("NasdaqNM")
+    val expectedQuote = Quote(testStock1, BigDecimal("1.23"), new DateTime())
+    val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
+      queryCount match {
+        case 0 => { stocks should equal (Iterable(testStock1)) }
+        case 1 => { stocks should equal (Iterable()) }
+        case _ => { fail() }
+      }
       queryCount += 1
-      expectedStock
+      Iterable(expectedQuote)
     })
     val cache = new CachedStockDatabase(database, new Duration(100000))
 
     // Act:
-    val actualStock1 = cache.getStock("NasdaqNM", "MSFT")
-    val actualStock2 = cache.getStock("NasdaqNM", "MSFT")
+    val actualQuotes1 = cache.getQuotes(Iterable(testStock1))
+    val actualQuotes2 = cache.getQuotes(Iterable(testStock1))
 
     // Assert:
-    queryCount should equal (1)
-    actualStock1 should equal (expectedStock)
-    actualStock2 should equal (expectedStock)
+    actualQuotes1 should equal (Iterable(expectedQuote))
+    actualQuotes2 should equal (Iterable(expectedQuote))
   }
 
-  private class MockStockDatabase(callback: (String, String) => Stock) extends StockDatabase {
-    def getStock(exchange: String, symbol: String) = callback(exchange, symbol)
+  test("getQuotes: Mixes cache hits and misses.") {
+    // Arrange:
+    val expectedQuote1 = Quote(testStock1, BigDecimal("1.23"), new DateTime())
+    val expectedQuote2 = Quote(testStock2, BigDecimal("1.23"), new DateTime())
+    val quoteMap = Map(testStock1 -> expectedQuote1, testStock2 -> expectedQuote2)
+    var queryCount: Int = 0
+
+    val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
+      queryCount match {
+        case 0 => { stocks should equal (Iterable(testStock1)) }
+        case 1 => { stocks should equal (Iterable(testStock2)) }
+        case _ => fail()
+      }
+      queryCount += 1
+
+      stocks map quoteMap
+    })
+    val cache = new CachedStockDatabase(database, new Duration(100000))
+
+    // Act:
+    val actualQuotes1 = cache.getQuotes(Iterable(testStock1))
+    val actualQuotes2 = cache.getQuotes(Iterable(testStock1, testStock2))
+
+    // Assert:
+    actualQuotes1 should equal (Iterable(expectedQuote1))
+    actualQuotes2 should equal (Iterable(expectedQuote1, expectedQuote2))
+  }
+
+  private class MockStockDatabase(callback: Iterable[Stock] => Iterable[Quote]) extends StockDatabase {
+    def getQuotes(stock: Iterable[Stock]): Iterable[Quote] = callback(stock)
   }
 }

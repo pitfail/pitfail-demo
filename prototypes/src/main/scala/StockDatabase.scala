@@ -1,14 +1,10 @@
 package com.github.pitfail
 
 trait StockDatabase {
-  def getStock(exchange: String, symbol: String): Stock
+  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote]
 }
 
-class NoSuchSymbolException(val symbol: String) extends Exception(
-  "There is no stock with ticker symbol '%s'".format(symbol))
-
-class ExchangeMismatchException(val expectedExchange: String,
-                                val actualExchange: String) extends Exception(
-  "Expected exchange '%s'; got '%s'.".format(expectedExchange, actualExchange))
+class NoSuchStockException(val stock: Stock) extends Exception(
+  "There is no stock with ticker symbol '%s' in the %s exchange.".format(stock.symbol, stock.exchange))
 
 class DatabaseException(message: String) extends Exception(message)

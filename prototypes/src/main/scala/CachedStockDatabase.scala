@@ -5,7 +5,7 @@ import scala.math.BigDecimal
 import scala.collection.mutable.{Map => MMap}
 
 class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends StockDatabase {
-  val symbols: MMap[(String, String), (BigDecimal, DateTime)] = MMap()
+  val cache: MMap[Stock, Quote] = MMap()
 
   if (database == null)
     throw new NullPointerException("Database must be non-null.")
@@ -13,25 +13,45 @@ class CachedStockDatabase(database: StockDatabase, timeout: Duration) extends St
   if (timeout == null)
     throw new NullPointerException("Timeout must be non-null.")
 
-  def getStock(exchange: String, symbol: String): Stock =
-    (symbols get (exchange, symbol) match {
-      case Some((price: BigDecimal, updateTime: DateTime)) => {
-        if (isExpired(updateTime))
-          None
-        else
-          Some((price, updateTime))
-      }
-      case _ => None
-    }) match {
-      case Some((price: BigDecimal, updateTime: DateTime)) =>
-        new Stock(exchange, symbol, price, updateTime)
-      case None => {
-        val stock = database.getStock(exchange, symbol)
-        symbols((exchange, symbol)) = (stock.price, stock.updated)
-        stock
+  def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
+    val now = new DateTime()
+ 
+    // Split cached stocks from those that need refreshing.
+    (stocks.foldLeft( (List[Quote](), List[Stock]()) )(
+      (lists, stock) => {
+        lists match {
+          case (quotes: List[Quote], stocks: List[Stock]) => {
+            getCachedQuote(stock, now) match {
+              case Some(quote: Quote) => (quotes :+ quote, stocks)
+              case None => (quotes, stocks :+ stock)
+    }}}})) match {
+      case (cachedQuotes: List[Quote], missingStocks: List[Stock]) => {
+        val updatedQuotes = if (missingStocks.isEmpty) List() else updateQuotes(missingStocks)
+        cachedQuotes ++ updatedQuotes
       }
     }
+  }
 
-  private def isExpired(then: DateTime): Boolean =
-    timeout.compareTo(new Duration(then, new DateTime())) < 0
+  private def getCachedQuote(stock: Stock, now: DateTime): Option[Quote] =
+    (cache get stock) match {
+      case Some(quote: Quote) => {
+        if (isExpired(quote, now))
+          None
+        else
+          Some(quote)
+      }
+      case None => None
+    }
+
+
+  private def updateQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
+    val quotes = database.getQuotes(stocks)
+    quotes map { (quote) => {
+      cache(quote.stock) = quote
+      quote
+    }}
+  }
+  
+  private def isExpired(quote: Quote, now: DateTime): Boolean =
+    timeout.compareTo(new Duration(quote.updateTime, now)) < 0
 }
