@@ -20,3 +20,5 @@ case class Quote(stock: Stock, price: BigDecimal, updateTime: DateTime) {
 object Quote {
   implicit def quoteToStock(quote: Quote): Stock = quote.stock
 }
+
+// vim: set ts=2 sw=2 et:
