@@ -2,3 +2,4 @@ project/boot
 project/target
 target/
 .DS_Store
+*~
