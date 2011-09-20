@@ -1,6 +1,6 @@
 scalaVersion := "2.9.1"
 
-scalacOptions ++= Seq("-explaintypes")
+scalacOptions ++= Seq("-explaintypes", "-deprecation")
 
 libraryDependencies ++= Seq(
   "joda-time"      % "joda-time"                   % "2.0",
