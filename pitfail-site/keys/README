@@ -1,0 +1,6 @@
+
+This directory contains API keys and secrets for any service for which those
+are necessary. Obviously those keys should not go in source control.
+
+Hence, a .gitignore file in this directory ignores all *.scala files.
+

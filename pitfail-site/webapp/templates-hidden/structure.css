@@ -1,0 +1,15 @@
+
+#content {
+    position: absolute;
+    left: 20%;
+    right: 100%;
+    top: 0%;
+}
+
+#sidebar {
+    position: absolute;
+    left: 0%;
+    right: 20%;
+    top: 0%;
+}
+

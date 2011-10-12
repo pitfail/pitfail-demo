@@ -1,0 +1,19 @@
+
+<div class="lift:comet?type=Offers">
+    <h4 id="ifHaveOffers">You have an offer:</h4>
+    <ul class="offers">
+        <li id="offer">
+            <lift:UserLink user=""/> is offering
+            <span id="description"/>
+            <lift:AcceptOffer form="post">
+                <input type="submit" value="Accept" name="submit"/>
+                <input type="hidden" name="offerId"/>
+            </lift:AcceptOffer>
+            <lift:DeclineOffer form="post">
+                <input type="submit" value="Decline" name="submit"/>
+                <input type="hidden" name="offerId"/>
+            </lift:DeclineOffer>
+        </li>
+    </ul>
+</div>
+

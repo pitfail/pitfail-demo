@@ -1,0 +1,73 @@
+
+<lift:children>
+
+<h3>Your Portfolio</h3>
+
+<table class="lift:comet?type=Portfolio tChart">
+    <col class="left"/>
+    <col class="right"/>
+    <tr class="header">
+        <th>Assets</th>
+        <th>Liabilities</th>
+    </tr>
+    <tr>
+        <td class="assets">
+            <h4>Cash</h4>
+            <p id="cash"></p>
+            
+            <br/>
+            <h4>Stocks</h4>
+            <lift:children id="ifHaveStocks">
+            <table class="stocksTable">
+                <tr>
+                    <th>Ticker</th>
+                    <th>Volume</th>
+                </tr>
+                <tr id="stock">
+                    <td id="ticker"></td>
+                    <td id="volume"></td>
+                    <td>
+                        <lift:SellThisStock form="post">
+                            <input type="submit" value="Sell" name="sell"/>
+                            <input type="hidden" name="ticker"/>
+                        </lift:SellThisStock>
+                    </td>
+                </tr>
+            </table>
+            </lift:children>
+
+            <lift:children id="ifNoStocks">
+            <p>You have no stocks</p>
+            </lift:children>
+
+            <br/>
+            <h4>Derivatives</h4>
+            <lift:children id="ifHaveDerivativeAssets">
+            <table class="derivativesTable">
+                <tr>
+                    <th>Securities</th>
+                    <th>Exec Date</th>
+                    <th>Condition</th>
+                    <th>Peer</th>
+                </tr>
+                <tr id="derivativeAsset">
+                    <td id="securities"/>
+                    <td id="exec"/>
+                    <td id="condition"/>
+                    <td id="peer"><lift:UserLink user="blank"/></td>
+                </tr>
+            </table>
+            </lift:children>
+
+            <lift:children id="ifNoDerivativeAssets">
+            <p>You have no derivatives</p>
+            </lift:children>
+        </td>
+        <td class="liabilities">
+            (Liabilities)
+        </td>
+    </tr>
+</table>
+
+</lift:children>
+

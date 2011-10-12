@@ -1,0 +1,16 @@
+
+<lift:children>
+
+<lift:LoginStatus.ifLoggedIn>
+<lift:embed what="myPortfolio"/>
+<lift:embed what="myOffers"/>
+<lift:embed what="myActions"/>
+</lift:LoginStatus.ifLoggedIn>
+
+<lift:LoginStatus.ifLoggedOut>
+<p><a class="lift:TwitterLink">Login</a> to see your portfolio.</p>
+</lift:LoginStatus.ifLoggedOut>
+
+</lift:children>
+
+
