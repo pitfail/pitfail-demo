@@ -20,26 +20,13 @@ import matteform._
 
 object SellThisStock extends Loggable
 {
-    def render = doRender _
-    
-    def doRender(in: NodeSeq) = {
-        logger.info("Rendering SellThisStock " + this)
-        try {
-            form.render(in)
-        }
-        catch { case e: Any =>
-            logger.info("Caught " + e + " while rendering")
-            throw e
-        }
-    }
+    def render = form.render _
     
     object form extends Form[String](() => (),
         AttrField("ticker")
     )
     {
         def act(ticker: String) {
-            logger.info("Selling " + ticker + "!!")
-            
             userSellStock(ticker)
             
             NewsHub   ! Refresh
@@ -48,16 +35,15 @@ object SellThisStock extends Loggable
     }
     
     def userSellStock(ticker: String) {
-        import control.{SellStock => Seller}
-        import Seller._
-        import control.LoginManager.NotLoggedIn
-        import comet.NewsHub
+        import control.LoginManager._
+        import model.Schema._
 
         try {
-            Seller.userSellAllStock(ticker)
+            val user = currentUser
+            user.mainPortfolio.sellAll(ticker)
         }
         catch {
-            case NotLoggedIn() =>
+            case NotLoggedIn =>
                 throw BadInput("You must be logged in to trade")
                 
             case DontOwnStock(_) =>

@@ -52,12 +52,14 @@ class Offers extends Refreshable with Loggable
         else p
     }
     
-    private def offer = "#offer" #> (
-        myOffers map ( o =>
-              "user= [user]" #> o.from.owner.username
+    private def offer = "#offer" #> { li =>
+        logger.info("Rendering offer " + li)
+        
+        ("*" #> (myOffers map ( o =>
+              "user=blank [user]" #> o.from.owner.username
             & "#description" #> o.derivative.toHumanString
-        )
-    )
+        )))(li)
+    }
 }
 
 object Offers extends RefreshHub

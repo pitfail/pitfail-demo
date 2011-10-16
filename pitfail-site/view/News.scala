@@ -11,21 +11,18 @@ import js._
 import JsCmds._
 import JE._
 import Helpers._
-import org.squeryl.PrimitiveTypeMode.inTransaction
 
 import control.LoginManager
 import lib.formats._
 
-import model.{Schema}
-import Schema._
-
 import net.liftweb.actor
 import actor._
 
-class News extends CometActor
-    with CometListener
+class News extends Refreshable
     with Loggable
 {
+    import model.Schema._
+    
     def registerWith = NewsHub
     
     override def lowPriority: PartialFunction[Any,Unit] = {
@@ -34,7 +31,7 @@ class News extends CometActor
     
     override def render = doRender _
     
-    def doRender(in: NodeSeq) = inTransaction {
+    def doRender(in: NodeSeq) = trans {
         val events: Seq[NewsEvent] = recentEvents(10)
         
         val headlines = events map { ev =>
@@ -58,15 +55,5 @@ class News extends CometActor
     }
 }
 
-object NewsHub extends LiftActor
-    with ListenerManager
-{
-    def createUpdate = Refresh
-    
-    override def lowPriority = {
-        case Refresh => updateListeners()
-    }
-    
-    def apply() = this ! Refresh
-}
+object NewsHub extends RefreshHub
 
