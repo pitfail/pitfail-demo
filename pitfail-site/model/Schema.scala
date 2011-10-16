@@ -21,24 +21,34 @@ import derivatives.{Derivative}
 
 object Schema extends squeryl.Schema {
     
-    implicit val users       = table[User]
-    implicit val portfolios  = table[Portfolio]
-    implicit val stockAssets = table[StockAsset]
-    implicit val newsEvents  = table[NewsEvent]
+    type Dollars = BigDecimal
+    
+    implicit val users                 = table[User]
+    implicit val portfolios            = table[Portfolio]
+    implicit val stockAssets           = table[StockAsset]
+    implicit val newsEvents            = table[NewsEvent]
     implicit val derivativeAssets      = table[DerivativeAsset]
     implicit val derivativeLiabilities = table[DerivativeLiability]
     implicit val derivativeOffers      = table[DerivativeOffer]
     
+    // Errors that can occur during model operations
+    case object NegativeVolume extends Exception
+    case class NotEnoughCash(have: Dollars, need: Dollars) extends Exception
+    case class DontOwnStock(ticker: String) extends Exception
+    case class NotEnoughShares(have: BigDecimal, need: BigDecimal) extends Exception
+    
+    def trans[A](x: =>A) = inTransaction(x)
+    
     def byUsername(name: String): Option[User] =
-        inTransaction {
+        trans {
             from(users) (u =>
                 where(u.username === name)
                 select(u)
             ) headOption
         }
     
-    def touchUser(username: String): User =
-        inTransaction {
+    def ensureUser(username: String): User =
+        trans {
             byUsername(username) match {
                 case None =>
                     val user = User(username = username)
@@ -63,7 +73,7 @@ object Schema extends squeryl.Schema {
         val msecs = System.currentTimeMillis - (n: Long) * 24*60*60
         val stamp = new Timestamp(msecs)
         
-        inTransaction {
+        trans {
             from(newsEvents)(e =>
                 where(e.when > stamp)
                 select(e)
@@ -72,7 +82,7 @@ object Schema extends squeryl.Schema {
         }
     }
     
-    def recentEvents(n: Int): Seq[NewsEvent] = inTransaction {
+    def recentEvents(n: Int): Seq[NewsEvent] = trans {
         from(newsEvents)(e =>
             select(e)
             orderBy(e.when desc)
@@ -88,6 +98,20 @@ object Schema extends squeryl.Schema {
         )
         extends KL
     {
+        def offerDerivativeTo(recip: User, deriv: Derivative): Unit = trans {
+            // Can anything go wrong here? I'm not aware...
+            val offer = DerivativeOffer(
+                mode = deriv.serialize,
+                from = this.mainPortfolio,
+                to   = recip.mainPortfolio
+            )
+            
+            derivativeOffers.insert(offer)
+        }
+        
+        def offerDerivativeAtAuction(deriv: Derivative): Unit = trans {
+            throw new IllegalStateException("Not implemented, sorry ;( ;( ;(")
+        }
     }
     
     case class Portfolio(
@@ -97,8 +121,12 @@ object Schema extends squeryl.Schema {
         )
         extends KL
     {
-        def buy(stock: StockShares): StockAsset = inTransaction {
-            assert(cash >= stock.price)
+        def buyStock(ticker: String, volume: Dollars)
+            = buy(StockShares(ticker, volume))
+        
+        def buy(stock: StockShares): StockAsset = trans {
+            if (cash < stock.price)
+                throw NotEnoughCash(cash, stock.price)
             
             // Look to see if we can lump this in with an
             // existing asset
@@ -110,7 +138,6 @@ object Schema extends squeryl.Schema {
             
             asset.shares += stock.shares
             cash -= stock.value
-            assert(cash > 0)
 
             newsEvents insert NewsEvent(
                 action  = "buy",
@@ -125,17 +152,15 @@ object Schema extends squeryl.Schema {
             asset
         }
         
-        def sell(stock: StockShares): Unit = inTransaction {
+        def sell(stock: StockShares): Unit = trans {
             val asset =
                 haveTicker(stock.ticker) match {
                     case Some(asset) => asset
-                    case None =>
-                        throw new IllegalStateException(
-                            "Cannot sell %s; don't have it" format stock.ticker
-                        )
+                    case None => throw DontOwnStock(stock.ticker)
                 }
             
-            assert(asset.shares >= stock.shares)
+            if (stock.shares > asset.shares)
+                throw NotEnoughShares(asset.shares, stock.shares)
             
             cash += stock.value
             asset.shares -= stock.shares
@@ -154,14 +179,11 @@ object Schema extends squeryl.Schema {
             portfolios.update(this)
         }
         
-        def sellAll(ticker: String): Unit = inTransaction {
+        def sellAll(ticker: String): Unit = trans {
             val asset =
                 haveTicker(ticker) match {
                     case Some(asset) => asset
-                    case None =>
-                        throw new IllegalStateException(
-                            "Cannot sell %s; don't have it" format ticker
-                        )
+                    case None => throw DontOwnStock(ticker)
                 }
             
             val stock = StockShares(asset.ticker, asset.shares)
@@ -179,7 +201,7 @@ object Schema extends squeryl.Schema {
         }
         
         def haveTicker(ticker: String): Option[StockAsset] =
-            inTransaction {
+            trans {
                 from(stockAssets) (a =>
                     where(
                             (a.ticker === ticker)
@@ -190,7 +212,7 @@ object Schema extends squeryl.Schema {
             }
         
         def makeTicker(ticker: String): StockAsset =
-            inTransaction {
+            trans {
                 val asset = StockAsset(
                     ticker    = ticker,
                     portfolio = this
@@ -200,7 +222,7 @@ object Schema extends squeryl.Schema {
             }
         
         def myStockAssets: Seq[StockAsset] =
-            inTransaction {
+            trans {
                 from(stockAssets) (a =>
                     where(
                         a.portfolio === this
@@ -210,7 +232,7 @@ object Schema extends squeryl.Schema {
             }
         
         def myDerivativeAssets: Seq[DerivativeAsset] =
-            inTransaction {
+            trans {
                 from(derivativeAssets) (a =>
                     where (
                         a.owner === this
@@ -220,7 +242,7 @@ object Schema extends squeryl.Schema {
             }
         
         def myOffers: Seq[DerivativeOffer] =
-            inTransaction {
+            trans {
                 from (derivativeOffers) (o =>
                     where (
                         o.to === this
@@ -241,36 +263,36 @@ object Schema extends squeryl.Schema {
     case class DerivativeAsset(
         var id:    Long            = 0,
         var name:  String          = "",
-        var mode:  String          = "",
+        var mode:  Array[Byte]     = Array(),
         var exec:  Timestamp       = now,
         var peer:  Link[Portfolio] = 0,
         var owner: Link[Portfolio] = 0
         )
         extends KL
     {
-        def derivative: Derivative = Derivative.fromJSON(mode)
+        def derivative: Derivative = Derivative.deserialize(mode)
     }
     
     case class DerivativeLiability(
         var id:    Long            = 0,
-        var mode:  String          = "",
+        var mode:  Array[Byte]     = Array(),
         var owner: Link[Portfolio] = 0
         )
         extends KL
     {
-        def derivative: Derivative = Derivative.fromJSON(mode)
+        def derivative: Derivative = Derivative.deserialize(mode)
     }
     
     case class DerivativeOffer(
         var id:   Long            = 0,
-        var mode: String          = "",
+        var mode: Array[Byte]     = Array(),
         @Column("sender")
         var from: Link[Portfolio] = 0,
         var to:   Link[Portfolio] = 0
         )
         extends KL
     {
-        def derivative: Derivative = Derivative.fromJSON(mode)
+        def derivative: Derivative = Derivative.deserialize(mode)
     }
         
     case class NewsEvent(
@@ -300,9 +322,15 @@ object Schema extends squeryl.Schema {
     def createSchema() {
         init()
         
-        inTransaction {
+        trans {
             this.create
         }
+    }
+    
+    def clearDatabase() {
+        new java.io.File("data.h2.db").delete()
+        createSchema()
+        ensureUser("ellbur_k_a")
     }
 }
 

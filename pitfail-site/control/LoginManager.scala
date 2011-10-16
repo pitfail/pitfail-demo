@@ -13,7 +13,7 @@ import model.Schema._
 
 object LoginManager {
     
-    case class NotLoggedIn() extends RuntimeException
+    case object NotLoggedIn extends RuntimeException
     
     def loggedIn_? = currentLogin match {
         case Some(_) => true
@@ -28,7 +28,7 @@ object LoginManager {
         import model.Schema
         
         _currentLogin := Some(name)
-        Schema.touchUser(name)
+        Schema.ensureUser(name)
     }
     
     def logout() {
@@ -36,17 +36,15 @@ object LoginManager {
     }
     
     def currentLogin: Option[String] = _currentLogin.is
-    
-    def withUser(op: User => Unit) {
+    def currentUser: User =
         currentLogin match {
             case Some(name) =>
                 byUsername(name) match {
-                    case Some(user) => op(user)
+                    case Some(user) => user
                     case _ => throw new IllegalStateException("Invalid user")
                 }
-            case _ => throw NotLoggedIn()
+            case _ => throw NotLoggedIn
         }
-    }
     
     // Who we're logged in as
     object _currentLogin extends SessionVar[Option[String]](Some("ellbur_k_a"))

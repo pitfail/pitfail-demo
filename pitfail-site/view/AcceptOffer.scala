@@ -14,8 +14,6 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import scala.math.{BigDecimal}
-import lib.formats._
 import matteform._
 
 object AcceptOffer extends Loggable

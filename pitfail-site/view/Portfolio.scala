@@ -65,7 +65,7 @@ class Portfolio extends Refreshable with Loggable
             val deriv = a.derivative
             (
                   "#securities *" #> (deriv.security toHumanString)
-                & "#exec *"       #> (deriv.exec toString)
+                & "#exec *"       #> (deriv.exec toString())
                 & "#condition *"  #> (deriv.condition toHumanString)
                 & "#peer *"       #> ("user= [user]" #> a.peer.owner.username)
             )

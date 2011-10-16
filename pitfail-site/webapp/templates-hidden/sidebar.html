@@ -1,13 +1,17 @@
 
 <lift:children>
 
+<lift:ClearDatabase form="post">
+<input type="submit" name="submit" value="Clear Database"/>
+</lift:ClearDatabase>
+
 <lift:LoginStatus.ifLoggedIn>
 <p>Logged in as <lift:LoginStatus.username/></p>
 <p><a href="/logout">Logout</a></p>
 </lift:LoginStatus.ifLoggedIn>
 
 <lift:LoginStatus.ifLoggedOut>
-<p><a class="lift:TwitterLink" href="#">Login</a></p>
+<p><a href="/twitter/login">Login</a></p>
 </lift:LoginStatus.ifLoggedOut>
 
 <h3>Places</h3>

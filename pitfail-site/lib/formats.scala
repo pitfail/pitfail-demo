@@ -48,7 +48,7 @@ case class FormattedDerivative(
     deriv: Derivative
 ) {
     def toHumanString: String =
-        "%s on %s if %" format (
+        "%s on %s if %s" format (
             deriv.security toHumanString,
             deriv.exec,
             deriv.condition toHumanString

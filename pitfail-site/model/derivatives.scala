@@ -5,33 +5,31 @@ package model
 package object derivatives {
 
 import java.sql.Timestamp
+// Joda time
+import org.joda.time.{DateTime}
 import lib.formats._
 
-import net.liftweb.json.{DefaultFormats,parse,render,compact}
-import net.liftweb.json.Extraction
-    import Extraction.{extract, decompose}
+import net.liftweb.common.Loggable
 
 // --------------------------------------------------------------------
 // The data types
 
 case class Derivative(
     security:  Security,
-    exec:      Timestamp,
+    exec:      DateTime,
     condition: Condition
 ) {
-    import Derivative._
-    
-    def toJSON: String = compact(render(decompose(this)))
+    def serialize: Array[Byte] = serialization.serialize(this)
 }
 
-object Derivative {
-    implicit val formats = DefaultFormats
-    def fromJSON(json: String) = extract[Derivative](parse(json))
+object Derivative extends Loggable {
+    def deserialize(bs: Array[Byte]): Derivative =
+        serialization.deserialize[Derivative](bs)
 }
 
 // -------------------------------------------
 
-abstract class Security
+sealed abstract class Security
 
 case class SecDollar(
         amount: BigDecimal
@@ -56,9 +54,9 @@ case class SecSum(
 
 // -------------------------------------------
 
-abstract class Condition
+sealed abstract class Condition
 
-case object CondAlways extends Condition
+case class CondAlways() extends Condition
 
 case class CondGreater(
         a: ComparableSecurity,
@@ -67,7 +65,7 @@ case class CondGreater(
 
 // -------------------------------------------
 
-abstract class ComparableSecurity
+sealed abstract class ComparableSecurity
 
 case class CompSecStock(
         ticker: String,
