@@ -13,8 +13,22 @@
             </div>
         </div>
 
-        <div id="search" class="lift:comet?type=QueryStock queryStock">
-            <input type="text" name="query" value=""/>
+        <div id="query" class="lift:comet?type=QueryStock">
+            <div id="query-search">
+                <input type="text" name="query" value=""/>
+                <input type="submit" name="submit" value="Search"/>
+            </div>
+
+            <div id="query-quote">
+                <span id="search-quote"/>
+                <span id="search-change"/>
+                <input type="text" name="quantity" value="1"/>
+                <input type="submit" name="buy" value="Buy"/>
+                <input type="submit" name="add" value="Add"/>
+            </div>
+
+            <div id="query-derivative">
+            </div>
         </div>
 
         <div id="body">
