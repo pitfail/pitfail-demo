@@ -11,12 +11,13 @@ scalaSource in Compile <<= baseDirectory(identity)
 
 scalacOptions ++= Seq(
     "-deprecation",
-    "-unchecked"
+    "-unchecked",
+    "-explaintypes"
 )
 
 // For scalaz
 resolvers += "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
-  
+
 libraryDependencies ++= Seq(
     "joda-time" % "joda-time" % "2.0",
     "org.joda" % "joda-convert" % "1.0",
