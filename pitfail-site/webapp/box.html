@@ -1,0 +1,16 @@
+
+<lift:surround with="default" at="content">
+    <h2>Welcome to box!</h2>
+    <div class="lift:comet?type=TheBox thebox">
+        <p id="thebox_content">This is the contents of the box.</p>
+    </div>
+    <div class="set_form">
+        <h4>Set the contents of the box:</h4>
+        <form class="lift:form.ajax">
+            <input class="lift:SetBox" id="setbox_in"/>
+            <input type="submit" value="Set!"/>
+        </form>
+    </div>
+</lift:surround>
+
+

@@ -1,0 +1,21 @@
+
+<lift:children>
+
+<h3>Recent Actions</h3>
+
+<ul class="lift:comet?type=News news">
+    <li id="newsItem">
+        <lift:cases choice="blank">
+            <lift:choice test="buy">
+                <lift:UserLink user="blank"/> bought <span id="volume"/> of <span id="ticker"/>
+            </lift:choice>
+
+            <lift:choice test="sell">
+                <lift:UserLink user="blank"/> sold <span id="volume"/> of <span id="ticker"/>
+            </lift:choice>
+        </lift:cases>
+    </li>
+</ul>
+
+</lift:children>
+

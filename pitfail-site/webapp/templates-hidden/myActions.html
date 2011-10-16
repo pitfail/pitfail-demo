@@ -1,0 +1,99 @@
+
+<lift:children>
+
+    <h3>Make a Trade</h3>
+    
+    <div class="lift:comet?type=BuyStock buyStock">
+        <h4>Buy stock:</h4>
+        
+        <table class="buyStock">
+            <tr>
+                <td>Ticker:</td>
+                <td><input name="ticker" type="text"/></td>
+                <td>(<a href="???">lookup</a>)</td>
+                <td><span id="tickerError" class="inputError"/></td>
+            </tr>
+            <tr>
+                <td>Volume:</td>
+                <td>$<input name="volume" type="text"/></td>
+                <td></td>
+                <td><span id="volumeError" class="inputError"/></td>
+            </tr>
+            <tr><td><input value="Buy" name="submit" type="submit"/></td></tr>
+        </table>
+        <p><span id="submitError" class="inputError"/></p>
+    </div>
+    
+    <div class="lift:comet?type=SellDerivative sellDerivative">
+        <h4>Sell derivative:</h4>
+        
+        <table class="sellDerivative">
+            <tr>
+                <td>To:</td>
+                <td>
+                    <ul class="choices">
+                        <li id="to_case_user">
+                            <input type="radio" id="user"/> User: <input type="text" name="recipient"/>
+                            <span id="recipientError" class="inputError"/>
+                        </li>
+                        <li id="to_case_auction">
+                            <input type="radio" id="auction"/> Auction
+                        </li>
+                    </ul>
+                    <span id="toError" class="inputError"/>
+                </td>
+            </tr>
+            <tr>
+                <td>Securities:</td>
+                <td>
+                    <ul>
+                        <li id="securities">
+                            <input type="text" name="ticker"/>
+                            <span id="tickerError" class="inputError"/>
+                            <input type="text" name="shares"/>
+                            <span id="sharesError" class="inputError"/>
+                            <input type="submit" name="delete" value="Del"/>
+                        </li>
+                    </ul>
+                </td>
+                <td>
+                    <input type="submit" name="securitiesAdd" value="Add"/>
+                </td>
+                <span id="securitiesError" class="inputError"/>
+            </tr>
+            <tr>
+                <td>On:</td>
+                <td>
+                    <input type="text" name="on"/> (mm/dd)
+                </td>
+                <td>
+                    <span id="onError" class="inputError"/>
+                </td>
+            </tr>
+            <tr>
+                <td>If:</td>
+                <td>
+                    <ul class="choices">
+                        <li id="cond_case_always">
+                            <input type="radio" id="always"/> Always
+                        </li>
+                        <li id="cond_case_when">
+                            <input type="radio" id="when"/>When:
+                                blah
+                        </li>
+                    </ul>
+                    <span id="condError" class="inputError"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="submit" value="Sell" name="submit"/>
+                    <span id="submitError" class="inputError"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    
+</lift:children>
+
