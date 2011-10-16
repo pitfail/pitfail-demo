@@ -1,4 +1,4 @@
-package com.github.pitfail
+package stockdata
 
 import org.joda.time.DateTime
 import scala.math.BigDecimal

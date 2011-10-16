@@ -1,4 +1,4 @@
-package com.github.pitfail
+package stockdata
 
 import java.io.IOException
 
@@ -12,6 +12,8 @@ class HttpQueryService(method: String) extends QueryService {
   def query(url: URL): String = {
     val connection = url.openConnection().asInstanceOf[HttpURLConnection]
     connection.setRequestMethod(method)
+
+    print(url)
 
     val responseCode = connection.getResponseCode()
     if (responseCode != HttpURLConnection.HTTP_OK) {

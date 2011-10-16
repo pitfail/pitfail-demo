@@ -1,4 +1,4 @@
-package com.github.pitfail
+package stockdata
 
 import java.net.URL
 

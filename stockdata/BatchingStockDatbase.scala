@@ -1,4 +1,4 @@
-package com.github.pitfail
+package stockdata
 
 import scala.collection.mutable.{Map => MMap}
 
