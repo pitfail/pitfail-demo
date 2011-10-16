@@ -18,6 +18,10 @@ import HList._
 import KList._
 import ~>._
 
+// Capitalized Scalaz has the implicits
+import scalaz.Scalaz
+import Scalaz.{Id=>_, _}
+
 import scala.collection.mutable.ArrayBuffer
 
 // ------------------------------------------------------------
@@ -48,12 +52,15 @@ class CaseField[+A](
         stages.foldLeft(same)(_ & _)
     }
     
-    def produce() = (
-        selected map {
-            s => Right(cases(s).process)
-        }
-        getOrElse Left("None selected")
-    )
+    def produce() = selected match {
+        case Some(i) =>
+            cases(i).process() match {
+                case Some(ans) => OK(ans)
+                case None      => ChildError
+            }
+        case None =>
+            Error("None selected")
+    }
     
     def clearInner() {
         selected = None
@@ -77,7 +84,14 @@ class AggregateField[+A, HL <: HList](
     import AggregateField._
     
     def renderInner = fields.toList.foldLeft(same)(_ & _.render)
-    def produce() = Right(constructor(fields down mapProcess))
+    def produce() = {
+        val inners = fields map mapProcess
+        
+        if (inners.toList forall (_.isDefined))
+            OK(constructor(inners down mapExtract))
+        else
+            ChildError
+    }
     
     def clearInner() {
         fields.toList foreach (_.clear())
@@ -90,8 +104,18 @@ object AggregateField {
     ): Field[A]
         = new AggregateField(c, f)
     
-    val mapProcess = new (Field ~> Id) {
-        def apply[T](field: Field[T]): T = field.process()
+    val mapProcess = new (Field ~> Option) {
+        def apply[T](field: Field[T]): Option[T] = field.process()
+    }
+    
+    val mapExtract = new (Option ~> Id) {
+        def apply[T](o: Option[T]): T = o match {
+            case Some(t) => t
+            case _ =>
+                throw new IllegalStateException(
+                    "Owen doesn't know how to use types!"
+                )
+        }
     }
 }
 
@@ -118,10 +142,12 @@ class ListField[A](
         & ("name="+name+"Add") #> { add =>
             SHtml.ajaxSubmit((add\"@value").text, addOneAjax _)
         }
-        //SHtml.onSubmitUnit(addOnePost _)
-        //& ("name="+name+"Add [onclick]") #> SHtml.ajaxInvoke(addOneAjax _)
     )
-    def produce() = Right(fields map (_.process) toList)
+    def produce() =
+        (fields map (_.process)).sequence match {
+            case Some(a) => OK(a)
+            case None    => ChildError
+        }
     
     def addOne() {
         fields.append(producer())

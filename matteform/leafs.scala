@@ -21,7 +21,7 @@ class StringField(
     extends Field[String](name)
     with TextField
 {
-    def produce() = Right(text)
+    def produce() = OK(text)
 }
 object StringField {
     def apply(n: String, i: String): Field[String]
@@ -40,10 +40,10 @@ class NumberField(
 {
     def produce() =
         try {
-            Right(BigDecimal(text))
+            OK(BigDecimal(text))
         }
         catch {
-            case e: NumberFormatException => Left("Should be a number")
+            case e: NumberFormatException => Error("Should be a number")
         }
 }
 object NumberField {
@@ -64,7 +64,7 @@ class HiddenField(
     def renderInner = ("#"+name) #> SHtml.onSubmit(t => text = Some(t))
     
     def produce() = text match {
-        case Some(text) => Right(text)
+        case Some(text) => OK(text)
         case _ =>
             throw new IllegalStateException(name+" should have been set")
     }
@@ -85,7 +85,7 @@ class ConstField[+A](
     extends Field[A]("noname")
 {
     def renderInner = same
-    def produce() = Right(it)
+    def produce() = OK(it)
     def clearInner() { }
 }
 object ConstField {
@@ -123,7 +123,7 @@ class AttrField(
         }
     
     def produce() = text match {
-        case Some(text) => Right(text)
+        case Some(text) => OK(text)
         case _ =>
             throw new IllegalStateException(name+" should have been set")
     }

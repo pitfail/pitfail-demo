@@ -52,17 +52,18 @@ abstract class Form[A](
     }
     
     def process() {
-        try {
-            act(field.process())
-            clear()
-        }
-        catch {
-            case BadInput(msg) =>
-                logger.info("Form failed due to " + msg)
-                errors.text = Some(msg)
-                
-            case ChildError =>
-                logger.info("Form failed due to child error")
+        field.process() match {
+            case Some(a) =>
+                try {
+                    act(a)
+                    clear()
+                }
+                catch { case BadInput(msg) =>
+                    logger.info("Form failed due to " + msg)
+                    errors.text = Some(msg)
+                }
+            case None =>
+                logger.info("Form failed due to child errorZ")
         }
     }
     
@@ -78,7 +79,7 @@ abstract class Field[+A](val name: String)
     val errors = new ErrorRenderable(name)
     
     def renderInner: CssBindFunc
-    def produce(): Either[String,A]
+    def produce(): FieldResult[A]
     def clearInner(): Unit
     
     def clear() {
@@ -86,14 +87,17 @@ abstract class Field[+A](val name: String)
         clearInner()
     }
     
-    def process(): A =
+    def process(): Option[A] =
         produce() match {
-            case Right(a)  =>
+            case OK(a)  =>
                 errors.text = None
-                a
-            case Left(msg) =>
+                Some(a)
+            case Error(msg) =>
                 errors.text = Some(msg)
-                throw ChildError
+                None
+            case ChildError =>
+                errors.text = None
+                None
         }
     
     def render = renderInner & errors.render

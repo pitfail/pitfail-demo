@@ -12,5 +12,9 @@ import JE._
 import Helpers._
 
 case class BadInput(msg: String) extends Exception
-case object ChildError extends Exception
+
+sealed abstract class FieldResult[+A]
+case class OK[+A](result: A) extends FieldResult[A]
+case class Error(msg: String) extends FieldResult[Nothing]
+case object ChildError extends FieldResult[Nothing]
 
