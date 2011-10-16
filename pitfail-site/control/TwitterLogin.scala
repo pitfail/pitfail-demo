@@ -141,7 +141,7 @@ object TwitterLogin extends Loggable
         .provider(classOf[TwitterApi])
         .apiKey(TwitterKeys.consumerKey)
         .apiSecret(TwitterKeys.consumerSecret)
-        .callback("http://ellbur:8080/twitter/callback")
+        .callback("http://localhost:8080/twitter/callback")
         .build()
 }
 
