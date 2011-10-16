@@ -13,8 +13,6 @@ class HttpQueryService(method: String) extends QueryService {
     val connection = url.openConnection().asInstanceOf[HttpURLConnection]
     connection.setRequestMethod(method)
 
-    print(url)
-
     val responseCode = connection.getResponseCode()
     if (responseCode != HttpURLConnection.HTTP_OK) {
       throw new IOException("Request returned response code %s.".format(responseCode))

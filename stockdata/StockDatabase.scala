@@ -5,7 +5,7 @@ trait StockDatabase {
 }
 
 class NoSuchStockException(val stock: Stock) extends Exception(
-  "There is no stock with ticker symbol '%s' in the %s exchange.".format(stock.symbol, stock.exchange))
+  "There is no stock with ticker symbol '%s'.".format(stock.symbol))
 
 class DatabaseException(message: String) extends Exception(message)
 

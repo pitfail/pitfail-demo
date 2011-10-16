@@ -30,7 +30,7 @@ class QueryStock extends Refreshable with Loggable
     private object pendingStocks extends SessionVar[List[Stock]](List())
     
     object form extends Form[Stock](hub,
-        AggregateField((ticker: String) => Stock("NasdaqNM", ticker),
+        AggregateField(Stock,
                 StringField("query", "")
             :^: KNil
         )
@@ -50,7 +50,7 @@ class QueryStock extends Refreshable with Loggable
                 val quote = stockDatabase.getQuotes(Iterable(stock)).head
                 ("#search-quote" #> quote.price.toString & "#search-change" #> "(-1%)")
             }
-            case None        => same
+            case None => same
         })(in)
     }
 }
