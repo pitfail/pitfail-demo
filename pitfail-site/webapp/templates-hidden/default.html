@@ -14,9 +14,9 @@
         </div>
 
         <lift:QueryStock>
-            <div>
+            <div id="search-query">
                 <input type="text" name="query" value=""/>
-                <input type="submit" name="submit" value="Search"/>
+                <input type="submit" name="submit-query" value="Search"/>
             </div>
 
             <div id="submitError"/>
@@ -32,10 +32,26 @@
                     <dt>Dividend Share</dt> <dd id="search-dividend"/>
                 </dl>
                 <input type="text" name="quantity" value="1"/>
-                <input type="submit" name="add" value="Add"/>
+                <input type="submit" name="submit-quote" value="Add"/>
             </div>
 
-            <ul id="search-list"/>
+            <table id="search-list">
+                <thead>
+                    <tr><th>Ticker</th><th>Company</th><th>Price</th><th>Shares</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody>
+                    <tr id="search-list-row">
+                        <td class="search-list-ticker"/>
+                        <td class="search-list-company"/>
+                        <td class="search-list-price"/>
+                        <td class="search-list-shares"/>
+                        <td class="search-list-subtotal"/>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr><td colspan="4">Total</td><td id="search-list-total"/></tr>
+                </tfoot>
+            </table>
         </lift:QueryStock>
 
         <div id="body">

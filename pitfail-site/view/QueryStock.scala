@@ -25,57 +25,79 @@ import scalaz.Scalaz._
 class QueryStock extends RefreshableSnippet with Loggable
 {
     private val stockDatabase: StockDatabase = new YahooStockDatabase(new HttpQueryService("GET"))
-    private var currentStock: Option[Stock] = None
-    private var pendingStocks: List[Stock]  = List()
+    private var currentQuote: Option[Quote] = None
+    private var order: List[(Quote, BigDecimal)]  = List()
 
     def render(p: RefreshPoint)(in: NodeSeq) = (
            in
-        |> form.render(p) _
-        |> renderData _
+        |> queryForm.render(p) _
+        |> quoteForm.render(p) _
+        |> renderQuote _
+        |> renderList _
     )
     
-    object form extends Form[Stock](
+    object queryForm extends Form[Stock](
         AggregateField(Stock,
                 StringField("query", "")
             :^: KNil
-        )
+        ),
+        name = "submit-query"
     )
     {
         override def act(stock: Stock) {
-            currentStock = Some(stock)
+            logger.info("QUERY: " + stock)
+            currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
         }
     }
 
-    def renderData(in: NodeSeq): NodeSeq = {
-        (currentStock match {
-            case Some(stock) => {
-                try {
-                    val quote = stockDatabase.getQuotes(Iterable(stock)).head
-                    ( "#search-company *"  #> quote.company
-                    & "#search-ticker *"   #> quote.stock.symbol
-                    & "#search-price *"    #> quote.price.toString
-                    & "#search-change *"   #> quote.info.percentChange.toString
-                    & "#search-open *"     #> quote.info.openPrice.toString
-                    & "#search-low *"      #> quote.info.lowPrice.toString
-                    & "#search-high *"     #> quote.info.highPrice.toString
-                    & "#search-dividend *" #> quote.info.dividendShare.toString
-                    & "#search-list"       #> Nil)
-                } catch {
-                    case e: DatabaseException =>
-                        throw BadInput("Unable to get an up-to-date stock quote. Please try again later.")
-
-                    case e: NoSuchStockException =>
-                        throw BadInput(e.toString)
-
-                    case _ =>
-                        throw BadInput("An unknown error has occurred.")
+    object quoteForm extends Form[BigDecimal](
+        NumberField("quantity", "1"),
+        name = "submit-quote"
+    )
+    {
+        override def act(quantity: BigDecimal) {
+            currentQuote match {
+                case Some(quote) => {
+                    order = order :+ (quote, quantity)
+                    currentQuote = None
                 }
+
+                case None =>
+                    throw BadInput("An unknown error has occurred.")
+             } 
+        }
+    }
+
+    def renderQuote(in: NodeSeq): NodeSeq = {
+        (currentQuote match {
+            case Some(quote) => {
+                ( "#search-company *"  #> quote.company
+                & "#search-ticker *"   #> quote.stock.symbol
+                & "#search-price *"    #> quote.price.toString
+                & "#search-change *"   #> quote.info.percentChange.toString
+                & "#search-open *"     #> quote.info.openPrice.toString
+                & "#search-low *"      #> quote.info.lowPrice.toString
+                & "#search-high *"     #> quote.info.highPrice.toString
+                & "#search-dividend *" #> quote.info.dividendShare.toString)
             }
 
-            case None => {
-                ( "#search-quote" #> Nil
-                & "#search-list"  #> Nil)
-            }
+            case None =>
+                ("#search-quote" #> Nil)
+        })(in)
+    }
+
+    def renderList(in: NodeSeq): NodeSeq = {
+        (if (order isEmpty) {
+            "#search-list" #> Nil
+        } else {
+            "#search-list-row" #> (order map (_ match {
+                case (quote, quantity) => 
+                    ( ".search-list-ticker *"   #> quote.symbol
+                    & ".search-list-company *"  #> quote.company
+                    & ".search-list-price *"    #> ("$" + quote.price.toString)
+                    & ".search-list-shares *"   #> quantity.toString
+                    & ".search-list-subtotal *" #> ("$" + (quote.price * quantity).toString))
+            }))
         })(in)
     }
 }
