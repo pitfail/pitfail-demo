@@ -37,7 +37,7 @@
 
             <table id="search-list">
                 <thead>
-                    <tr><th>Ticker</th><th>Company</th><th>Price</th><th>Shares</th><th>Subtotal</th></tr>
+                    <tr><th>Ticker</th><th>Company</th><th>Price</th><th>Shares</th><th>Subtotal</th><th/></tr>
                 </thead>
                 <tbody>
                     <tr id="search-list-row">
@@ -46,10 +46,11 @@
                         <td class="search-list-price"/>
                         <td class="search-list-shares"/>
                         <td class="search-list-subtotal"/>
+                        <td><input type="submit" value="Remove" class="search-list-remove"/></td>
                     </tr>
                 </tbody>
                 <tfoot>
-                    <tr><td colspan="4">Total</td><td class="search-list-total"/></tr>
+                    <tr><td colspan="4">Total</td><td class="search-list-total"/><td/></tr>
                 </tfoot>
             </table>
         </lift:QueryStock>
