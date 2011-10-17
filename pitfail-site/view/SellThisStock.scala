@@ -14,13 +14,11 @@ import Helpers._
 
 import matteform._
 
-object SellThisStock extends RenderableSnippet with Loggable
+object SellThisStock extends RefreshableSnippet with Loggable
 {
-    def dispatch = {
-        case "render" => form.render _
-    }
+    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
     
-    object form extends Form[String](this,
+    object form extends Form[String](
         AttrField("ticker")
     )
     {

@@ -15,16 +15,20 @@ import Helpers._
 import matteform._
 import scalaz.Scalaz._
 
-class TestForm extends RenderableSnippet with Loggable {
+class TestForm extends RefreshableSnippet with Loggable {
     
     var count: Int = 0
     
-    def dispatch = {
-        case "render" => form.render _
-    }
+    def render(p: RefreshPoint)(in: NodeSeq) = (
+           in
+        |> inc.render(p) _
+        |> dec.render(p) _
+        |> renderCount
+    )
     
-    object form extends Form[Unit](this,
-        ConstField(())
+    object inc extends Form[Unit](
+        ConstField(()),
+        name = "inc"
     )
     {
         def act(u: Unit) {
@@ -32,14 +36,16 @@ class TestForm extends RenderableSnippet with Loggable {
         }
     }
     
-    override def render(in: NodeSeq): NodeSeq =
-        in |> renderCount
+    object dec extends Form[Unit](
+        ConstField(()),
+        name = "dec"
+    )
+    {
+        def act(u: Unit) {
+            count -= 1
+        }
+    }
     
     def renderCount = "#count *" #> count
-    
-    def processAjax(in: NodeSeq)(): JsCmd = {
-        count += 1
-        SetHtml("testForm", render(in))
-    }
 }
 

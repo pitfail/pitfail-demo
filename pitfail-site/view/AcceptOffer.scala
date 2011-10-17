@@ -16,13 +16,57 @@ import Helpers._
 
 import matteform._
 
-object AcceptOffer extends Loggable
+object AcceptOffer extends RefreshableSnippet with Loggable
 {
-    def render = "#yo" #> "no"
+    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
+    
+    object form extends Form[String](
+        AttrField("offerID")
+    )
+    {
+        def act(offerID: String) {
+            import control.LoginManager._
+            import model.Schema._
+            
+            try {
+                val user = control.LoginManager.currentUser
+                user.acceptOffer(offerID)
+            }
+            catch {
+                case NotLoggedIn =>
+                    throw new BadInput("You're not logged in")
+                    
+                case OfferExpired =>
+                    throw new BadInput("This offer has expired")
+            }
+        }
+    }
 }
 
-object DeclineOffer extends Loggable
+object DeclineOffer extends RefreshableSnippet with Loggable
 {
-    def render = "#yo" #> "no"
+    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
+    
+    object form extends Form[String](
+        AttrField("offerID")
+    )
+    {
+        def act(offerID: String) {
+            import control.LoginManager._
+            import model.Schema._
+            
+            try {
+                val user = control.LoginManager.currentUser
+                user.declineOffer(offerID)
+            }
+            catch {
+                case NotLoggedIn =>
+                    throw new BadInput("You're not logged in")
+                    
+                case OfferExpired =>
+                    throw new BadInput("This offer has expired")
+            }
+        }
+    }
 }
 

@@ -20,11 +20,9 @@ import view.UserField
 import model.derivatives._
 import model.Schema.User
 
-class SellDerivative extends RenderableSnippet with Loggable
+class SellDerivative extends RefreshableSnippet with Loggable
 {
-    def dispatch = {
-        case "render" => form.render _
-    }
+    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
     
     case class Order(
         to:         To,
@@ -40,7 +38,7 @@ class SellDerivative extends RenderableSnippet with Loggable
     case class ToUser(user: User) extends To
     case object ToAuction extends To
     
-    object form extends Form[Order](this,
+    object form extends Form[Order](
         AggregateField(Order,
                 CaseField[To]("to",
                     "user" -> AggregateField(ToUser,
@@ -65,7 +63,7 @@ class SellDerivative extends RenderableSnippet with Loggable
         )
     )
     {
-        override def act(order: Order) {
+        def act(order: Order) {
             userSellDerivative(order)
         }
     }

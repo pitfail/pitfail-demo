@@ -1,3 +1,4 @@
+
 package code
 package snippet
 
@@ -19,18 +20,21 @@ import view.UserField
 import stockdata._
 import model.derivatives._
 import model.Schema.User
+import scalaz.Scalaz._
 
-class QueryStock extends RenderableSnippet with Loggable
+class QueryStock extends RefreshableSnippet with Loggable
 {
     private val stockDatabase: StockDatabase = new YahooStockDatabase(new HttpQueryService("GET"))
     private var currentStock: Option[Stock] = None
     private var pendingStocks: List[Stock]  = List()
 
-    def dispatch = {
-        case "render" => form.render _
-    }
+    def render(p: RefreshPoint)(in: NodeSeq) = (
+           in
+        |> form.render(p) _
+        |> renderData _
+    )
     
-    object form extends Form[Stock](this,
+    object form extends Form[Stock](
         AggregateField(Stock,
                 StringField("query", "")
             :^: KNil
@@ -42,7 +46,7 @@ class QueryStock extends RenderableSnippet with Loggable
         }
     }
 
-    override def render(in: NodeSeq): NodeSeq = {
+    def renderData(in: NodeSeq): NodeSeq = {
         (currentStock match {
             case Some(stock) => {
                 try {
@@ -75,5 +79,4 @@ class QueryStock extends RenderableSnippet with Loggable
         })(in)
     }
 }
-
 

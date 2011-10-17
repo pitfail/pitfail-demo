@@ -15,36 +15,34 @@ import Helpers._
 import scalaz.Scalaz._
 
 abstract class Form[A](
-    snippet: RenderableSnippet,
-    field: Field[A]
+    field: Field[A],
+    name: String = "submit"
     )
     extends Loggable
 {
     def act(result: A): Unit
     
-    val errors = new ErrorRenderable("submit") {
+    val errors = new ErrorRenderable(name) {
         def renderInner = same
     }
     
-    def render(in: NodeSeq): NodeSeq = {
-        val formID = UUID.randomUUID.toString
-        def setID(inner: NodeSeq) = <div id={formID}>{inner}</div>
-        
+    def render(p: RefreshPoint)(in: NodeSeq): NodeSeq = {
         val rendering = (
-              "name=submit" #> { submit =>
+              ("name="+name) #> { submit =>
                   val value = (submit\"@value").text
-                  SHtml.ajaxSubmit(value, processAjax(formID, in) _)
+                  SHtml.ajaxSubmit(value, processAjax(p) _)
               }
             & field.render
             & errors.render
         )
         
-        in |> snippet.render _ |> rendering |> SHtml.ajaxForm _ |> setID _
+        in |> rendering |> SHtml.ajaxForm _
     }
         
-    def processAjax(formID: String, in: NodeSeq)(): JsCmd = {
+    def processAjax(p: RefreshPoint)(): JsCmd = {
         logger.info("Processing AJAX")
-        process() & SetHtml(formID, render(in))
+        process()
+        p.refreshCommand
     }
     
     def processPost() {
@@ -53,7 +51,7 @@ abstract class Form[A](
         S.redirectTo(S.uri)
     }
     
-    def process(): JsCmd =
+    def process() {
         field.process() match {
             case Some(a) =>
                 try {
@@ -63,12 +61,11 @@ abstract class Form[A](
                 catch { case BadInput(msg) =>
                     logger.info("Form failed due to " + msg)
                     errors.text = Some(msg)
-                    Noop
                 }
             case None =>
-                logger.info("Form failed due to child errorZ")
-                Noop
+                logger.info("Form failed due to child error")
         }
+    }
     
     def clear() {
         field.clear()
@@ -105,34 +102,33 @@ abstract class Field[+A](val name: String)
     
     def render = renderInner & errors.render
 }
-object Form {
-    import http._
-    import S._
-    import common._
-    import util._
-    import util.Helpers._
-    import http.js._
-    import http.js.AjaxInfo
-    import JE._
-    import JsCmds._
-    import scala.xml._
-    import SHtml._
 
-    // The default SHtml.ajaxSubmit returns true for some reason...
-    def ajaxSubmit(value: String, func: () => JsCmd): Elem = {
-        val funcName = "z" + Helpers.nextFuncName
-        addFunctionMap(funcName, contextFuncBuilder(func))
-
-        <input type="submit"
-            name={funcName}
-            value={value}
-            onclick={"liftAjax.lift_uriSuffix = '"+funcName+"=_'; return true;"}
-        />
+trait RefreshableSnippet extends StatefulSnippet {
+    def render(p: RefreshPoint)(in: NodeSeq): NodeSeq
+    
+    def dispatch: DispatchIt = {
+        case "render" => renderFull _
     }
+    
+    val uuid = UUID.randomUUID.toString
+    
+    def renderFull(in: NodeSeq): NodeSeq = (
+           in
+        |> render(RefreshPoint(in, uuid, this)) _
+        |> addID
+    )
+        
+    def addID(in: NodeSeq) = <div id={uuid}>{in}</div>
 }
 
-trait RenderableSnippet extends StatefulSnippet {
-    def render(in: NodeSeq): NodeSeq = in
+case class RefreshPoint(
+        orig:    NodeSeq,
+        uuid:    String,
+        snippet: RefreshableSnippet
+    )
+{
+    def refreshCommand: JsCmd =
+        SetHtml(uuid, snippet.renderFull(orig))
 }
 
 class ErrorRenderable(name: String) {

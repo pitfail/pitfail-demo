@@ -2,8 +2,6 @@
 package code
 package snippet
 
-import code.comet._
-
 import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
@@ -16,9 +14,11 @@ import Helpers._
 
 import matteform._
 
-object ClearDatabase extends Loggable
+object ClearDatabase
 {
-    def render = "#foo" #> "no"
+    def render =
+        "type=submit" #> SHtml.onSubmitUnit({() =>
+            model.Schema.clearDatabase()
+        })
 }
-
 
