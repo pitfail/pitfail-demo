@@ -15,6 +15,7 @@ import squeryl.dsl._
 import squeryl.dsl.ast._
 import links.Sugar._
 import java.sql.Timestamp
+import java.util.UUID
 
 import Stocks.{StockShares, stockPrice}
 import derivatives.{Derivative}
@@ -36,6 +37,7 @@ object Schema extends squeryl.Schema {
     case class NotEnoughCash(have: Dollars, need: Dollars) extends Exception
     case class DontOwnStock(ticker: String) extends Exception
     case class NotEnoughShares(have: BigDecimal, need: BigDecimal) extends Exception
+    case object OfferExpired extends Exception
     
     def trans[A](x: =>A) = inTransaction(x)
     
@@ -101,9 +103,10 @@ object Schema extends squeryl.Schema {
         def offerDerivativeTo(recip: User, deriv: Derivative): Unit = trans {
             // Can anything go wrong here? I'm not aware...
             val offer = DerivativeOffer(
-                mode = deriv.serialize,
-                from = this.mainPortfolio,
-                to   = recip.mainPortfolio
+                handle = UUID.randomUUID.toString,
+                mode   = deriv.serialize,
+                from   = this.mainPortfolio,
+                to     = recip.mainPortfolio
             )
             
             derivativeOffers.insert(offer)
@@ -112,6 +115,10 @@ object Schema extends squeryl.Schema {
         def offerDerivativeAtAuction(deriv: Derivative): Unit = trans {
             throw new IllegalStateException("Not implemented, sorry ;( ;( ;(")
         }
+        
+        def acceptOffer(offerID: String) { mainPortfolio.acceptOffer(offerID) }
+        
+        def declineOffer(offerID: String) { mainPortfolio.declineOffer(offerID) }
     }
     
     case class Portfolio(
@@ -250,6 +257,38 @@ object Schema extends squeryl.Schema {
                     select(o)
                 ) toList
             }
+        
+        def acceptOffer(offerID: String): Unit = trans {
+            val offerOption =
+                from(derivativeOffers) (o =>
+                    where(
+                            (o.handle === offerID)
+                        and (o.to     === this)
+                    )
+                    select(o)
+                ) headOption
+            
+            val offer =
+                offerOption match {
+                    case Some(o) => o
+                    case None    => throw OfferExpired
+                }
+            val deriv = offer.derivative
+            
+            val asset =
+                DerivativeAsset(
+                    name  = UUID.randomUUID.toString.substring(0, 5),
+                    mode  = offer.mode,
+                    // TODO: This is obviously wrong.
+                    exec  =  now,
+                    peer  = offer.from,
+                    owner = this
+                )
+            derivativeAssets.insert(asset)
+        }
+        
+        def declineOffer(offerID: String): Unit = trans {
+        }
     }
 
     case class StockAsset(
@@ -284,11 +323,12 @@ object Schema extends squeryl.Schema {
     }
     
     case class DerivativeOffer(
-        var id:   Long            = 0,
-        var mode: Array[Byte]     = Array(),
+        var id:     Long            = 0,
+        var handle: String          = "",
+        var mode:   Array[Byte]     = Array(),
         @Column("sender")
-        var from: Link[Portfolio] = 0,
-        var to:   Link[Portfolio] = 0
+        var from:   Link[Portfolio] = 0,
+        var to:     Link[Portfolio] = 0
         )
         extends KL
     {
