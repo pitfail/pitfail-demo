@@ -16,18 +16,16 @@ import scala.math.{BigDecimal}
 import lib.formats._
 import matteform._
 
-class BuyStock extends RenderableSnippet with Loggable
+class BuyStock extends RefreshableSnippet with Loggable
 {
-    def dispatch = {
-        case "render" => form.render _
-    }
+    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
     
     case class Order(
             ticker: String,
             volume: BigDecimal
         )
     
-    object form extends Form[Order](this,
+    object form extends Form[Order](
         AggregateField(Order,
                 StringField("ticker", "")
             :^: NumberField("volume", "10.00")

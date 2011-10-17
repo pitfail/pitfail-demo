@@ -55,7 +55,7 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
         Stock((quoteElement\"Symbol").extract[String]),
         Quote(
           stock      = Stock((quoteElement\"Symbol").extract[String]),
-          company    =(quoteElement\"Name").extract[String],
+          company    = (quoteElement\"Name").extract[String],
           exchange   = (quoteElement\"StockExchange").extract[String],
           price      = BigDecimal((quoteElement\"Ask").extract[String]),
           updateTime = dateTimeFormat.parseDateTime(
@@ -63,13 +63,13 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
             + " "
             + (quoteElement\"LastTradeTime").extract[String]
           ),
-          properties = Map(
-            "Open"     -> BigDecimal((quoteElement\"Open").extract[String]),
-            "DaysHigh" -> BigDecimal((quoteElement\"DaysHigh").extract[String]),
-            "DaysLow"  -> BigDecimal((quoteElement\"DaysLow").extract[String]),
-            "PercentChange" -> BigDecimal((quoteElement\"ChangeinPercent")
-                                            .extract[String].stripSuffix("%")),
-            "DividendShare" -> BigDecimal((quoteElement\"DividendShare").extract[String])
+          info = QuoteInfo(
+            percentChange = BigDecimal((quoteElement\"ChangeinPercent")
+                                        .extract[String].stripSuffix("%")),
+            dividendShare = BigDecimal((quoteElement\"DividendShare").extract[String]),
+            openPrice     = BigDecimal((quoteElement\"Open").extract[String]),
+            lowPrice      = BigDecimal((quoteElement\"DaysLow").extract[String]),
+            highPrice     = BigDecimal((quoteElement\"DaysHigh").extract[String])
           )
         )
       )}).toMap

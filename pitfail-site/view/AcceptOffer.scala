@@ -16,13 +16,11 @@ import Helpers._
 
 import matteform._
 
-object AcceptOffer extends RenderableSnippet with Loggable
+object AcceptOffer extends RefreshableSnippet with Loggable
 {
-    def dispatch = {
-        case "render" => form.render _
-    }
+    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
     
-    object form extends Form[String](this,
+    object form extends Form[String](
         AttrField("offerID")
     )
     {
@@ -45,13 +43,11 @@ object AcceptOffer extends RenderableSnippet with Loggable
     }
 }
 
-object DeclineOffer extends RenderableSnippet with Loggable
+object DeclineOffer extends RefreshableSnippet with Loggable
 {
-    def dispatch = {
-        case "render" => form.render _
-    }
+    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
     
-    object form extends Form[String](this,
+    object form extends Form[String](
         AttrField("offerID")
     )
     {
