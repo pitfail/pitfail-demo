@@ -23,11 +23,7 @@ class News extends Refreshable
 {
     import model.Schema._
     
-    def registerWith = NewsHub
-    
-    override def lowPriority: PartialFunction[Any,Unit] = {
-        case Refresh => reRender()
-    }
+    def registerWith = News
     
     override def render = doRender _
     
@@ -55,5 +51,5 @@ class News extends Refreshable
     }
 }
 
-object NewsHub extends RefreshHub
+object News extends RefreshHub
 

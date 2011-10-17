@@ -18,16 +18,7 @@ import matteform._
 
 object ClearDatabase extends Loggable
 {
-    def render = form.render _
-    
-    object form extends Form[Unit](() => (),
-        ConstField(())
-    )
-    {
-        def act(u: Unit) {
-            model.Schema.clearDatabase()
-        }
-    }
+    def render = "#foo" #> "no"
 }
 
 

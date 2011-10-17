@@ -124,7 +124,7 @@ object AggregateField {
 
 class ListField[A](
     name: String,
-    callback: () => Unit,
+    snippet: StatefulSnippet,
     val producer: () => Field[A]
 )
     extends Field[Seq[A]](name)
@@ -160,7 +160,6 @@ class ListField[A](
     
     def addOneAjax(): JsCmd = {
         addOne()
-        callback()
         Noop
     }
     
@@ -170,7 +169,6 @@ class ListField[A](
     
     def deleteAjax(i: Int)(): JsCmd = {
         delete(i)
-        callback()
         Noop
     }
     
@@ -179,9 +177,9 @@ class ListField[A](
 object ListField {
     def apply[A](
         n: String,
-        c: () => Unit,
+        s: StatefulSnippet,
         p: =>Field[A]
     ): Field[Seq[A]]
-        = new ListField[A](n, c, () => p)
+        = new ListField[A](n, s, () => p)
 }
 

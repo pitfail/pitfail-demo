@@ -18,29 +18,11 @@ import matteform._
 
 object AcceptOffer extends Loggable
 {
-    def render = form.render _
-    
-    object form extends Form[String](() => (),
-        AttrField("offerId")
-    )
-    {
-        def act(offerId: String) {
-            logger.info("Accepting " + offerId + "!!")
-        }
-    }
+    def render = "#yo" #> "no"
 }
 
 object DeclineOffer extends Loggable
 {
-    def render = form.render _
-    
-    object form extends Form[String](() => (),
-        AttrField("offerId")
-    )
-    {
-        def act(offerId: String) {
-            logger.info("Declining " + offerId + "!!")
-        }
-    }
+    def render = "#yo" #> "no"
 }
 

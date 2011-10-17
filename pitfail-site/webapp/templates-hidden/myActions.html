@@ -3,7 +3,7 @@
 
     <h3>Make a Trade</h3>
     
-    <div class="lift:comet?type=BuyStock buyStock">
+    <lift:BuyStock>
         <h4>Buy stock:</h4>
         
         <table class="buyStock">
@@ -22,9 +22,9 @@
             <tr><td><input value="Buy" name="submit" type="submit"/></td></tr>
         </table>
         <p><span id="submitError" class="inputError"/></p>
-    </div>
+    </lift:BuyStock>
     
-    <div class="lift:comet?type=SellDerivative sellDerivative">
+    <lift:SellDerivative form="post">
         <h4>Sell derivative:</h4>
         
         <table class="sellDerivative">
@@ -92,8 +92,7 @@
                 </td>
             </tr>
         </table>
-    </div>
-    
+    </lift:SellDerivative>
     
 </lift:children>
 

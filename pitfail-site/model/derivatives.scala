@@ -56,7 +56,7 @@ case class SecSum(
 
 sealed abstract class Condition
 
-case class CondAlways() extends Condition
+case object CondAlways extends Condition
 
 case class CondGreater(
         a: ComparableSecurity,

@@ -1,6 +1,6 @@
 
 package code
-package comet
+package snippet
 
 import net.liftweb.{common, http, util}
 import common.{Loggable}
@@ -16,19 +16,18 @@ import scala.math.{BigDecimal}
 import lib.formats._
 import matteform._
 
-class BuyStock extends Refreshable with Loggable
+class BuyStock extends RenderableSnippet with Loggable
 {
-    object hub extends RefreshHub
-    def registerWith = hub
-    
-    override def render = form.render  _
+    def dispatch = {
+        case "render" => form.render _
+    }
     
     case class Order(
             ticker: String,
             volume: BigDecimal
         )
     
-    object form extends Form[Order](hub,
+    object form extends Form[Order](this,
         AggregateField(Order,
                 StringField("ticker", "")
             :^: NumberField("volume", "10.00")
@@ -38,8 +37,8 @@ class BuyStock extends Refreshable with Loggable
     {
         def act(order: Order) {
             userBuyStock(order.ticker, order.volume)
-            Portfolio ! Refresh
-            NewsHub ! Refresh
+            comet.Portfolio ! comet.Refresh
+            comet.News ! comet.Refresh
         }
     }
     

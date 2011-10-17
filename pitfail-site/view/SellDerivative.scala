@@ -1,6 +1,6 @@
 
 package code
-package comet
+package snippet
 
 import net.liftweb.{common, http, util}
 import common.{Loggable}
@@ -20,12 +20,11 @@ import view.UserField
 import model.derivatives._
 import model.Schema.User
 
-class SellDerivative extends Refreshable with Loggable
+class SellDerivative extends RenderableSnippet with Loggable
 {
-    object hub extends RefreshHub
-    def registerWith = hub
-    
-    override def render = form.render  _
+    def dispatch = {
+        case "render" => form.render _
+    }
     
     case class Order(
         to:         To,
@@ -41,7 +40,7 @@ class SellDerivative extends Refreshable with Loggable
     case class ToUser(user: User) extends To
     case object ToAuction extends To
     
-    object form extends Form[Order](hub,
+    object form extends Form[Order](this,
         AggregateField(Order,
                 CaseField[To]("to",
                     "user" -> AggregateField(ToUser,
@@ -50,7 +49,7 @@ class SellDerivative extends Refreshable with Loggable
                               ),
                     "auction" -> ConstField(ToAuction)
                 )
-            :^: ListField[Security]("securities", hub,
+            :^: ListField[Security]("securities", this,
                     AggregateField(makeSecStock _,
                             StringField("ticker", "")
                         :^: NumberField("shares", "1")
@@ -59,8 +58,8 @@ class SellDerivative extends Refreshable with Loggable
                 )
             :^: StringField("on", "February 42th")
             :^: CaseField[Condition]("cond",
-                    "always" -> ConstField(CondAlways()),
-                    "when"   -> ConstField(CondAlways())
+                    "always" -> ConstField(CondAlways),
+                    "when"   -> ConstField(CondAlways)
                 )
             :^: KNil
         )
@@ -68,7 +67,6 @@ class SellDerivative extends Refreshable with Loggable
     {
         override def act(order: Order) {
             userSellDerivative(order)
-            Offers ! Refresh
         }
     }
     

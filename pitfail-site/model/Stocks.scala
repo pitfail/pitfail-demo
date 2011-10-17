@@ -7,8 +7,6 @@ import scala.math.{BigDecimal}
 object Stocks {
     
     case class StockShares(val ticker: String, val shares: BigDecimal) {
-        assert(shares > 0)
-        
         def price: BigDecimal = stockPrice(ticker)
         def value: BigDecimal = price * shares
     }

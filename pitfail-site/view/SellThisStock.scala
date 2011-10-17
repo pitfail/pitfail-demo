@@ -2,8 +2,6 @@
 package code
 package snippet
 
-import code.comet._
-
 import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
@@ -14,23 +12,22 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import scala.math.{BigDecimal}
-import lib.formats._
 import matteform._
 
-object SellThisStock extends Loggable
+object SellThisStock extends RenderableSnippet with Loggable
 {
-    def render = form.render _
+    def dispatch = {
+        case "render" => form.render _
+    }
     
-    object form extends Form[String](() => (),
+    object form extends Form[String](this,
         AttrField("ticker")
     )
     {
         def act(ticker: String) {
             userSellStock(ticker)
-            
-            NewsHub   ! Refresh
-            Portfolio ! Refresh
+            comet.Portfolio ! comet.Refresh
+            comet.News ! comet.Refresh
         }
     }
     
