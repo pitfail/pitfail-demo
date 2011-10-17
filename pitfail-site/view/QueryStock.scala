@@ -85,16 +85,16 @@ class QueryStock extends RefreshableSnippet with Loggable
 
     def renderQuote(in: NodeSeq): NodeSeq = {
         (currentQuote match {
-            case Some(quote) => {
-                ( "#search-company *"  #> quote.company
+            case Some(quote) => (
+                  "#search-company *"  #> quote.company
                 & "#search-ticker *"   #> quote.stock.symbol
                 & "#search-price *"    #> quote.price.toString
-                & "#search-change *"   #> quote.info.percentChange.toString
-                & "#search-open *"     #> quote.info.openPrice.toString
-                & "#search-low *"      #> quote.info.lowPrice.toString
-                & "#search-high *"     #> quote.info.highPrice.toString
-                & "#search-dividend *" #> quote.info.dividendShare.toString)
-            }
+                & "#search-change *"   #> tryGetNumber(quote.info.percentChange)
+                & "#search-open *"     #> tryGetNumber(quote.info.openPrice)
+                & "#search-low *"      #> tryGetNumber(quote.info.lowPrice)
+                & "#search-high *"     #> tryGetNumber(quote.info.highPrice)
+                & "#search-dividend *" #> tryGetNumber(quote.info.dividendShare)
+            )
 
             case None =>
                 ("#search-quote" #> Nil)
@@ -106,15 +106,23 @@ class QueryStock extends RefreshableSnippet with Loggable
             "#search-list" #> Nil
         } else {
             ( "#search-list-row" #> (order map (_ match {
-                case (_, (quote, quantity)) => 
-                    ( ".search-list-ticker *"   #> quote.stock.symbol
+                case (_, (quote, quantity)) => (
+                      ".search-list-ticker *"   #> quote.stock.symbol
                     & ".search-list-company *"  #> quote.company
                     & ".search-list-price *"    #> ("$" + quote.price.toString)
                     & ".search-list-shares *"   #> quantity.toString
-                    & ".search-list-subtotal *" #> ("$" + (quote.price * quantity).toString))
+                    & ".search-list-subtotal *" #> ("$" + (quote.price * quantity).toString)
+                )
               }))
             & ".search-list-total *" #> ("$" + getTotalPrice(order.values).toString))
         })(in)
+    }
+
+    private def tryGetNumber(a: Option[BigDecimal]): String = {
+        a match {
+            case Some(number) => number.toString
+            case None         => "n/a"
+        }
     }
 
     private def getTotalPrice(quotes: Iterable[(Quote, BigDecimal)]): BigDecimal = {
