@@ -105,15 +105,22 @@ class QueryStock extends RefreshableSnippet with Loggable
         (if (order isEmpty) {
             "#search-list" #> Nil
         } else {
-            "#search-list-row" #> (order map (_ match {
+            ( "#search-list-row" #> (order map (_ match {
                 case (_, (quote, quantity)) => 
                     ( ".search-list-ticker *"   #> quote.stock.symbol
                     & ".search-list-company *"  #> quote.company
                     & ".search-list-price *"    #> ("$" + quote.price.toString)
                     & ".search-list-shares *"   #> quantity.toString
                     & ".search-list-subtotal *" #> ("$" + (quote.price * quantity).toString))
-            }))
+              }))
+            & ".search-list-total *" #> ("$" + getTotalPrice(order.values).toString))
         })(in)
+    }
+
+    private def getTotalPrice(quotes: Iterable[(Quote, BigDecimal)]): BigDecimal = {
+        (quotes map (_ match {
+            case (quote, quantity) => quote.price * quantity
+        })).reduceLeft[BigDecimal](_ + _)
     }
 }
 
