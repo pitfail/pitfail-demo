@@ -4,6 +4,7 @@
     <h3>Make a Trade</h3>
     
     <lift:BuyStock>
+    <div class="buyStock">
         <h4>Buy stock:</h4>
         
         <table class="buyStock">
@@ -22,9 +23,11 @@
             <tr><td><input value="Buy" name="submit" type="submit"/></td></tr>
         </table>
         <p><span id="submitError" class="inputError"/></p>
+    </div>
     </lift:BuyStock>
     
-    <lift:SellDerivative form="post">
+    <lift:SellDerivative>
+    <div class="sellDerivative">
         <h4>Sell derivative:</h4>
         
         <table class="sellDerivative">
@@ -92,6 +95,7 @@
                 </td>
             </tr>
         </table>
+    </div>
     </lift:SellDerivative>
     
 </lift:children>

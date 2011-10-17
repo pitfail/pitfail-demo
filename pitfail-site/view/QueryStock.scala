@@ -41,7 +41,7 @@ class QueryStock extends RefreshableSnippet with Loggable
                 StringField("query", "")
             :^: KNil
         ),
-        name = "submit-query"
+        formID = Some("search-query")
     )
     {
         override def act(stock: Stock) {
@@ -52,7 +52,7 @@ class QueryStock extends RefreshableSnippet with Loggable
 
     object quoteForm extends Form[BigDecimal](
         NumberField("quantity", "1"),
-        name = "submit-quote"
+        formID = Some("search-quote")
     )
     {
         override def act(quantity: BigDecimal) {
