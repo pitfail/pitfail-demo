@@ -1,18 +1,28 @@
-package com.github.pitfail
+package stockdata
 
 import org.joda.time.DateTime
 import scala.math.BigDecimal
 
-case class Stock(exchange: String, symbol: String) {
-  override val toString = "%s:%s".format(exchange, symbol)
+case class Stock(symbol: String) {
+  override val toString = symbol
 }
 
-case class Quote(stock: Stock, price: BigDecimal, updateTime: DateTime) {
+case class Quote(stock: Stock,
+                 exchange: String,
+                 company: String,
+                 price: BigDecimal,
+                 updateTime: DateTime,
+                 properties: Map[String, BigDecimal]) {
   override val toString = "%s=%s".format(stock.toString, price.toString)
 
+  // TODO: Need to put some thought into this...
   override def equals(that: Any): Boolean =
     that match {
-      case Quote(thatStock, thatPrice, _) => (stock == thatStock && price == thatPrice)
+      case Quote(thatStock, thatExchange, _, thatPrice, thatTime, _) => (
+           stock == thatStock
+        && exchange == thatExchange
+        && price == thatPrice
+        && updateTime == thatTime)
       case _ => false
     }
 }

@@ -1,20 +1,33 @@
-
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:lift="http://liftweb.net/">
-	<head>
-		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-		<meta name="description" content=""/>
-		<meta name="keywords" content=""/>
-
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
         <link rel="stylesheet" type="text/css" href="/static/css/structure.css"/>
         <link rel="stylesheet" type="text/css" href="/static/css/appearance.css"/>
-
-		<title>PitFail</title>
-		<script id="jquery" src="/classpath/jquery.js" type="text/javascript"></script>
-	</head>
+        <script id="jquery" src="/classpath/jquery.js" type="text/javascript"></script>
+        <title>PitFail</title>
+    </head>
     <body>
         <div id="header">
             <div id="header_container">
                 <h1>PitFail</h1>
+            </div>
+        </div>
+
+        <div id="query" class="lift:comet?type=QueryStock">
+            <div id="query-search">
+                <input type="text" name="query" value=""/>
+                <input type="submit" name="submit" value="Search"/>
+            </div>
+
+            <div id="query-quote">
+                <span id="search-quote"/>
+                <span id="search-change"/>
+                <input type="text" name="quantity" value="1"/>
+                <input type="submit" name="buy" value="Buy"/>
+                <input type="submit" name="add" value="Add"/>
+            </div>
+
+            <div id="query-derivative">
             </div>
         </div>
 
@@ -37,6 +50,6 @@
                 </div>
             </div>
         </div>
-	</body>
+    </body>
 </html>
 

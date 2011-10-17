@@ -1,12 +1,21 @@
-package com.github.pitfail
+package stockdata
 
 import java.io.IOException
 import java.net.URL
+
 import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+
 import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
 import scala.math.BigDecimal
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
+  private val dateTimeFormat = DateTimeFormat.forPattern("M/d/yyyy h:mma")
+  private val responseFields = List("Symbol", "StockExchange", "Ask",
+    "LastTradeDate", "LastTradeTime", "Name", "Open", "DaysHigh", "DaysLow",
+    "ChangeinPercent", "DividendShare"
+  )
+
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
     if (stocks.isEmpty) return Iterable()
 
@@ -42,16 +51,31 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
         else
           (root\"query"\"results"\"quote").children
 
-      (quoteElements map { (quoteElement) => {
-        val quoteExchange = (quoteElement\"StockExchange").extract[String]
-        val quoteSymbol = (quoteElement\"Symbol").extract[String]
-        val quotePrice = (quoteElement\"LastTradePriceOnly").extract[String]
-        val stock = Stock(quoteExchange, quoteSymbol)
-        (stock, Quote(stock, BigDecimal(quotePrice), now))
-      }}).toMap
+      (quoteElements map { (quoteElement) => (
+        Stock((quoteElement\"Symbol").extract[String]),
+        Quote(
+          stock      = Stock((quoteElement\"Symbol").extract[String]),
+          company    =(quoteElement\"Name").extract[String],
+          exchange   = (quoteElement\"StockExchange").extract[String],
+          price      = BigDecimal((quoteElement\"Ask").extract[String]),
+          updateTime = dateTimeFormat.parseDateTime(
+              (quoteElement\"LastTradeDate").extract[String]
+            + " "
+            + (quoteElement\"LastTradeTime").extract[String]
+          ),
+          properties = Map(
+            "Open"     -> BigDecimal((quoteElement\"Open").extract[String]),
+            "DaysHigh" -> BigDecimal((quoteElement\"DaysHigh").extract[String]),
+            "DaysLow"  -> BigDecimal((quoteElement\"DaysLow").extract[String]),
+            "PercentChange" -> BigDecimal((quoteElement\"ChangeinPercent")
+                                            .extract[String].stripSuffix("%")),
+            "DividendShare" -> BigDecimal((quoteElement\"DividendShare").extract[String])
+          )
+        )
+      )}).toMap
     } catch {
-      case ex: MappingException =>
-        throw new DatabaseException("Yahoo Finance returned JSON with unexpected structured.")
+      //case ex: MappingException =>
+      //  throw new DatabaseException("Yahoo Finance returned JSON with unexpected structure.")
 
       case ex: NumberFormatException =>
         throw new DatabaseException("Yahoo Finance returned an invalid stock price.")
@@ -66,9 +90,8 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
 
   // Restrict exchange and symbol to be alphabetic.
   private def buildYQL(symbols: Iterable[Stock]) = (
-    "SELECT StockExchange,Symbol,LastTradePriceOnly"
-      + " FROM yahoo.finance.quotes"
-      + " WHERE symbol in (" + (symbols map { "'%s'" format _.symbol }).mkString(",") + ")"
+    "SELECT " + responseFields.mkString(",") + " FROM yahoo.finance.quotes "
+      + "WHERE symbol in (" + (symbols map { "'%s'" format _.symbol }).mkString(",") + ")"
   )
 }
 

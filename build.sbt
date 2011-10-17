@@ -11,15 +11,21 @@ scalaSource in Compile <<= baseDirectory(identity)
 
 scalacOptions ++= Seq(
     "-deprecation",
-    "-unchecked"
+    "-unchecked",
+    "-explaintypes"
 )
 
 // For scalaz
 resolvers += "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
-  
+
 libraryDependencies ++= Seq(
     "joda-time" % "joda-time" % "2.0",
     "org.joda" % "joda-convert" % "1.0",
+    "net.databinder" % "dispatch-core_2.9.0-1"       % "0.8.5",
+    "net.databinder" % "dispatch-http-json_2.9.0-1"  % "0.8.5",
+    "net.databinder" % "dispatch-lift-json_2.9.0-1"  % "0.8.5",
+    "net.databinder" % "dispatch-oauth_2.9.0-1"      % "0.8.5",
+    "net.databinder" % "dispatch-nio_2.9.0-1"        % "0.8.5",
     "net.liftweb" % "lift-webkit_2.9.0" % "2.4-M3" % "compile->default",
     "net.liftweb" % "lift-openid_2.9.0" % "2.4-M3",
     "net.liftweb" % "lift-json-ext_2.9.0" % "2.4-M3",
