@@ -11,7 +11,7 @@ import scala.math.BigDecimal
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
   private val dateTimeFormat = DateTimeFormat.forPattern("M/d/yyyy h:mma")
-  private val responseFields = List("Symbol", "StockExchange", "AskRealtime",
+  private val responseFields = List("Symbol", "StockExchange", "LastTradePriceOnly",
     "LastTradeDate", "LastTradeTime", "Name", "Open", "DaysHigh", "DaysLow",
     "ChangeinPercent", "DividendShare"
   )
@@ -58,19 +58,20 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
           stock      = Stock((quoteElement\"Symbol").extract[String]),
           company    = (quoteElement\"Name").extract[String],
           exchange   = (quoteElement\"StockExchange").extract[String],
-          price      = BigDecimal((quoteElement\"AskRealtime").extract[String]),
+          price      = BigDecimal((quoteElement\"LastTradePriceOnly").extract[String]),
           updateTime = dateTimeFormat.parseDateTime(
               (quoteElement\"LastTradeDate").extract[String]
             + " "
             + (quoteElement\"LastTradeTime").extract[String]
           ),
           info = QuoteInfo(
+            // TODO: These may not always be available.
             percentChange = BigDecimal((quoteElement\"ChangeinPercent")
                                         .extract[String].stripSuffix("%")),
             dividendShare = BigDecimal((quoteElement\"DividendShare").extract[String]),
-            openPrice     = BigDecimal((quoteElement\"Open").extract[String]),
-            lowPrice      = BigDecimal((quoteElement\"DaysLow").extract[String]),
-            highPrice     = BigDecimal((quoteElement\"DaysHigh").extract[String])
+            openPrice     = BigDecimal("0"), //(quoteElement\"Open").extract[String]),
+            lowPrice      = BigDecimal("0"), //(quoteElement\"DaysLow").extract[String]),
+            highPrice     = BigDecimal("0")  //(quoteElement\"DaysHigh").extract[String])
           )
         )
       )}).toMap
