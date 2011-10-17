@@ -12,6 +12,8 @@ import JsCmds._
 import JE._
 import Helpers._
 
+import scala.collection.SortedMap
+import scala.collection.immutable.TreeMap
 import scala.math.{BigDecimal}
 import lib.formats._
 import matteform._
@@ -26,7 +28,8 @@ class QueryStock extends RefreshableSnippet with Loggable
 {
     private val stockDatabase: StockDatabase = new YahooStockDatabase(new HttpQueryService("GET"))
     private var currentQuote: Option[Quote] = None
-    private var order: List[(Quote, BigDecimal)]  = List()
+    private var order: SortedMap[String, (Quote, BigDecimal)] = TreeMap()
+
 
     def render(p: RefreshPoint)(in: NodeSeq) = (
            in
@@ -35,7 +38,7 @@ class QueryStock extends RefreshableSnippet with Loggable
         |> renderQuote _
         |> renderList _
     )
-    
+
     object queryForm extends Form[Stock](
         AggregateField(Stock,
                 StringField("query", "")
@@ -45,7 +48,6 @@ class QueryStock extends RefreshableSnippet with Loggable
     )
     {
         override def act(stock: Stock) {
-            logger.info("QUERY: " + stock)
             currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
         }
     }
@@ -57,11 +59,24 @@ class QueryStock extends RefreshableSnippet with Loggable
     {
         override def act(quantity: BigDecimal) {
             currentQuote match {
+                // User entered a value into the query field.
                 case Some(quote) => {
-                    order = order :+ (quote, quantity)
+                    order = (order get quote.stock.symbol) match {
+                        // Add more shares to an existing stock.
+                        case Some((oldQuote, oldQuantity)) => {
+                            order + ((quote.stock.symbol, (quote, oldQuantity + quantity)))
+                        }
+
+                        // Add a new stock.
+                        case None => {
+                            order + ((quote.stock.symbol, (quote, quantity)))
+                        }
+                    }
+
                     currentQuote = None
                 }
 
+                // This shouldn't be visible if the user didn't enter a value.
                 case None =>
                     throw BadInput("An unknown error has occurred.")
              } 
@@ -91,8 +106,8 @@ class QueryStock extends RefreshableSnippet with Loggable
             "#search-list" #> Nil
         } else {
             "#search-list-row" #> (order map (_ match {
-                case (quote, quantity) => 
-                    ( ".search-list-ticker *"   #> quote.symbol
+                case (_, (quote, quantity)) => 
+                    ( ".search-list-ticker *"   #> quote.stock.symbol
                     & ".search-list-company *"  #> quote.company
                     & ".search-list-price *"    #> ("$" + quote.price.toString)
                     & ".search-list-shares *"   #> quantity.toString
