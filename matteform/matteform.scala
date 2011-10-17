@@ -16,19 +16,19 @@ import scalaz.Scalaz._
 
 abstract class Form[A](
     field: Field[A],
-    name: String = "submit"
+    formID: Option[String] = None
     )
     extends Loggable
 {
     def act(result: A): Unit
     
-    val errors = new ErrorRenderable(name) {
+    val errors = new ErrorRenderable("submit") {
         def renderInner = same
     }
     
     def render(p: RefreshPoint)(in: NodeSeq): NodeSeq = {
         val rendering = (
-              ("name="+name) #> { submit =>
+              ("name=submit") #> { submit =>
                   val value = (submit\"@value").text
                   SHtml.ajaxSubmit(value, processAjax(p) _)
               }
@@ -36,7 +36,15 @@ abstract class Form[A](
             & errors.render
         )
         
-        in |> rendering |> SHtml.ajaxForm _
+        formID match {
+            case None =>
+                in |> rendering |> SHtml.ajaxForm _
+            case Some(formID) =>
+                val attack = ("#"+formID) #> { inIn =>
+                    inIn |> rendering |> SHtml.ajaxForm _
+                }
+                in |> attack
+        }
     }
         
     def processAjax(p: RefreshPoint)(): JsCmd = {

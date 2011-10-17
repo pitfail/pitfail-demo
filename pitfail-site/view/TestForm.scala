@@ -28,7 +28,7 @@ class TestForm extends RefreshableSnippet with Loggable {
     
     object inc extends Form[Unit](
         ConstField(()),
-        name = "inc"
+        formID = Some("inc")
     )
     {
         def act(u: Unit) {
@@ -38,7 +38,7 @@ class TestForm extends RefreshableSnippet with Loggable {
     
     object dec extends Form[Unit](
         ConstField(()),
-        name = "dec"
+        formID = Some("dec")
     )
     {
         def act(u: Unit) {
