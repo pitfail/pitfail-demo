@@ -11,7 +11,7 @@ import scala.math.BigDecimal
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
   private val dateTimeFormat = DateTimeFormat.forPattern("M/d/yyyy h:mma")
-  private val responseFields = List("Symbol", "StockExchange", "Ask",
+  private val responseFields = List("Symbol", "StockExchange", "AskRealtime",
     "LastTradeDate", "LastTradeTime", "Name", "Open", "DaysHigh", "DaysLow",
     "ChangeinPercent", "DividendShare"
   )
@@ -51,13 +51,14 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
         else
           (root\"query"\"results"\"quote").children
 
+      // DEVNOTE: Any fields referenced here must also be added to responseFields.
       (quoteElements map { (quoteElement) => (
         Stock((quoteElement\"Symbol").extract[String]),
         Quote(
           stock      = Stock((quoteElement\"Symbol").extract[String]),
           company    = (quoteElement\"Name").extract[String],
           exchange   = (quoteElement\"StockExchange").extract[String],
-          price      = BigDecimal((quoteElement\"Ask").extract[String]),
+          price      = BigDecimal((quoteElement\"AskRealtime").extract[String]),
           updateTime = dateTimeFormat.parseDateTime(
               (quoteElement\"LastTradeDate").extract[String]
             + " "
