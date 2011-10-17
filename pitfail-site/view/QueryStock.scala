@@ -2,6 +2,8 @@
 package code
 package snippet
 
+import java.math.{MathContext,RoundingMode}
+
 import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
@@ -24,12 +26,13 @@ import model.derivatives._
 import model.Schema.User
 import scalaz.Scalaz._
 
+import lib.formats._
+
 class QueryStock extends RefreshableSnippet with Loggable
 {
     private val stockDatabase: StockDatabase = new YahooStockDatabase(new HttpQueryService("GET"))
     private var currentQuote: Option[Quote] = None
     private var order: SortedMap[String, (Quote, BigDecimal)] = TreeMap()
-
 
     def render(p: RefreshPoint)(in: NodeSeq) = (
            in
@@ -48,7 +51,13 @@ class QueryStock extends RefreshableSnippet with Loggable
     )
     {
         override def act(stock: Stock) {
-            currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
+            // TODO: Handle errors.
+            try {
+                currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
+            } catch {
+                case _: NoSuchStockException => {
+                    print("ERROR: No Such Stock") }
+            }
         }
     }
 
@@ -72,7 +81,6 @@ class QueryStock extends RefreshableSnippet with Loggable
                             order + ((quote.stock.symbol, (quote, quantity)))
                         }
                     }
-
                     currentQuote = None
                 }
 
@@ -106,13 +114,15 @@ class QueryStock extends RefreshableSnippet with Loggable
             "#search-list" #> Nil
         } else {
             ( "#search-list-row" #> (order map (_ match {
-                case (_, (quote, quantity)) => (
-                      ".search-list-ticker *"   #> quote.stock.symbol
+                case (_, (quote, quantity)) => {
+                    // TODO: What if the user doesn't have enough money?
+                    val shares = BigDecimal((quantity / quote.price).toInt)
+                    ( ".search-list-ticker *"   #> quote.stock.symbol
                     & ".search-list-company *"  #> quote.company
-                    & ".search-list-price *"    #> ("$" + quote.price.toString)
-                    & ".search-list-shares *"   #> quantity.toString
-                    & ".search-list-subtotal *" #> ("$" + (quote.price * quantity).toString)
-                )
+                    & ".search-list-price *"    #> (quote.price toDollarString)
+                    & ".search-list-shares *"   #> shares.toString
+                    & ".search-list-subtotal *" #> ((shares * quote.price) toDollarString))
+                }
               }))
             & ".search-list-total *" #> ("$" + getTotalPrice(order.values).toString))
         })(in)
@@ -120,7 +130,7 @@ class QueryStock extends RefreshableSnippet with Loggable
 
     private def tryGetNumber(a: Option[BigDecimal]): String = {
         a match {
-            case Some(number) => number.toString
+            case Some(number) => number toDollarString
             case None         => "n/a"
         }
     }
