@@ -1,5 +1,5 @@
 package code
-package comet
+package snippet
 
 import net.liftweb.{common, http, util}
 import common.{Loggable}
@@ -20,16 +20,17 @@ import stockdata._
 import model.derivatives._
 import model.Schema.User
 
-class QueryStock extends Refreshable with Loggable
+class QueryStock extends RenderableSnippet with Loggable
 {
-    object hub extends RefreshHub
-    def registerWith = hub
+    private val stockDatabase: StockDatabase = new YahooStockDatabase(new HttpQueryService("GET"))
+    private var currentStock: Option[Stock] = None
+    private var pendingStocks: List[Stock]  = List()
 
-    val stockDatabase: StockDatabase = new YahooStockDatabase(new HttpQueryService("GET"))
-    private object currentStock extends SessionVar[Option[Stock]](None)
-    private object pendingStocks extends SessionVar[List[Stock]](List())
+    def dispatch = {
+        case "render" => form.render _
+    }
     
-    object form extends Form[Stock](hub,
+    object form extends Form[Stock](this,
         AggregateField(Stock,
                 StringField("query", "")
             :^: KNil
@@ -37,18 +38,22 @@ class QueryStock extends Refreshable with Loggable
     )
     {
         override def act(stock: Stock) {
-            currentStock(Some(stock))
-            hub ! Refresh
+            currentStock = Some(stock)
         }
     }
 
-    override def render = (doRender _) andThen (form.render _)
-    
-    def doRender(in: NodeSeq): NodeSeq = {
-        (currentStock.is match {
+    override def render(in: NodeSeq): NodeSeq = {
+        (currentStock match {
             case Some(stock) => {
                 val quote = stockDatabase.getQuotes(Iterable(stock)).head
-                ("#search-quote" #> quote.price.toString & "#search-change" #> "(-1%)")
+                ( "#search-company *"  #> quote.company
+                & "#search-ticker *"   #> quote.stock.symbol
+                & "#search-quote *"    #> quote.price.toString
+                & "#search-change *"   #> quote.info.percentChange.toString
+                & "#search-open *"     #> quote.info.openPrice.toString
+                & "#search-low *"      #> quote.info.lowPrice.toString
+                & "#search-high *"     #> quote.info.highPrice.toString
+                & "#search-dividend *" #> quote.info.dividendShare.toString)
             }
             case None => same
         })(in)

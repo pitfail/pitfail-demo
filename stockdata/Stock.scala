@@ -12,7 +12,7 @@ case class Quote(stock: Stock,
                  company: String,
                  price: BigDecimal,
                  updateTime: DateTime,
-                 properties: Map[String, BigDecimal]) {
+                 info: QuoteInfo) {
   override val toString = "%s=%s".format(stock.toString, price.toString)
 
   // TODO: Need to put some thought into this...
@@ -26,6 +26,12 @@ case class Quote(stock: Stock,
       case _ => false
     }
 }
+
+case class QuoteInfo(percentChange: BigDecimal,
+                     openPrice: BigDecimal,
+                     lowPrice: BigDecimal,
+                     highPrice: BigDecimal,
+                     dividendShare: BigDecimal)
 
 object Quote {
   implicit def quoteToStock(quote: Quote): Stock = quote.stock
