@@ -74,8 +74,8 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
         )
       )}).toMap
     } catch {
-      //case ex: MappingException =>
-      //  throw new DatabaseException("Yahoo Finance returned JSON with unexpected structure.")
+      case ex: MappingException =>
+        throw new DatabaseException("Yahoo Finance returned JSON with unexpected structure.")
 
       case ex: NumberFormatException =>
         throw new DatabaseException("Yahoo Finance returned an invalid stock price.")

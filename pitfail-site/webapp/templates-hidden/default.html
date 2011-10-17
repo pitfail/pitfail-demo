@@ -14,26 +14,28 @@
         </div>
 
         <lift:QueryStock>
-            <div id="query-search">
+            <div>
                 <input type="text" name="query" value=""/>
                 <input type="submit" name="submit" value="Search"/>
             </div>
 
-            <h2><span id="search-company"/> (<span id="search-ticker"/>)</h2>
-            <dl id="query-quote">
-                <dt>Quote</dt>          <dd id="search-quote"/>
-                <dt>Daily Change</dt>   <dd id="search-change"/>
-                <dt>Open</dt>           <dd id="search-open"/>
-                <dt>Low</dt>            <dd id="search-low"/>
-                <dt>High</dt>           <dd id="search-high"/>
-                <dt>Dividend Share</dt> <dd id="search-dividend"/>
-            </dl>
+            <div id="submitError"/>
 
-            <div id="query-buy">
+            <div id="search-quote">
+                <h2><span id="search-company"/> (<span id="search-ticker"/>)</h2>
+                <dl>
+                    <dt>Price</dt>          <dd id="search-price"/>
+                    <dt>Daily Change</dt>   <dd id="search-change"/>
+                    <dt>Open</dt>           <dd id="search-open"/>
+                    <dt>Low</dt>            <dd id="search-low"/>
+                    <dt>High</dt>           <dd id="search-high"/>
+                    <dt>Dividend Share</dt> <dd id="search-dividend"/>
+                </dl>
                 <input type="text" name="quantity" value="1"/>
-                <input type="submit" name="buy" value="Buy"/>
                 <input type="submit" name="add" value="Add"/>
             </div>
+
+            <ul id="search-list"/>
         </lift:QueryStock>
 
         <div id="body">

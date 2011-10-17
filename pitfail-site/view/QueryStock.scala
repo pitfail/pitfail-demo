@@ -45,17 +45,33 @@ class QueryStock extends RenderableSnippet with Loggable
     override def render(in: NodeSeq): NodeSeq = {
         (currentStock match {
             case Some(stock) => {
-                val quote = stockDatabase.getQuotes(Iterable(stock)).head
-                ( "#search-company *"  #> quote.company
-                & "#search-ticker *"   #> quote.stock.symbol
-                & "#search-quote *"    #> quote.price.toString
-                & "#search-change *"   #> quote.info.percentChange.toString
-                & "#search-open *"     #> quote.info.openPrice.toString
-                & "#search-low *"      #> quote.info.lowPrice.toString
-                & "#search-high *"     #> quote.info.highPrice.toString
-                & "#search-dividend *" #> quote.info.dividendShare.toString)
+                try {
+                    val quote = stockDatabase.getQuotes(Iterable(stock)).head
+                    ( "#search-company *"  #> quote.company
+                    & "#search-ticker *"   #> quote.stock.symbol
+                    & "#search-price *"    #> quote.price.toString
+                    & "#search-change *"   #> quote.info.percentChange.toString
+                    & "#search-open *"     #> quote.info.openPrice.toString
+                    & "#search-low *"      #> quote.info.lowPrice.toString
+                    & "#search-high *"     #> quote.info.highPrice.toString
+                    & "#search-dividend *" #> quote.info.dividendShare.toString
+                    & "#search-list"       #> Nil)
+                } catch {
+                    case e: DatabaseException =>
+                        throw BadInput("Unable to get an up-to-date stock quote. Please try again later.")
+
+                    case e: NoSuchStockException =>
+                        throw BadInput(e.toString)
+
+                    case _ =>
+                        throw BadInput("An unknown error has occurred.")
+                }
             }
-            case None => same
+
+            case None => {
+                ( "#search-quote" #> Nil
+                & "#search-list"  #> Nil)
+            }
         })(in)
     }
 }
