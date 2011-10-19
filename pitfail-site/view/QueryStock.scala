@@ -142,7 +142,7 @@ class QueryStock extends RefreshableSnippet with Loggable
 
     private def getTotalPrice(quotes: Iterable[(Quote, BigDecimal)]): BigDecimal = {
         (quotes map (_ match {
-            case (quote, quantity) => quote.price * quantity
+            case (quote, quantity) => BigDecimal((quantity / quote.price).toInt) * quote.price
         })).reduceLeft[BigDecimal](_ + _)
     }
 }
