@@ -53,10 +53,7 @@ class BuyStock extends RefreshableSnippet with Loggable
                 "You must buy more than $0.00 of a stock"
             )
             case NotEnoughCash(have, need) => throw BadInput(
-                "You need at least %s you only have %s" format (
-                    need toDollarString,
-                    have toDollarString
-                )
+                "You need at least %s you only have %s" format (need.$, have.$)
             )
             case NotLoggedIn =>
                 throw BadInput("You must be logged in to buy stock")

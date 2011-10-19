@@ -27,10 +27,15 @@ object AcceptOffer extends RefreshableSnippet with Loggable
         def act(offerID: String) {
             import control.LoginManager._
             import model.Schema._
+            import comet.Refresh
+            
+            logger.info("ACCEPTING OFFER " + offerID)
             
             try {
                 val user = control.LoginManager.currentUser
                 user.acceptOffer(offerID)
+                comet.Offers ! Refresh
+                comet.Portfolio ! Refresh
             }
             catch {
                 case NotLoggedIn =>

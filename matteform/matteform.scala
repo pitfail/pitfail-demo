@@ -32,7 +32,7 @@ abstract class Form[A](
                   val value = (submit\"@value").text
                   SHtml.ajaxSubmit(value, processAjax(p) _)
               }
-            & field.render
+            & field.render(p)
             & errors.render
         )
         
@@ -86,7 +86,7 @@ abstract class Field[+A](val name: String)
 {
     val errors = new ErrorRenderable(name)
     
-    def renderInner: CssBindFunc
+    def renderInner(p: RefreshPoint): CssBindFunc
     def produce(): FieldResult[A]
     def clearInner(): Unit
     
@@ -108,7 +108,7 @@ abstract class Field[+A](val name: String)
                 None
         }
     
-    def render = renderInner & errors.render
+    def render(p: RefreshPoint) = renderInner(p) & errors.render
 }
 
 trait RefreshableSnippet extends StatefulSnippet {

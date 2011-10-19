@@ -56,8 +56,9 @@ class Offers extends Refreshable with Loggable
         logger.info("Rendering offer " + li)
         
         ("*" #> (myOffers map ( o =>
-              "user=blank [user]" #> o.from.owner.username
-            & "#description" #> o.derivative.toHumanString
+              "user=blank [user]"    #> o.from.owner.username
+            & "#description"         #> o.derivative.toHumanString
+            & "name=offerID [value]" #> o.handle
         )))(li)
     }
 }

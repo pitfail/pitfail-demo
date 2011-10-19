@@ -19,6 +19,7 @@ object ClearDatabase
     def render =
         "type=submit" #> SHtml.onSubmitUnit({() =>
             model.Schema.clearDatabase()
+            S.redirectTo("/")
         })
 }
 

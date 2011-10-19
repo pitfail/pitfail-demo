@@ -35,7 +35,7 @@ class CaseField[+A](
 {
     var selected: Option[String] = None
     
-    def renderInner = {
+    def renderInner(p: RefreshPoint) = {
         val radios = SHtml.radio(
             cases.keys toList,
             selected,
@@ -45,7 +45,7 @@ class CaseField[+A](
         val stages = cases map { case (n, c) =>
             ("#"+name+"_"+"case_"+n) #> (
                   ("#"+n) #> radios(n)
-                & c.render
+                & c.render(p)
             )
         }
         
@@ -83,7 +83,9 @@ class AggregateField[+A, HL <: HList](
 {
     import AggregateField._
     
-    def renderInner = fields.toList.foldLeft(same)(_ & _.render)
+    def renderInner(p: RefreshPoint) =
+        fields.toList.foldLeft(same)(_ & _.render(p))
+    
     def produce() = {
         val inners = fields map mapProcess
         
@@ -132,15 +134,15 @@ class ListField[A](
 {
     val fields: ArrayBuffer[Field[A]] = ArrayBuffer()
     
-    def renderInner = (
+    def renderInner(p: RefreshPoint) = (
           ("#"+name) #> (fields.indices map ( i =>
                 "name=delete" #> { del =>
-                    SHtml.ajaxSubmit((del\"@value").text, deleteAjax(i) _)
+                    SHtml.ajaxSubmit((del\"@value").text, deleteAjax(i, p) _)
                 }
-              & fields(i).render
+              & fields(i).render(p)
           ))
         & ("name="+name+"Add") #> { add =>
-            SHtml.ajaxSubmit((add\"@value").text, addOneAjax _)
+            SHtml.ajaxSubmit((add\"@value").text, addOneAjax(p) _)
         }
     )
     def produce() =
@@ -158,18 +160,18 @@ class ListField[A](
         S.redirectTo(S.uri)
     }
     
-    def addOneAjax(): JsCmd = {
+    def addOneAjax(p: RefreshPoint)(): JsCmd = {
         addOne()
-        Noop
+        p.refreshCommand
     }
     
     def delete(i: Int) {
         fields.remove(i)
     }
     
-    def deleteAjax(i: Int)(): JsCmd = {
+    def deleteAjax(i: Int, p: RefreshPoint)(): JsCmd = {
         delete(i)
-        Noop
+        p.refreshCommand
     }
     
     def clearInner() { fields.clear() }
