@@ -109,3 +109,182 @@ div.sellDerivative {
     list-style-type: none;
 }
 
+
+
+
+
+
+/* foo */
+html {
+    font-family: sans-serif;
+}
+
+#search {
+    width: 770px;
+    margin: 0 auto;
+}
+
+/* Search */
+#search-query {
+    position: relative;
+    height: 55px;
+    margin-bottom: 0.4em;
+}
+
+#search-query input[type=text] {
+    position: absolute;
+    left:  0;
+    right: 50px;
+    padding: 4px;
+    height: 40px;
+    font-size: 1.5em;
+    border: 1px solid #333;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+#search-query input[type=submit] {
+    position: absolute;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background: #EEE;
+}
+
+/* */
+.block {
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 0.2em;
+    margin-top: 0.5em;
+}
+
+/* Quote */
+#search-quote {
+    position: relative;
+    padding: 0.2em;
+}
+
+.quote {
+    height: 110px;
+}
+
+.quote h2 {
+    width: 40%;
+    overflow: hidden;
+    margin-top:  0.5em;
+    margin-left: 0.2em;
+}
+
+.quote h2 .quote-ticker {
+    font-weight: bold;
+    font-size: 1.5em;
+}
+
+.quote h2 .quote-company {
+    font-size: 1.2em;
+}
+
+.quote h3 {
+    width: 40%;
+    margin-top: 0.5em;
+    margin-left: 0.2em;
+}
+
+.quote h3 .quote-price {
+    width: 40%;
+    overflow: hidden;
+    font-weight: bold;
+    font-size: 2.5em;
+}
+
+.quote h3 .quote-change {
+    font-size: 1.5em;
+    margin-left: 1em;
+}
+
+.quote dl {
+    position: absolute;
+    top: 0.2em;
+    left: 40%;
+    right: 245px;
+    padding: 0.5em 0;
+    font-size: 1.2em;
+}
+
+.quote dl dt {
+    width: 45%;
+    margin-right: 5%;
+    float: left;
+    text-align: right;
+}
+
+.quote dl dt:after {
+    content: ":";
+}
+
+.quote dl dl {
+    width: 50%;
+    float: left;
+}
+
+.quote img {
+    position: absolute;
+    top: 0.2em;
+    right: 0;
+}
+
+/* */
+table#search-list {
+    width: 100%;
+    padding: 0;
+    background: #EEE;
+    border: 1px solid #000;
+    border-collapse: separate;
+    border-radius: 6px;
+}
+
+table#search-list td {
+    padding: 0.3em;
+}
+
+table#search-list th {
+    font-weight: bold;
+    padding: 0.3em;
+}
+
+table#search-list thead th,
+table#search-list thead td {
+    text-align: center;
+    border-bottom: 1px solid #000;
+}
+
+table#search-list tbody {
+    background: #FFF;
+}
+
+table#search-list tfoot th,
+table#search-list tfoot td {
+    border-top: 1px solid #000;
+}
+
+table#search-list .search-list-ticker,
+table#search-list .search-list-company,
+table#search-list .search-list-price,
+table#search-list .search-list-shares,
+table tfoot th {
+    border-right: 1px solid #000;
+}
+
+table tfoot .search-list-total {
+    text-align: right;
+    border-right: 1px solid #000;
+    background: #FFF;
+}
+
+table .search-list-ticker   { text-align: left;   width: 10%; }
+table .search-list-company  { text-align: left;   width: 40%; }
+table .search-list-price    { text-align: right;  }
+table .search-list-shares   { text-align: center; }
+table .search-list-subtotal { text-align: right;  }
+table .search-list-buttons  { text-align: left;   width: 100px; }

@@ -63,7 +63,7 @@ class QueryStock extends RefreshableSnippet with Loggable
 
     object quoteForm extends Form[BigDecimal](
         NumberField("quantity", "1"),
-        formID = Some("search-quote")
+        formID = Some("search-buy")
     )
     {
         override def act(quantity: BigDecimal) {
@@ -94,24 +94,29 @@ class QueryStock extends RefreshableSnippet with Loggable
     def renderQuote(in: NodeSeq): NodeSeq = {
         (currentQuote match {
             case Some(quote) => (
-                  "#search-company *"  #> quote.company
-                & "#search-ticker *"   #> quote.stock.symbol
-                & "#search-price *"    #> quote.price.toString
-                & "#search-change *"   #> tryGetNumber(quote.info.percentChange)
-                & "#search-open *"     #> tryGetNumber(quote.info.openPrice)
-                & "#search-low *"      #> tryGetNumber(quote.info.lowPrice)
-                & "#search-high *"     #> tryGetNumber(quote.info.highPrice)
-                & "#search-dividend *" #> tryGetNumber(quote.info.dividendShare)
+                  ".quote-company *"    #> quote.company
+                & ".quote-ticker *"     #> quote.stock.symbol
+                & ".quote-price *"      #> quote.price.toString
+                & ".quote-change *"     #> tryGetNumber(quote.info.percentChange)
+                & ".quote-open *"       #> tryGetNumber(quote.info.openPrice)
+                & ".quote-low *"        #> tryGetNumber(quote.info.lowPrice)
+                & ".quote-high *"       #> tryGetNumber(quote.info.highPrice)
+                & ".quote-dividend *"   #> tryGetNumber(quote.info.dividendShare)
+                & ".quote-graph [src]"  #> "http://ichart.finance.yahoo.com/instrument/1.0/%s/chart;range=1d/image;size=239x110"
+                                             .format(quote.stock.symbol toLowerCase)
             )
 
             case None =>
-                ("#search-quote" #> Nil)
+                ( "#search-quote" #> Nil
+                & "#search-buy"   #> Nil)
+                //same
         })(in)
     }
 
     def renderList(in: NodeSeq): NodeSeq = {
         (if (order isEmpty) {
             "#search-list" #> Nil
+            //same
         } else {
             ( "#search-list-row" #> (order map (_ match {
                 case (_, (quote, quantity)) => {
@@ -119,9 +124,9 @@ class QueryStock extends RefreshableSnippet with Loggable
                     val shares = BigDecimal((quantity / quote.price).toInt)
                     ( ".search-list-ticker *"   #> quote.stock.symbol
                     & ".search-list-company *"  #> quote.company
-                    & ".search-list-price *"    #> (quote.price toDollarString)
+                    & ".search-list-price *"    #> (quote.price.$)
                     & ".search-list-shares *"   #> shares.toString
-                    & ".search-list-subtotal *" #> ((shares * quote.price) toDollarString))
+                    & ".search-list-subtotal *" #> ((shares * quote.price).$))
                 }
               }))
             & ".search-list-total *" #> ("$" + getTotalPrice(order.values).toString))
@@ -130,7 +135,7 @@ class QueryStock extends RefreshableSnippet with Loggable
 
     private def tryGetNumber(a: Option[BigDecimal]): String = {
         a match {
-            case Some(number) => number toDollarString
+            case Some(number) => number.$
             case None         => "n/a"
         }
     }
