@@ -31,9 +31,6 @@ class SellDerivative extends RefreshableSnippet with Loggable
         condition:  Condition
     )
     
-    def makeSecStock(t: String, s: BigDecimal) =
-        SecScale(SecStock(t), s)
-    
     abstract class To
     case class ToUser(user: User) extends To
     case object ToAuction extends To
@@ -48,7 +45,7 @@ class SellDerivative extends RefreshableSnippet with Loggable
                     "auction" -> ConstField(ToAuction)
                 )
             :^: ListField[Security]("securities", this,
-                    AggregateField(makeSecStock _,
+                    AggregateField(SecStock,
                             StringField("ticker", "")
                         :^: NumberField("shares", "1")
                         :^: KNil
@@ -64,7 +61,9 @@ class SellDerivative extends RefreshableSnippet with Loggable
     )
     {
         def act(order: Order) {
+            import comet._
             userSellDerivative(order)
+            Offers ! Refresh
         }
     }
     
@@ -75,7 +74,7 @@ class SellDerivative extends RefreshableSnippet with Loggable
         
         try {
             val deriv = Derivative(
-                SecSum(order.securities),
+                order.securities,
                 new DateTime, // TODO: Change this!
                 order.condition
             )

@@ -61,7 +61,8 @@ class HiddenField(
 {
     var text: Option[String] = None
     
-    def renderInner = ("#"+name) #> SHtml.onSubmit(t => text = Some(t))
+    def renderInner(p: RefreshPoint) =
+        ("#"+name) #> SHtml.onSubmit(t => text = Some(t))
     
     def produce() = text match {
         case Some(text) => OK(text)
@@ -84,7 +85,7 @@ class ConstField[+A](
     )
     extends Field[A]("noname")
 {
-    def renderInner = same
+    def renderInner(p: RefreshPoint) = same
     def produce() = OK(it)
     def clearInner() { }
 }
@@ -103,7 +104,7 @@ class AttrField(
 {
     var text: Option[String] = None
     
-    def renderInner =
+    def renderInner(p: RefreshPoint) =
         ("name="+name) #> { p =>
             val attr = {
                 try {
@@ -146,7 +147,7 @@ trait TextField
     
     var text: String = initText
     
-    def renderInner =
+    def renderInner(p: RefreshPoint) =
         ("name="+name) #> (
               "input [value]" #> text
             & "input"         #> SHtml.onSubmit(text = _)

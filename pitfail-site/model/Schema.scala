@@ -13,12 +13,12 @@ import squeryl.customtypes.{LongField}
 import squeryl.adapters.H2Adapter
 import squeryl.dsl._
 import squeryl.dsl.ast._
-import links.Sugar._
+import links._
 import java.sql.Timestamp
 import java.util.UUID
 
 import Stocks.{StockShares, stockPrice}
-import derivatives.{Derivative}
+import derivatives._
 
 object Schema extends squeryl.Schema {
     
@@ -63,7 +63,7 @@ object Schema extends squeryl.Schema {
                     portfolios insert port
                     
                     user.mainPortfolio = port
-                    users update user
+                    user.update()
                     
                     user
                     
@@ -134,14 +134,10 @@ object Schema extends squeryl.Schema {
         def buy(stock: StockShares): StockAsset = trans {
             if (cash < stock.price)
                 throw NotEnoughCash(cash, stock.price)
+            if (stock.shares < 0)
+                throw NegativeVolume
             
-            // Look to see if we can lump this in with an
-            // existing asset
-            val asset =
-                haveTicker(stock.ticker) match {
-                    case Some(asset) => asset
-                    case None        => makeTicker(stock.ticker)
-                }
+            val asset = stockAsset(stock.ticker)
             
             asset.shares += stock.shares
             cash -= stock.value
@@ -153,10 +149,19 @@ object Schema extends squeryl.Schema {
                 shares  = stock.shares,
                 price   = stock.price
             )
-            portfolios.update(this)
-            stockAssets.update(asset)
+            this.update()
+            asset.update()
             
             asset
+        }
+        
+        def stockAsset(ticker: String): StockAsset = trans {
+            // Look to see if we can lump this in with an
+            // existing asset
+            haveTicker(ticker) match {
+                case Some(asset) => asset
+                case None        => makeTicker(ticker)
+            }
         }
         
         def sell(stock: StockShares): Unit = trans {
@@ -172,9 +177,9 @@ object Schema extends squeryl.Schema {
             cash += stock.value
             asset.shares -= stock.shares
             if (asset.shares <= 0)
-                stockAssets.deleteWhere(a => a.id === asset.id)
+                asset.delete()
             else
-                stockAssets.update(asset)
+                asset.update()
             
             newsEvents insert NewsEvent(
                 action  = "sell",
@@ -183,7 +188,7 @@ object Schema extends squeryl.Schema {
                 shares  = stock.shares,
                 price   = stock.price
             )
-            portfolios.update(this)
+            this.update()
         }
         
         def sellAll(ticker: String): Unit = trans {
@@ -203,8 +208,8 @@ object Schema extends squeryl.Schema {
                 shares  = stock.shares,
                 price   = stock.price
             )
-            stockAssets.deleteWhere(a => a.id === asset.id)
-            portfolios.update(this)
+            asset.delete()
+            this.update()
         }
         
         def haveTicker(ticker: String): Option[StockAsset] =
@@ -259,6 +264,34 @@ object Schema extends squeryl.Schema {
             }
         
         def acceptOffer(offerID: String): Unit = trans {
+            val offer = findOffer(offerID)
+            val deriv = offer.derivative
+            
+            val liab =
+                DerivativeLiability(
+                    mode  = offer.mode,
+                    // TODO: This is obviously wrong
+                    exec  = now,
+                    owner = offer.from
+                )
+            liab.insert()
+            
+            val asset =
+                DerivativeAsset(
+                    peer  = liab,
+                    scale = BigDecimal("1.0"),
+                    owner = this
+                )
+            asset.insert()
+            offer.delete()
+        }
+        
+        def declineOffer(offerID: String): Unit = trans {
+            val offer = findOffer(offerID)
+            offer.delete()
+        }
+        
+        def findOffer(offerID: String): DerivativeOffer = trans {
             val offerOption =
                 from(derivativeOffers) (o =>
                     where(
@@ -268,26 +301,142 @@ object Schema extends squeryl.Schema {
                     select(o)
                 ) headOption
             
-            val offer =
-                offerOption match {
-                    case Some(o) => o
-                    case None    => throw OfferExpired
-                }
-            val deriv = offer.derivative
-            
-            val asset =
-                DerivativeAsset(
-                    name  = UUID.randomUUID.toString.substring(0, 5),
-                    mode  = offer.mode,
-                    // TODO: This is obviously wrong.
-                    exec  =  now,
-                    peer  = offer.from,
-                    owner = this
-                )
-            derivativeAssets.insert(asset)
+            offerOption match {
+                case Some(o) => o
+                case None    => throw OfferExpired
+            }
         }
         
-        def declineOffer(offerID: String): Unit = trans {
+        def take(sec: Security, peer: Portfolio): Unit = trans {
+            sec match {
+                case SecDollar(amt) =>
+                    if (amt > 0) takeCash(amt, peer)
+                    else peer.takeCash(amt, this)
+                    
+                case SecStock(ticker, shares) =>
+                    if (shares > 0) takeStock(ticker, shares, peer)
+                    else peer.takeStock(ticker, shares, this)
+                
+                case SecDerivative(name, scale) =>
+                    if (scale > 0) takeDerivative(name, scale, peer)
+                    else peer.takeDerivative(name, scale, this)
+            }
+        }
+        
+        def takeCash(amt: Dollars, peer: Portfolio): Unit = trans {
+            cash += peer.loseCash(amt)
+            this.update()
+        }
+        
+        def loseCash(amt: Dollars): Dollars = trans {
+            val (actual, nextCash) =
+                if (amt > cash) (cash, BigDecimal("0"))
+                else (amt, cash - amt)
+            
+            cash = nextCash
+            this.update()
+            
+            actual
+        }
+        
+        def takeStock(ticker: String, shares: BigDecimal, peer: Portfolio): Unit = trans {
+            val actual = peer.loseStock(ticker, shares)
+            val asset = stockAsset(ticker)
+            
+            asset.shares += actual
+            asset.update()
+        }
+        
+        def loseStock(ticker: String, shares: BigDecimal): BigDecimal = trans {
+            var leftover: BigDecimal = shares
+            
+            haveTicker(ticker) match {
+                case None =>
+                case Some(asset) =>
+                    if (asset.shares > leftover) {
+                        asset.shares -= leftover
+                        leftover = 0
+                        asset.update()
+                    }
+                    else {
+                        leftover -= asset.shares
+                        asset.delete()
+                    }
+            }
+            
+            if (leftover > 0) {
+                val price = stockPrice(ticker)
+                val sharesFromCash = cash / price
+                if (sharesFromCash > leftover) {
+                    cash -= leftover / price
+                    leftover = 0
+                }
+                else {
+                    cash = 0
+                    leftover -= sharesFromCash
+                }
+                this.update()
+            }
+            
+            return shares - leftover
+        }
+        
+        def takeDerivative(name: String, scale: BigDecimal, from: Portfolio):
+            Unit =
+        trans {
+            val actuals = from.loseDerivative(name, scale)
+            for (
+                (liability, scale) <- actuals
+            ) {
+                val asset = DerivativeAsset(
+                    peer  = liability,
+                    scale = scale,
+                    owner = this
+                )
+                asset.insert()
+            }
+        }
+        
+        def loseDerivative(name: String, scale: BigDecimal):
+            Seq[(DerivativeLiability, BigDecimal)] =
+        trans {
+            val origLiab = DerivativeLiability.byName(name) getOrElse {
+                // TODO: We need to do this just a little bit better......
+                throw new IllegalStateException("The derivative vanished...")
+            }
+            val myAsset = DerivativeAsset.byPeer(origLiab, this)
+            
+            myAsset match {
+                case None =>
+                    val newLiab = replicateLiability(origLiab, scale)
+                    (newLiab, BigDecimal("1.0")) :: Nil
+                    
+                case Some(myAsset) =>
+                    if (myAsset.scale >= scale) {
+                        myAsset.scale -= scale
+                        myAsset.update()
+                        (origLiab, scale) :: Nil
+                    }
+                    else {
+                        val newLiab = replicateLiability(origLiab, scale - myAsset.scale)
+                        myAsset.delete()
+                        (origLiab, myAsset.scale) :: (newLiab, BigDecimal("1.0")) :: Nil
+                    }
+            }
+        }
+        
+        def replicateLiability(liab: DerivativeLiability, scale: BigDecimal):
+            DerivativeLiability =
+        trans {
+            val newMode = (liab.derivative * scale).serialize
+            val newLiab = DerivativeLiability(
+                mode  = newMode,
+                exec  = liab.exec,
+                owner = this
+            )
+            newLiab.insert()
+            
+            newLiab
         }
     }
 
@@ -301,25 +450,55 @@ object Schema extends squeryl.Schema {
     
     case class DerivativeAsset(
         var id:    Long            = 0,
-        var name:  String          = "",
-        var mode:  Array[Byte]     = Array(),
-        var exec:  Timestamp       = now,
-        var peer:  Link[Portfolio] = 0,
+        var peer:  Link[DerivativeLiability] = 0,
+        var scale: BigDecimal      = 0,
         var owner: Link[Portfolio] = 0
         )
         extends KL
     {
-        def derivative: Derivative = Derivative.deserialize(mode)
+        def derivative: Derivative = trans {
+            peer.derivative * scale
+        }
+    }
+    object DerivativeAsset {
+        def byPeer(liab: DerivativeLiability,  owner: Portfolio): Option[DerivativeAsset] =
+        trans {
+            val allAssets = from(derivativeAssets)(da =>
+                where(
+                         da.peer  === liab
+                    and  da.owner === owner
+                )
+                select(da)
+            ) toList
+        
+            // TODO: If there are duplicate derivative assets, now is a really good
+            // time to clean them up!
+            allAssets headOption
+        }
     }
     
     case class DerivativeLiability(
         var id:    Long            = 0,
+        var name:  String          = UUID.randomUUID.toString.substring(0, 5),
         var mode:  Array[Byte]     = Array(),
+        var exec:  Timestamp       = now,
         var owner: Link[Portfolio] = 0
         )
         extends KL
     {
-        def derivative: Derivative = Derivative.deserialize(mode)
+        def derivative: Derivative = trans {
+            Derivative.deserialize(mode)
+        }
+    }
+    object DerivativeLiability {
+        def byName(name: String): Option[DerivativeLiability] = trans {
+            from(derivativeLiabilities)(dl =>
+                where(
+                    dl.name === name
+                )
+                select(dl)
+            ) headOption
+        }
     }
     
     case class DerivativeOffer(
@@ -333,6 +512,15 @@ object Schema extends squeryl.Schema {
         extends KL
     {
         def derivative: Derivative = Derivative.deserialize(mode)
+        
+        def execute(): Unit = trans {
+            val deriv = derivative
+            val secs  = deriv.securities
+            
+            for (sec <- secs) {
+                to.take(sec, from)
+            }
+        }
     }
         
     case class NewsEvent(

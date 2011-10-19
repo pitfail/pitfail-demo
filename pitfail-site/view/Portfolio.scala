@@ -15,10 +15,8 @@ import Helpers._
 import control.LoginManager
 import lib.formats._
 
-import model.{Schema}
-import Schema.{User, StockAsset, DerivativeAsset, byUsername}
+import model.Schema._
 import LoginManager.{currentLogin}
-import org.squeryl.PrimitiveTypeMode.inTransaction
 
 class Portfolio extends Refreshable with Loggable
 {
@@ -28,8 +26,9 @@ class Portfolio extends Refreshable with Loggable
     var myStockAssets: Seq[StockAsset] = Nil
     var myCashAmount: BigDecimal = BigDecimal("0.00")
     var myDerivativeAssets: Seq[DerivativeAsset] = Nil
+    var myDerivativeLiabilities: Seq[DerivativeLiability] = Nil
     
-    override def refresh(): Unit = inTransaction {
+    override def refresh(): Unit = trans {
         for {
             name <- currentLogin
             user <- byUsername(name)
@@ -51,12 +50,12 @@ class Portfolio extends Refreshable with Loggable
         & ifNoDerivativeAssets
     )
     
-    private def cash = "#cash *" #> (myCashAmount toDollarString)
+    private def cash = "#cash *" #> (myCashAmount.$)
     
     private def stocks =
         "#stock *" #> (myStockAssets map ( a =>
               "#ticker *" #> a.ticker
-            & "#volume *" #> (stockVolume(a) toDollarString)
+            & "#volume *" #> (stockVolume(a).$)
             & "name=ticker [value]" #> a.ticker
         ))
     
@@ -64,10 +63,10 @@ class Portfolio extends Refreshable with Loggable
         "#derivativeAsset" #> (myDerivativeAssets map {a =>
             val deriv = a.derivative
             (
-                  "#securities *" #> (deriv.security toHumanString)
-                & "#exec *"       #> (deriv.exec toString())
+                  "#securities *" #> (deriv.securities toHumanString)
+                & "#exec *"       #> (deriv.exec toNearbyString)
                 & "#condition *"  #> (deriv.condition toHumanString)
-                & "#peer *"       #> ("user= [user]" #> a.peer.owner.username)
+                & "#peer *"       #> ("user=blank [user]" #> a.peer.owner.owner.username)
             )
         })
     

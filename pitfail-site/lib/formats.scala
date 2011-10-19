@@ -6,31 +6,45 @@ package object formats {
 
 import model.derivatives._
 import scala.math.{BigDecimal}
+import org.joda.time.{DateTime}
+
+// -----------------------------------------------
+// Time
+
+case class DateTimeFormatted(d: DateTime) {
+    // TODO: This should adapt better
+    def toNearbyString: String = d toString "M/d"
+}
+implicit def dateTimeFormatted(d: DateTime) = DateTimeFormatted(d)
 
 // -----------------------------------------------
 // Money
 
-class BigDecimalFormatted(b: BigDecimal) {
-    
-    def toDollarString: String =
-        "$%.2f" format (b doubleValue)
+case class BigDecimalFormatted(b: BigDecimal) {
+    def $: String = "$%.2f" format (b doubleValue)
+    def %(): String = "%.0f%%" format (b.doubleValue * 100)
+    def ###(): String = "%.0f" format (b doubleValue)
 }
-implicit def bigDecimalFormatted(b: BigDecimal): BigDecimalFormatted
-    = new BigDecimalFormatted(b)
+implicit def bigDecimalFormatted(b: BigDecimal) = BigDecimalFormatted(b)
     
 // -----------------------------------------------
 // Derivatives
+
+case class FormattedSecurities(
+    securities: Seq[Security]
+) {
+    def toHumanString: String = securities map (_.toHumanString) mkString " + "
+}
+implicit def securitiesFormatted(ss: Seq[Security]): FormattedSecurities
+    = FormattedSecurities(ss)
 
 case class FormattedSecurity(
     security: Security
 ) {
     def toHumanString: String = security match {
-        case SecDollar(amount)      => amount toDollarString
-        case SecStock(ticker)       => ticker
-        case SecDerivative(name)    => "[%s]" format name
-        case SecScale(sec, scale)   => "%s * (%s)" format (scale toString, sec toHumanString)
-        case SecSum(children)       =>
-            children map (_ toHumanString) map ("%s" format _) mkString " + "
+        case SecDollar(amount)          => amount.$
+        case SecStock(ticker, shares)   => "%s shares of %s" format (shares.###(), ticker)
+        case SecDerivative(name, scale) => "[%s %s]" format (scale.%(), name)
     }
 }
 implicit def securityFormatted(s: Security): FormattedSecurity
@@ -49,8 +63,8 @@ case class FormattedDerivative(
 ) {
     def toHumanString: String =
         "%s on %s if %s" format (
-            deriv.security toHumanString,
-            deriv.exec,
+            deriv.securities toHumanString,
+            deriv.exec toNearbyString,
             deriv.condition toHumanString
         )
 }

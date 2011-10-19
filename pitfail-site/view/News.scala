@@ -36,13 +36,13 @@ class News extends Refreshable
                       "choice=blank [choice]" #> "buy"
                     & "user=blank [user]" #> ev.subject.username
                     & "#ticker *" #> ev.ticker
-                    & "#volume *" #> (ev.price toDollarString)
+                    & "#volume *" #> (ev.price.$)
                 )
                 case "sell" => (
                       "choice=blank [choice]" #> "sell"
                     & "user=blank [user]" #> ev.subject.username
                     & "#ticker *" #> ev.ticker
-                    & "#volume *" #> (ev.price toDollarString)
+                    & "#volume *" #> (ev.price.$)
                 )
             }
         }

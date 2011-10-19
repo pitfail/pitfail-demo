@@ -15,11 +15,15 @@ import net.liftweb.common.Loggable
 // The data types
 
 case class Derivative(
-    security:  Security,
-    exec:      DateTime,
-    condition: Condition
+    securities: Seq[Security],
+    exec:       DateTime,
+    condition:  Condition
 ) {
     def serialize: Array[Byte] = serialization.serialize(this)
+    
+    def *(scale: BigDecimal): Derivative = this.copy(
+        securities = securities map (_ * scale)
+    )
 }
 
 object Derivative extends Loggable {
@@ -29,28 +33,32 @@ object Derivative extends Loggable {
 
 // -------------------------------------------
 
-sealed abstract class Security
+sealed abstract class Security {
+    def *(scale: BigDecimal): Security
+}
 
 case class SecDollar(
         amount: BigDecimal
     ) extends Security
+{
+    def *(scale: BigDecimal) = SecDollar(amount * scale)
+}
 
 case class SecStock(
-        ticker: String
+        ticker: String,
+        shares: BigDecimal
     ) extends Security
+{
+    def *(scale: BigDecimal) = SecStock(ticker, shares*scale)
+}
 
 case class SecDerivative(
-        name: String
+        name:  String,
+        scale: BigDecimal
     ) extends Security
-
-case class SecScale(
-        security: Security,
-        scale:    BigDecimal
-    ) extends Security
-
-case class SecSum(
-        securities: Seq[Security]
-    ) extends Security
+{
+    def *(nextScale: BigDecimal) = SecDerivative(name, scale*nextScale)
+}
 
 // -------------------------------------------
 
