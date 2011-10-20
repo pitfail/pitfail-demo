@@ -7,7 +7,17 @@ scalaVersion := "2.9.1"
 // not very useful. Defaults to Info.
 // logLevel := Level.Debug
 
-scalaSource in Compile <<= baseDirectory(identity)
+scalaSource in Compile <<= baseDirectory
+
+scalaSource in Test    <<= baseDirectory
+
+sourceDirectories in Compile ~= { srcDirs => srcDirs filter(!_.getAbsolutePath.endsWith("src/main/java")) }
+
+// Only issue with the following is if you place the project directory inside a directory named 'test'.
+
+includeFilter in Compile in unmanagedSources ~= { ff => ff && new SimpleFileFilter(
+		!_.getAbsolutePath.contains(File.pathSeperator + "test" + File.pathSeperator)
+	) }
 
 scalacOptions ++= Seq(
     "-deprecation",
