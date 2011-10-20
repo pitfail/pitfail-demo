@@ -109,26 +109,27 @@ div.sellDerivative {
     list-style-type: none;
 }
 
-
-
-
-
-
 /* foo */
 html {
     font-family: sans-serif;
 }
 
-#search {
+.container {
     width: 770px;
     margin: 0 auto;
+}
+
+/* Header */
+h1 {
+    /* TODO: Shouldn't need !important here. */
+    font-size: 3em !important;
+    margin-bottom: 1em;
 }
 
 /* Search */
 #search-query {
     position: relative;
-    height: 55px;
-    margin-bottom: 0.4em;
+    height: 52px;
 }
 
 #search-query input[type=text] {
@@ -234,7 +235,7 @@ html {
     right: 0;
 }
 
-/* */
+/* List in Derivative Builder */
 table#search-list {
     width: 100%;
     padding: 0;

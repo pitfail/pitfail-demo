@@ -96,12 +96,12 @@ class QueryStock extends RefreshableSnippet with Loggable
             case Some(quote) => (
                   ".quote-company *"    #> quote.company
                 & ".quote-ticker *"     #> quote.stock.symbol
-                & ".quote-price *"      #> quote.price.toString
-                & ".quote-change *"     #> tryGetNumber(quote.info.percentChange)
-                & ".quote-open *"       #> tryGetNumber(quote.info.openPrice)
-                & ".quote-low *"        #> tryGetNumber(quote.info.lowPrice)
-                & ".quote-high *"       #> tryGetNumber(quote.info.highPrice)
-                & ".quote-dividend *"   #> tryGetNumber(quote.info.dividendShare)
+                & ".quote-price *"      #> quote.price.$
+                & ".quote-change *"     #> (tryGetNumber(quote.info.percentChange) + "%")
+                & ".quote-open *"       #> tryGetPrice(quote.info.openPrice)
+                & ".quote-low *"        #> tryGetPrice(quote.info.lowPrice)
+                & ".quote-high *"       #> tryGetPrice(quote.info.highPrice)
+                & ".quote-dividend *"   #> tryGetPrice(quote.info.dividendShare)
                 & ".quote-graph [src]"  #> "http://ichart.finance.yahoo.com/instrument/1.0/%s/chart;range=1d/image;size=239x110"
                                              .format(quote.stock.symbol toLowerCase)
             )
@@ -124,7 +124,7 @@ class QueryStock extends RefreshableSnippet with Loggable
                     val shares = BigDecimal((quantity / quote.price).toInt)
                     ( ".search-list-ticker *"   #> quote.stock.symbol
                     & ".search-list-company *"  #> quote.company
-                    & ".search-list-price *"    #> (quote.price.$)
+                    & ".search-list-price *"    #> quote.price.$
                     & ".search-list-shares *"   #> shares.toString
                     & ".search-list-subtotal *" #> ((shares * quote.price).$))
                 }
@@ -134,6 +134,13 @@ class QueryStock extends RefreshableSnippet with Loggable
     }
 
     private def tryGetNumber(a: Option[BigDecimal]): String = {
+        a match {
+            case Some(number) => number.toString
+            case None         => "n/a"
+        }
+    }
+
+    private def tryGetPrice(a: Option[BigDecimal]): String = {
         a match {
             case Some(number) => number.$
             case None         => "n/a"
