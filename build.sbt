@@ -12,7 +12,8 @@ scalaSource in Compile <<= baseDirectory(identity)
 scalacOptions ++= Seq(
     "-deprecation",
     "-unchecked",
-    "-explaintypes"
+    "-explaintypes",
+    "-Xlog-implicits"
 )
 
 // For scalaz
