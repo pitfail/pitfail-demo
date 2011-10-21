@@ -25,6 +25,10 @@ abstract class Form[A](
     val errors = new ErrorRenderable("submit") {
         def renderInner = same
     }
+
+    def processField: Option[A] = {
+        field.process
+    }
     
     def render(p: RefreshPoint)(in: NodeSeq): NodeSeq = {
         val rendering = (
