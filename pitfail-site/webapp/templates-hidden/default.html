@@ -1,6 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:lift="http://liftweb.net/">
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css"/>
         <link rel="stylesheet" type="text/css" href="/static/css/structure.css"/>
         <link rel="stylesheet" type="text/css" href="/static/css/appearance.css"/>
         <script id="jquery" src="/classpath/jquery.js" type="text/javascript"></script>
@@ -14,44 +15,61 @@
         </div>
 
         <lift:QueryStock>
-            <div id="search-query">
-                <input type="text" name="query" value=""/>
-                <input type="submit" name="submit" value="Search"/>
+            <div id="search">
+                <div id="search-query">
+                    <input type="text" name="query" id="search-query-field" value=""/>
+                    <input type="submit" name="submit" value="Search"/>
+                </div>
+
+                <div id="search-quote" class="quote block">
+                    <h2><span class="quote-ticker"/> - <span class="quote-company"/></h2>
+                    <h3><span class="quote-price"/> <span class="quote-change"/></h3>
+                    <dl>
+                        <dt>Open</dt>     <dd class="quote-open"/>
+                        <dt>Low</dt>      <dd class="quote-low"/>
+                        <dt>High</dt>     <dd class="quote-high"/>
+                        <dt>Dividend</dt> <dd class="quote-dividend"/>
+                    </dl>
+                    <img class="quote-graph" alt="stock price over time"/>
+                </div>
+
+                <div id="search-buy" class="block">
+                    $<input type="text" name="quantity" value="0.00"/>
+                    <input type="submit" name="submit" value="Buy Shares"/>
+                    <input type="submit" name="submit" value="Add to Derivative"/>
+                </div>
+
+                <table id="search-list" class="block">
+                    <thead>
+                        <tr>
+                            <th class="search-list-ticker">Ticker</th>
+                            <th class="search-list-company">Company</th>
+                            <th class="search-list-price">Price</th>
+                            <th class="search-list-shares">Shares</th>
+                            <th class="search-list-subtotal">Subtotal</th>
+                            <th class="search-list-buttons"/>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="search-list-row">
+                            <td class="search-list-ticker"/>
+                            <td class="search-list-company"/>
+                            <td class="search-list-price"/>
+                            <td class="search-list-shares"/>
+                            <td class="search-list-subtotal"/>
+                            <td class="search-list-buttons"><input type="submit" value="Remove" class="search-list-remove"/></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4">Total</th>
+                            <td class="search-list-total"/>
+                            <td class="search-list-buttons"/>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
 
-            <div id="submitError"/>
-
-            <div id="search-quote">
-                <h2><span id="search-company"/> (<span id="search-ticker"/>)</h2>
-                <dl>
-                    <dt>Price</dt>          <dd id="search-price"/>
-                    <dt>Daily Change</dt>   <dd id="search-change"/>
-                    <dt>Open</dt>           <dd id="search-open"/>
-                    <dt>Low</dt>            <dd id="search-low"/>
-                    <dt>High</dt>           <dd id="search-high"/>
-                    <dt>Dividend Share</dt> <dd id="search-dividend"/>
-                </dl>
-                <input type="text" name="quantity" value="1"/>
-                <input type="submit" name="submit" value="Add"/>
-            </div>
-
-            <table id="search-list">
-                <thead>
-                    <tr><th>Ticker</th><th>Company</th><th>Price</th><th>Shares</th><th>Subtotal</th></tr>
-                </thead>
-                <tbody>
-                    <tr id="search-list-row">
-                        <td class="search-list-ticker"/>
-                        <td class="search-list-company"/>
-                        <td class="search-list-price"/>
-                        <td class="search-list-shares"/>
-                        <td class="search-list-subtotal"/>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr><td colspan="4">Total</td><td id="search-list-total"/></tr>
-                </tfoot>
-            </table>
         </lift:QueryStock>
 
         <div id="body">

@@ -5,13 +5,15 @@ import java.net.URL
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import net.liftweb.json.JsonAST.JValue
 
 import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
 import scala.math.BigDecimal
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
+  private implicit val formats = DefaultFormats
   private val dateTimeFormat = DateTimeFormat.forPattern("M/d/yyyy h:mma")
-  private val responseFields = List("Symbol", "StockExchange", "AskRealtime",
+  private val responseFields = List("Symbol", "StockExchange", "LastTradePriceOnly",
     "LastTradeDate", "LastTradeTime", "Name", "Open", "DaysHigh", "DaysLow",
     "ChangeinPercent", "DividendShare"
   )
@@ -34,7 +36,6 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
         throw new DatabaseException("Yahoo Finance query failed.")
     }
 
-    implicit val formats = DefaultFormats
     val root = try {
       JsonParser.parse(response)
     } catch {
@@ -58,19 +59,19 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
           stock      = Stock((quoteElement\"Symbol").extract[String]),
           company    = (quoteElement\"Name").extract[String],
           exchange   = (quoteElement\"StockExchange").extract[String],
-          price      = BigDecimal((quoteElement\"AskRealtime").extract[String]),
+          price      = BigDecimal((quoteElement\"LastTradePriceOnly").extract[String]),
           updateTime = dateTimeFormat.parseDateTime(
               (quoteElement\"LastTradeDate").extract[String]
             + " "
             + (quoteElement\"LastTradeTime").extract[String]
           ),
           info = QuoteInfo(
-            percentChange = BigDecimal((quoteElement\"ChangeinPercent")
-                                        .extract[String].stripSuffix("%")),
-            dividendShare = BigDecimal((quoteElement\"DividendShare").extract[String]),
-            openPrice     = BigDecimal((quoteElement\"Open").extract[String]),
-            lowPrice      = BigDecimal((quoteElement\"DaysLow").extract[String]),
-            highPrice     = BigDecimal((quoteElement\"DaysHigh").extract[String])
+            percentChange = Some(BigDecimal((quoteElement\"ChangeinPercent")
+                                        .extract[String].stripSuffix("%"))),
+            dividendShare = tryExtractNumber(quoteElement\"DividendShare"),
+            openPrice     = tryExtractNumber(quoteElement\"Open"),
+            lowPrice      = tryExtractNumber(quoteElement\"DaysLow"),
+            highPrice     = tryExtractNumber(quoteElement\"DaysHigh")
           )
         )
       )}).toMap
@@ -87,6 +88,14 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
         case Some(quote: Quote) => quote
         case None => throw new NoSuchStockException(stock)
     }}}
+  }
+
+  private def tryExtractNumber(field: JValue): Option[BigDecimal] = {
+    try {
+      Some(BigDecimal(field.extract[String]))
+    } catch {
+      case _ => None
+    }
   }
 
   // Restrict exchange and symbol to be alphabetic.

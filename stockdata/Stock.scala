@@ -27,11 +27,11 @@ case class Quote(stock: Stock,
     }
 }
 
-case class QuoteInfo(percentChange: BigDecimal,
-                     openPrice: BigDecimal,
-                     lowPrice: BigDecimal,
-                     highPrice: BigDecimal,
-                     dividendShare: BigDecimal)
+case class QuoteInfo(percentChange: Option[BigDecimal],
+                     openPrice: Option[BigDecimal],
+                     lowPrice: Option[BigDecimal],
+                     highPrice: Option[BigDecimal],
+                     dividendShare: Option[BigDecimal])
 
 object Quote {
   implicit def quoteToStock(quote: Quote): Stock = quote.stock

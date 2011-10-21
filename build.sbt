@@ -7,7 +7,20 @@ scalaVersion := "2.9.1"
 // not very useful. Defaults to Info.
 // logLevel := Level.Debug
 
-scalaSource in Compile <<= baseDirectory(identity)
+scalaSource in Compile <<= baseDirectory
+
+scalaSource in Test    <<= baseDirectory
+
+sourceDirectories in Compile ~= { srcDirs => srcDirs filter(!_.getAbsolutePath.endsWith("src/main/java")) }
+
+includeFilter in Compile in unmanagedSources <<=
+	(includeFilter in Compile in unmanagedSources, baseDirectory) { (ff, baseDir) =>
+		ff && new SimpleFileFilter({ file =>
+			val path = Path.relativizeFile(baseDir, file).get.getPath
+			val test = "test" + java.io.File.separator
+			! path.contains(test)
+		})
+	}
 
 scalacOptions ++= Seq(
     "-deprecation",
@@ -36,7 +49,8 @@ libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-simple" % "1.6.1",
     "com.h2database" % "h2" % "1.3.159",
     "org.squeryl" % "squeryl_2.9.0" % "0.9.4",
-    "org.scalaz" %% "scalaz-core" % "6.0.3"
+    "org.scalaz" %% "scalaz-core" % "6.0.3",
+    "org.scalatest"  % "scalatest_2.9.0-1"           % "1.6.1" % "test"
 )
 
 // For the Jetty server
