@@ -107,5 +107,12 @@ package object intform {
         case t1::t2::t3::t4::t5::Nil => m(t1,t2,t3,t4,t5)
         case _ => wc
     }
+    
+    // -----------------------------------------------------------------
+    
+    class MergeAttr(n1: NodeSeq) {
+        def &(n2: NodeSeq) = n1 // TODO obviously not right
+    }
+    implicit def mergeAttr(n1: NodeSeq) = new MergeAttr(n1)
 }
 

@@ -112,7 +112,26 @@ class Submit[A](
     def submitAjax() = {
         logger.info("Submitting!")
         
-        val cmd = form().process() map callback getOrElse Noop
+        val cmd = 
+            try {
+                val result = form().process()
+                result match {
+                    case Some(r) => logger.info("Resulted in " + r)
+                    case None    => logger.info("Failed do to input errors")
+                }
+                result map callback getOrElse Noop
+            }
+            catch {
+                case BadInput(msg) =>
+                    logger.info("Bad input: " + msg)
+                    errorText = msg
+                    Noop
+                case e: Any =>
+                    logger.error("Unhandled error in submission: " + e)
+                    errorText = "An unknown error occurred (see log messages)"
+                    Noop
+            }
+            
         form().refresh() & cmd
     }
     
