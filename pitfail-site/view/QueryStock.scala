@@ -43,7 +43,7 @@ class QueryStock extends RefreshableSnippet with Loggable
     )
 
     object queryForm extends Form[Stock](
-        AggregateField(Stock,
+        AggregateField((symbol: String) => Stock(symbol toUpperCase),
                 StringField("query", "")
             :^: KNil
         ),
@@ -51,12 +51,16 @@ class QueryStock extends RefreshableSnippet with Loggable
     )
     {
         override def act(stock: Stock) {
-            // TODO: Handle errors.
             try {
                 currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
             } catch {
-                case _: NoSuchStockException => {
-                    print("ERROR: No Such Stock") }
+                case _: NoSuchStockException => throw BadInput(
+                    "There is no stock with symbol " + stock.symbol + "."
+                )
+
+                case _: Exception => throw BadInput(
+                    "An unknown error has occurred."
+                )
             }
         }
     }
@@ -83,39 +87,34 @@ class QueryStock extends RefreshableSnippet with Loggable
                 & ".quote-graph [src]"  #> "http://ichart.finance.yahoo.com/instrument/1.0/%s/chart;range=1d/image;size=239x110"
                                              .format(quote.stock.symbol toLowerCase)
 
-             // TODO: Read button value from HTML.
-                & "#search-button-buy"  #> SHtml.ajaxSubmit("Buy",
-                                            //(in\\"id=search-button-buy"\"@value").text,
-                                            () => {
+                & "#search-button-buy"  #> (button => SHtml.ajaxSubmit((button\"@value").text, () => {
                     quoteForm.processField match {
                         case Some(volume) => buyStock(quote, volume)
                         case None         => throw BadInput("An unknown error has occured.")
                     }
                     p.refreshCommand
-                })
-
-            // TODO: Read button value from HTML.
-                & "#search-button-add"  #> SHtml.ajaxSubmit("Add",
-                                            //(in\\"id=search-button-add"\"@value").text,
-                                            () => {
+                }))
+                & "#search-button-add"  #> (button => SHtml.ajaxSubmit((button\"@value").text, () => {
                     quoteForm.processField match {
                         case Some(volume) => addStockToDerivative(quote, volume)
                         case None         => throw BadInput("An unknown error has occured.")
                     }
                     p.refreshCommand
-                })
+                }))
             )
 
             case None => (
                  "#search-quote" #> Nil
                 & "#search-buy"  #> Nil
+                //same
             )
         })(in)
     }
 
     def renderList(p: RefreshPoint)(in: NodeSeq): NodeSeq = {
         (if (order isEmpty) {
-            "#search-list" #> Nil
+            "#search-derivative" #> Nil
+            //same
         } else {
             ( "#search-list-row" #> (order map (_ match {
                 case (_, (quote, quantity)) => {
