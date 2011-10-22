@@ -38,12 +38,12 @@ class QueryStock extends RefreshableSnippet with Loggable
            in
         |> queryForm.render(p) _
         |> quoteForm.render(p) _
-        |> renderQuote _
-        |> renderList _
+        |> renderQuote(p) _
+        |> renderList(p) _
     )
 
     object queryForm extends Form[Stock](
-        AggregateField(Stock,
+        AggregateField((symbol: String) => Stock(symbol toUpperCase),
                 StringField("query", "")
             :^: KNil
         ),
@@ -51,12 +51,16 @@ class QueryStock extends RefreshableSnippet with Loggable
     )
     {
         override def act(stock: Stock) {
-            // TODO: Handle errors.
             try {
                 currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
             } catch {
-                case _: NoSuchStockException => {
-                    print("ERROR: No Such Stock") }
+                case _: NoSuchStockException => throw BadInput(
+                    "There is no stock with symbol " + stock.symbol + "."
+                )
+
+                case _: Exception => throw BadInput(
+                    "An unknown error has occurred."
+                )
             }
         }
     }
@@ -66,56 +70,50 @@ class QueryStock extends RefreshableSnippet with Loggable
         formID = Some("search-buy")
     )
     {
-        override def act(quantity: BigDecimal) {
-            currentQuote match {
-                // User entered a value into the query field.
-                case Some(quote) => {
-                    order = (order get quote.stock.symbol) match {
-                        // Add more shares to an existing stock.
-                        case Some((oldQuote, oldQuantity)) => {
-                            order + ((quote.stock.symbol, (quote, oldQuantity + quantity)))
-                        }
-
-                        // Add a new stock.
-                        case None => {
-                            order + ((quote.stock.symbol, (quote, quantity)))
-                        }
-                    }
-                    currentQuote = None
-                }
-
-                // This shouldn't be visible if the user didn't enter a value.
-                case None =>
-                    throw BadInput("An unknown error has occurred.")
-             } 
-        }
+        override def act(quantity: BigDecimal) {}
     }
 
-    def renderQuote(in: NodeSeq): NodeSeq = {
+    def renderQuote(p: RefreshPoint)(in: NodeSeq): NodeSeq = {
         (currentQuote match {
             case Some(quote) => (
                   ".quote-company *"    #> quote.company
                 & ".quote-ticker *"     #> quote.stock.symbol
-                & ".quote-price *"      #> quote.price.toString
-                & ".quote-change *"     #> tryGetNumber(quote.info.percentChange)
-                & ".quote-open *"       #> tryGetNumber(quote.info.openPrice)
-                & ".quote-low *"        #> tryGetNumber(quote.info.lowPrice)
-                & ".quote-high *"       #> tryGetNumber(quote.info.highPrice)
-                & ".quote-dividend *"   #> tryGetNumber(quote.info.dividendShare)
+                & ".quote-price *"      #> quote.price.$
+                & ".quote-change *"     #> (tryGetNumber(quote.info.percentChange) + "%")
+                & ".quote-open *"       #> tryGetPrice(quote.info.openPrice)
+                & ".quote-low *"        #> tryGetPrice(quote.info.lowPrice)
+                & ".quote-high *"       #> tryGetPrice(quote.info.highPrice)
+                & ".quote-dividend *"   #> tryGetPrice(quote.info.dividendShare)
                 & ".quote-graph [src]"  #> "http://ichart.finance.yahoo.com/instrument/1.0/%s/chart;range=1d/image;size=239x110"
                                              .format(quote.stock.symbol toLowerCase)
+
+                & "#search-button-buy"  #> (button => SHtml.ajaxSubmit((button\"@value").text, () => {
+                    quoteForm.processField match {
+                        case Some(volume) => buyStock(quote, volume)
+                        case None         => throw BadInput("An unknown error has occured.")
+                    }
+                    p.refreshCommand
+                }))
+                & "#search-button-add"  #> (button => SHtml.ajaxSubmit((button\"@value").text, () => {
+                    quoteForm.processField match {
+                        case Some(volume) => addStockToDerivative(quote, volume)
+                        case None         => throw BadInput("An unknown error has occured.")
+                    }
+                    p.refreshCommand
+                }))
             )
 
-            case None =>
-                ( "#search-quote" #> Nil
-                & "#search-buy"   #> Nil)
+            case None => (
+                 "#search-quote" #> Nil
+                & "#search-buy"  #> Nil
                 //same
+            )
         })(in)
     }
 
-    def renderList(in: NodeSeq): NodeSeq = {
+    def renderList(p: RefreshPoint)(in: NodeSeq): NodeSeq = {
         (if (order isEmpty) {
-            "#search-list" #> Nil
+            "#search-derivative" #> Nil
             //same
         } else {
             ( "#search-list-row" #> (order map (_ match {
@@ -124,16 +122,57 @@ class QueryStock extends RefreshableSnippet with Loggable
                     val shares = BigDecimal((quantity / quote.price).toInt)
                     ( ".search-list-ticker *"   #> quote.stock.symbol
                     & ".search-list-company *"  #> quote.company
-                    & ".search-list-price *"    #> (quote.price.$)
+                    & ".search-list-price *"    #> quote.price.$
                     & ".search-list-shares *"   #> shares.toString
                     & ".search-list-subtotal *" #> ((shares * quote.price).$))
                 }
               }))
-            & ".search-list-total *" #> ("$" + getTotalPrice(order.values).toString))
+            & ".search-list-total *" #> (getTotalPrice(order.values).toString))
         })(in)
     }
 
+    private def buyStock(quote: Quote, volume: BigDecimal) = {
+        import control.LoginManager._
+        import model.Schema._
+
+        try {
+            currentUser.mainPortfolio.buyStock(quote.stock.symbol, volume)
+            currentQuote = None
+        } catch {
+            case NegativeVolume => throw BadInput(
+                "You must buy more than $0.00 of a stock"
+            )
+            case NotEnoughCash(have, need) => throw BadInput(
+                "You need at least %s you only have %s" format (need.$, have.$)
+            )
+            case NotLoggedIn =>
+                throw BadInput("You must be logged in to buy stock")
+        }
+    }
+
+    private def addStockToDerivative(quote: Quote, volume: BigDecimal) = {
+        order = (order get quote.stock.symbol) match {
+            // Add more shares to an existing stock.
+            case Some((oldQuote, oldVolume)) => {
+                order + ((quote.stock.symbol, (quote, oldVolume + volume)))
+            }
+
+            // Add a new stock.
+            case None => {
+                order + ((quote.stock.symbol, (quote, volume)))
+            }
+        }
+        currentQuote = None
+    }
+
     private def tryGetNumber(a: Option[BigDecimal]): String = {
+        a match {
+            case Some(number) => number.toString
+            case None         => "n/a"
+        }
+    }
+
+    private def tryGetPrice(a: Option[BigDecimal]): String = {
         a match {
             case Some(number) => number.$
             case None         => "n/a"
