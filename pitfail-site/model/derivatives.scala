@@ -17,7 +17,8 @@ import net.liftweb.common.Loggable
 case class Derivative(
     securities: Seq[Security],
     exec:       DateTime,
-    condition:  Condition
+    condition:  Condition,
+    early:      Boolean
 ) {
     def serialize: Array[Byte] = serialization.serialize(this)
     

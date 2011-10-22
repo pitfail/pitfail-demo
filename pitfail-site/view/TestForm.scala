@@ -12,40 +12,46 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import matteform._
+import intform._
 import scalaz.Scalaz._
+import up._
+import HList._
+import KList._
+import ~>._
 
-class TestForm extends RefreshableSnippet with Loggable {
+class TestForm extends Page with Loggable {
     
-    var count: Int = 0
+    def render = form.render
     
-    def render(p: RefreshPoint)(in: NodeSeq) = (
-           in
-        |> inc.render(p) _
-        |> dec.render(p) _
-        |> renderCount
-    )
+    case class Order(
+            sym:   String,
+            count: String
+        )
     
-    object inc extends Form[Unit](
-        ConstField(()),
-        formID = Some("inc")
-    )
-    {
-        def act(u: Unit) {
-            count += 1
-        }
+    lazy val submit = Submit(form, "Send") { order =>
+        logger.info(order)
+        Noop
     }
     
-    object dec extends Form[Unit](
-        ConstField(()),
-        formID = Some("dec")
-    )
-    {
-        def act(u: Unit) {
-            count -= 1
-        }
-    }
-    
-    def renderCount = "#count *" #> count
+    lazy val form: Form[Order] = Form(Order, (
+            -StringField(),
+            -StringField(),
+            -submit
+        ))(F( (sym, count, sub) =>
+            <table>
+                <tr>
+                    <td>Symbol:</td>
+                    <td>{sym.main}</td>
+                    <td>{sym.errors}</td>
+                </tr>
+                <tr>
+                    <td>Count:</td>
+                    <td>{count.main}</td>
+                    <td>{count.errors}</td>
+                </tr>
+                <tr><td>{sub.main}</td></tr>
+                <tr><td>{sub.errors}</td></tr>
+            </table>
+        ))
 }
 

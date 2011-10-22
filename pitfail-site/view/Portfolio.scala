@@ -14,6 +14,7 @@ import Helpers._
 
 import control.LoginManager
 import lib.formats._
+import intform._
 
 import model.Schema._
 import LoginManager.{currentLogin}
@@ -22,76 +23,140 @@ class Portfolio extends Refreshable with Loggable
 {
     def registerWith = Portfolio
     
-    // Things to show
-    var myStockAssets: Seq[StockAsset] = Nil
-    var myCashAmount: BigDecimal = BigDecimal("0.00")
-    var myDerivativeAssets: Seq[DerivativeAsset] = Nil
-    var myDerivativeLiabilities: Seq[DerivativeLiability] = Nil
-    
-    override def refresh(): Unit = trans {
+    def render = (in: NodeSeq) => trans {
         for {
             name <- currentLogin
             user <- byUsername(name)
-        } {
-            val port = user.mainPortfolio
             
-            myStockAssets      = port.myStockAssets
-            myCashAmount       = port.cash
-            myDerivativeAssets = port.myDerivativeAssets
-        }
-    }
-    refresh()
-    
-    def render = (
-          cash
-        & ifHaveStocks(stocks)
-        & ifNoStocks
-        & ifHaveDerivativeAssets(derivativeAssets)
-        & ifNoDerivativeAssets
-    )
-    
-    private def cash = "#cash *" #> (myCashAmount.$)
-    
-    private def stocks =
-        "#stock *" #> (myStockAssets map ( a =>
-              "#ticker *" #> a.ticker
-            & "#volume *" #> (stockVolume(a).$)
-            & "name=ticker [value]" #> a.ticker
-        ))
-    
-    private def derivativeAssets =
-        "#derivativeAsset" #> (myDerivativeAssets map {a =>
-            val deriv = a.derivative
-            (
-                  "#securities *" #> (deriv.securities toHumanString)
-                & "#exec *"       #> (deriv.exec toNearbyString)
-                & "#condition *"  #> (deriv.condition toHumanString)
-                & "#peer *"       #> ("user=blank [user]" #> a.peer.owner.owner.username)
+            port = user.mainPortfolio
+            
+            myStockAssets           = port.myStockAssets
+            myCashAmount            = port.cash
+            myDerivativeAssets      = port.myDerivativeAssets
+            myDerivativeLiabilities = port.myDerivativeLiabilities
+        } yield
+        {
+            def result =
+                <table class="tChart">
+                    <col class="left"/>
+                    <col class="right"/>
+                    <tr class="header">
+                        <th>Assets</th>
+                        <th>Liabilities</th>
+                    </tr>
+                    <tr>
+                        <td class="assets">
+                            {cash}<br/>
+                            {stocks}<br/>
+                            {derivativeAssets}
+                        </td>
+                        <td class="liabilities">
+                            {derivativeLiabilities}
+                        </td>
+                    </tr>
+                </table>
+            
+            def cash = <p>{myCashAmount.$}</p>
+            
+            def stocks = (
+                <h4>Stocks</h4> ++ {
+                    if (!myStockAssets.isEmpty) stockTable
+                    else <p>You have no stocks</p>
+                }
             )
-        })
-    
-    private def ifHaveStocks(next: CssBindFunc) =
-        "#ifHaveStocks" #> { n =>
-            if (!myStockAssets.isEmpty) next(n)
-            else Nil
+            
+            def stockTable = (
+                <table class="stocksTable">
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Volume</th>
+                    </tr>
+                    { myStockAssets map stock _ }
+                </table>
+            )
+            
+            def stock(sa: StockAsset) =
+                <tr>
+                    <td>{sa.ticker}</td>
+                    <td>{stockVolume(sa).$}</td>
+                    <td>{snippet.SellThisStock(sa.ticker)}</td>
+                </tr>
+            
+            def derivativeAssets = (
+                <h4>Derivatives</h4> ++ {
+                    if (!myDerivativeAssets.isEmpty) {
+                        <table class="derivativesTable">
+                            <tr>
+                                <th>Securities</th>
+                                <th>Exec Date</th>
+                                <th>Condition</th>
+                                <th>Peer</th>
+                            </tr>
+                            { myDerivativeAssets map derivativeAsset _ }
+                        </table>
+                    }
+                    else {
+                        <p>You have no derivatives</p>
+                    }
+                }
+            )
+            
+            def derivativeAsset(da: DerivativeAsset) = {
+                val deriv = da.derivative
+                val peer  = da.peer.owner.owner
+                
+                <tr>
+                    <td>{deriv.securities toHumanString}</td>
+                    <td>{deriv.exec toNearbyString}</td>
+                    <td>{deriv.condition toHumanString}</td>
+                    <td>{snippet.UserLink(peer.username)}</td>
+                    <td> {
+                        if (deriv.early) execDerivative(da)
+                        else Nil
+                    } </td>
+                </tr>
+            }
+            
+            def derivativeLiabilities =
+                <h4>Derivatives</h4> ++ {
+                    if (!myDerivativeLiabilities.isEmpty)
+                        derivativeLiabilityTable
+                    else
+                        <p>You have no derivative liabilities</p>
+            }
+        
+            def derivativeLiabilityTable =
+                <table>
+                    <tr>
+                        <th>Securities</th>
+                        <th>Exec Date</th>
+                        <th>Condition</th>
+                    </tr>
+                    { myDerivativeLiabilities map derivativeLiability _ }
+                </table>
+            
+            def derivativeLiability(dl: DerivativeLiability) = {
+                val deriv = dl.derivative
+                
+                <tr>
+                    <td>{deriv.securities toHumanString}</td>
+                    <td>{deriv.exec toNearbyString}</td>
+                    <td>{deriv.condition toHumanString}</td>
+                </tr>
+            }
+            
+            result
         }
+    } getOrElse <p>Login to view your portfolio</p>
     
-    private def ifNoStocks =
-        "#ifNoStocks" #> { n =>
-            if (myStockAssets.isEmpty) n
-            else Nil
-        }
-    
-    private def ifHaveDerivativeAssets(next: CssBindFunc) =
-        "#ifHaveDerivativeAssets" #> { n =>
-            if (!myDerivativeAssets.isEmpty) next(n)
-            else Nil
-        }
-    
-    private def ifNoDerivativeAssets =
-        "#ifNoDerivativeAssets" #> { n =>
-            if (myDerivativeAssets.isEmpty) n
-            else Nil
+    def execDerivative(da: DerivativeAsset) =
+        Submit("Exec") {
+            da.refetch() map {_.execute()} match {
+                case Some(_) =>
+                    Portfolio ! Refresh
+                    Noop
+                case None => throw new BadInput("No longer exists")
+            }
         }
     
     // TODO: This is not right

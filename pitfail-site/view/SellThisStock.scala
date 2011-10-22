@@ -12,24 +12,19 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import matteform._
+import comet._
+import intform._
 
-object SellThisStock extends RefreshableSnippet with Loggable
+class SellThisStock(ticker: String) extends Loggable
 {
-    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
-    
-    object form extends Form[String](
-        AttrField("ticker")
-    )
-    {
-        def act(ticker: String) {
-            userSellStock(ticker)
-            comet.Portfolio ! comet.Refresh
-            comet.News ! comet.Refresh
+    def render =
+        Submit("Sell") {
+            userSellStock()
+            Portfolio ! Refresh
+            News ! Refresh
         }
-    }
     
-    def userSellStock(ticker: String) {
+    def userSellStock() {
         import control.LoginManager._
         import model.Schema._
 
@@ -45,5 +40,8 @@ object SellThisStock extends RefreshableSnippet with Loggable
                 throw BadInput("You don't own this stock")
         }
     }
+}
+object SellThisStock {
+    def apply(t: String) = new SellThisStock(t).render
 }
 

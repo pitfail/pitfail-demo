@@ -126,7 +126,7 @@ object Schema extends squeryl.Schema {
         var cash:          BigDecimal       = 0,
         var owner:         Link[User]       = 0
         )
-        extends KL
+        extends KL with net.liftweb.common.Loggable
     {
         def buyStock(ticker: String, volume: Dollars)
             = buy(StockShares(ticker, volume))
@@ -253,6 +253,16 @@ object Schema extends squeryl.Schema {
                 ) toList
             }
         
+        def myDerivativeLiabilities: Seq[DerivativeLiability] =
+            trans {
+                from(derivativeLiabilities) (l =>
+                    where (
+                        l.owner === this
+                    )
+                    select(l)
+                ) toList
+            }
+        
         def myOffers: Seq[DerivativeOffer] =
             trans {
                 from (derivativeOffers) (o =>
@@ -368,7 +378,7 @@ object Schema extends squeryl.Schema {
                 val price = stockPrice(ticker)
                 val sharesFromCash = cash / price
                 if (sharesFromCash > leftover) {
-                    cash -= leftover / price
+                    cash -= leftover * price
                     leftover = 0
                 }
                 else {
@@ -459,6 +469,15 @@ object Schema extends squeryl.Schema {
         def derivative: Derivative = trans {
             peer.derivative * scale
         }
+        
+        def execute(): Unit = trans {
+            val deriv = derivative
+            val secs  = deriv.securities
+            
+            for (sec <- secs) {
+                owner.take(sec, peer.owner)
+            }
+        }
     }
     object DerivativeAsset {
         def byPeer(liab: DerivativeLiability,  owner: Portfolio): Option[DerivativeAsset] =
@@ -478,11 +497,12 @@ object Schema extends squeryl.Schema {
     }
     
     case class DerivativeLiability(
-        var id:    Long            = 0,
-        var name:  String          = UUID.randomUUID.toString.substring(0, 5),
-        var mode:  Array[Byte]     = Array(),
-        var exec:  Timestamp       = now,
-        var owner: Link[Portfolio] = 0
+        var id:         Long            = 0,
+        var name:       String          = UUID.randomUUID.toString.substring(0, 5),
+        var mode:       Array[Byte]     = Array(),
+        var remaining:  BigDecimal      = BigDecimal("1.0"),
+        var exec:       Timestamp       = now,
+        var owner:      Link[Portfolio] = 0
         )
         extends KL
     {
@@ -512,15 +532,6 @@ object Schema extends squeryl.Schema {
         extends KL
     {
         def derivative: Derivative = Derivative.deserialize(mode)
-        
-        def execute(): Unit = trans {
-            val deriv = derivative
-            val secs  = deriv.securities
-            
-            for (sec <- secs) {
-                to.take(sec, from)
-            }
-        }
     }
         
     case class NewsEvent(
