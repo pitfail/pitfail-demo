@@ -37,66 +37,70 @@ class SellDerivative extends Page with Loggable
     case class ToUser(user: User) extends To
     case object ToAuction extends To
     
-    lazy val form: Form[Order] = Form(Order, (
-            -toField,
-            -secsField,
-            -execField,
-            -condField,
-            -sellSubmit
-        ))(F( (to,sec,on,cond,sub) =>
-            <table class="sellDerivative">
-                <tr><td>To:</td>
-                    <td>{to.main}</td>
-                    <td>{to.errors}</td>
-                </tr>
-                <tr><td>Securities:</td>
-                    <td>{sec.main}
-                        {sec.errors}
-                    </td>
-                </tr>
-                <tr><td>On:</td>
-                    <td>{on.main}</td>
-                    <td>{on.errors}</td>
-                </tr>
-                <tr><td>If:</td>
-                    <td>{cond.main}</td>
-                    <td>{cond.errors}</td>
-                </tr>
-                
-                <tr><td>{sub.main}</td></tr>
-                <tr><td>{sub.errors}</td></tr>
-            </table>
-        ))
+    lazy val form: Form[Order] = Form(Order,
+        (
+            toField,
+            secsField,
+            execField,
+            condField
+        ),
+        formRender
+    )
     
-    lazy val toField = CaseField[To]((
+    def formRender =
+        <table class="sellDerivative">
+            <tr><td>To:</td>
+                <td>{toRender}</td>
+                <td>{toField.errors}</td>
+            </tr>
+            <tr><td>Securities:</td>
+                <td>(todo)</td>
+            </tr>
+            <tr><td>On:</td>
+                <td>{execField.main}</td>
+                <td>{execField.errors}</td>
+            </tr>
+            <tr><td>If:</td>
+                <td>{condRender}</td>
+                <td>{condField.errors}</td>
+            </tr>
+            
+            <tr><td>{sellSubmit.main}</td></tr>
+            <tr><td>{sellSubmit.errors}</td></tr>
+        </table>
+    
+    lazy val toField = CaseField[To](
+        (
             recipientField,
             ConstField(ToAuction)
-        ))(C( (user,auc) =>
-            <ul>
-                <li>{user.choice} User: {user.main} {user.errors}</li>
-                <li>{auc.choice} Auction</li>
-            </ul>
-        ))
+        )
+    )
+    
+    def toRender =
+        <ul>
+            <li>{toField._1} User: {userField.main} {userField.errors}</li>
+            <li>{toField._2} Auction</li>
+        </ul>
         
-    lazy val recipientField = AggregateField(ToUser, (
-            -UserField()
-        ))(F( (user) =>
-            <span>To user: {user.main} {user.errors}</span>
-        ))
+    lazy val recipientField = AggregateField(ToUser, userField)
+    lazy val userField = UserField("")
         
     lazy val secsField = ConstField(Seq[Security]())
         
     lazy val execField = StringField()
 
-    lazy val condField = CaseField[Condition]((
+    lazy val condField = CaseField[Condition](
+        (
             ConstField(CondAlways),
             ifField
-        ))(C( (al,iff) =>
-            <ul>
-                <li>{al.choice} Always</li>
-                <li>{iff.choice} If {iff.main} {iff.errors}</li>
-            </ul>
-        ))
+        )
+    )
+    
+    def condRender =
+        <ul>
+            <li>{condField._1} Always</li>
+            <li>{condField._2} If (todo)</li>
+        </ul>
 
     lazy val ifField = ConstField(CondAlways)
     

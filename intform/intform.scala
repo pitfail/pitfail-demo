@@ -23,7 +23,8 @@ import ~>._
 // Form
 
 class Form[+A](
-        val field: Field[A]
+        val field: Field[A],
+        val renderer: () => NodeSeq
     )
     extends Processable[A]
     with InnerFieldRender
@@ -34,21 +35,18 @@ class Form[+A](
     def reset() { field.reset() }
 }
 object Form {
-    def apply[A, F <: HList, H <: HList] (
+    def apply[A, F <: HList](
         c: F => A,
-        f: FieldList[F, H]
-    )(
-        r: H => NodeSeq
-    ): Form[A] =
-        new Form(new AggregateField(c, f, r))
+        f: KList[Field, F],
+        r: => NodeSeq
+    ): Form[A] = new Form(new AggregateField(c, f), () => r)
 }
 
 // ------------------------------------------------------------------
 // Field
 
 abstract class Field[+A]
-    extends FieldRender
-    with BasicErrors
+    extends BasicErrors
 {
     def produce(): SubmitResult[A]
     def process(): Option[A] = produce() match {
@@ -65,25 +63,8 @@ abstract class Field[+A]
     
     def reset(): Unit
 }
-object Field {
-    implicit def toAdd[A](f: Field[A]) = new FieldAdd(f)
-}
 
-class FieldAdd[A](f: Field[A]) extends FieldListAdd {
-    def unary_- = this
-    
-    // FieldListAdd
-    type F2[+F<:HList] = A :+: F
-    type H2[+H<:HList] = FieldRender :+: H
-    
-    def fieldListAdd[F1<:HList,H1<:HList](orig: FieldList[F1,H1])
-        = FieldList[F2[F1], H2[H1]](
-            fields = KCons(f, orig.fields),
-            html   = HCons(f: FieldRender, orig.html)
-        )
-}
-
-trait BasicErrors extends ErrorRender {
+trait BasicErrors {
     var errorText: String = ""
 }
 
@@ -107,7 +88,7 @@ class Submit[A](
     with Loggable
     with FieldRender
     with BasicErrors
-    with FieldListAdd
+    with ErrorRender
 {
     def submitAjax() = {
         logger.info("Submitting!")
@@ -134,24 +115,13 @@ class Submit[A](
             
         form().refresh() & cmd
     }
-    
-    // FieldListAdd
-    type F2[+F<:HList] = F
-    type H2[+H<:HList] = FieldRender :+: H
-    
-    def fieldListAdd[F1<:HList,H1<:HList](orig: FieldList[F1,H1])
-        = orig.copy(
-            html = HCons(this: FieldRender, orig.html)
-        )
-    
-    def unary_- = this
 }
 object Submit {
     def apply[A](form: =>Form[A], value: String)(callback: (A) => JsCmd) =
         new Submit(() => form, callback, value)
     
     def apply(text: String)(callback: =>JsCmd) = new SubmitRender
-        with FormOuter with BasicErrors
+        with FormOuter with BasicErrors with ErrorRender
     {
         val value = text
         def submitAjax() = callback

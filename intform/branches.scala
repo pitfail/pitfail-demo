@@ -17,17 +17,16 @@ import ~>._
 // ---------------------------------------------------------------------------
 // AggregateField
 
-class AggregateField[+A, F <: HList, H <: HList](
+class AggregateField[+A, F <: HList](
         constructor: F => A,
-        fields: FieldList[F, H],
-        renderer: H => NodeSeq
+        fields: KList[Field, F]
     )
     extends Field[A]
 {
     import AggregateField._
     
     def produce() = {
-        val inners = fields.fields map mapProcess
+        val inners = fields map mapProcess
         
         if (inners.toList forall (_.isDefined))
             OK(constructor(inners down mapExtract))
@@ -35,18 +34,13 @@ class AggregateField[+A, F <: HList, H <: HList](
             ChildError
     }
     
-    def reset() { fields.fields.toList map (_.reset) }
-    
-    def main: NodeSeq = renderer(fields.html)
+    def reset() { fields.toList map (_.reset) }
 }
 object AggregateField {
-    def apply[A, F <: HList, H <: HList] (
+    def apply[A, F <: HList](
         c: F => A,
-        f: FieldList[F, H]
-    )(
-        r: H => NodeSeq
-    ) =
-        new AggregateField(c, f, r)
+        f: KList[Field, F]
+    ): AggregateField[A,F] = new AggregateField(c, f)
         
     val mapProcess = new (Field ~> Option) {
         def apply[T](field: Field[T]): Option[T] = field.process()
@@ -63,28 +57,11 @@ object AggregateField {
     }
 }
 
-case class FieldList[+F <: HList, +H <: HList](
-        fields: KList[Field, F],
-        html: H
-    )
-object FieldList {
-    def empty = FieldList(KNil, new HNil)
-}
-
-trait FieldListAdd {
-    type F2[+F<:HList] <: HList
-    type H2[+H<:HList] <: HList
-    
-    def fieldListAdd[F1<:HList,H1<:HList](orig: FieldList[F1,H1]): FieldList[F2[F1], H2[H1]]
-    def a[F1<:HList,H1<:HList](orig: FieldList[F1,H1]) = fieldListAdd(orig)
-}
-
 // ---------------------------------------------------------------------------
 // CaseField
 
 class CaseField[+A](
-        cases: Seq[Field[A]],
-        val renderer: List[ChoiceRender] => NodeSeq
+        cases: Seq[Field[A]]
     )
     extends Field[A]
     with Loggable
@@ -109,23 +86,11 @@ class CaseField[+A](
     val table = cases map { f =>
         (UUID.randomUUID.toString, f)
     } toMap
+    
 }
 object CaseField {
     def apply[A](
         c: Seq[Field[A]]
-    )(
-        r: List[ChoiceRender] => NodeSeq
-    ) = new CaseField(c, r)
-}
-
-class ChoiceRender(
-        f: FieldRender,
-        radio: NodeSeq
-    )
-    extends FieldRender
-{
-    def choice = radio
-    def main = f.main
-    def errors = f.errors
+    ) = new CaseField(c)
 }
 

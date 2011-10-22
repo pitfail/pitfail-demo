@@ -50,9 +50,9 @@ trait FieldRender extends Renderable {
 // Form rendering
 
 trait InnerFieldRender extends Renderable {
-    def field: Field[Any]
+    val renderer: () => NodeSeq
     
-    def render: NodeSeq = field.render
+    def render: NodeSeq = renderer()
 }
 
 trait FormOuter extends Renderable {
@@ -72,7 +72,7 @@ trait SubmitRender extends FieldRender {
 // -----------------------------------------------------------------
 // Error rendering
 
-trait ErrorRender extends FieldRender {
+trait ErrorRender {
     def errorText: String
     
     def errors: NodeSeq = <span class="inputError">{errorText}</span>
@@ -90,22 +90,21 @@ trait TextRender extends FieldRender {
     )
 }
 
-trait CaseRender extends FieldRender {
-    val renderer: List[ChoiceRender] => NodeSeq
-    
+trait CaseRender extends ErrorRender {
+    val table: Map[String,Field[Any]]
     var selected: Option[String]
-    val table: Map[String, Field[Any]]
     
-    def main = {
-        val radios = SHtml.radio(
-            table.keys toList,
-            selected,
-            n => selected = Some(n)
-        )
-        
-        renderer(table map { case (name, field) =>
-            new ChoiceRender(field, radios(name))
-        } toList)
-    }
+    lazy val radios = SHtml.radio(
+        table.keys toList,
+        selected,
+        s => selected = Some(s)
+    )
+    
+    def _1 = radios(0)
+    def _2 = radios(1)
+    def _3 = radios(2)
+    def _4 = radios(3)
+    def _5 = radios(4)
+    def _6 = radios(5)
 }
 

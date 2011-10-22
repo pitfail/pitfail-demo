@@ -17,6 +17,7 @@ import JE._
 abstract class TextField[+A](initText: String)
     extends Field[A]
     with TextRender
+    with ErrorRender
 {
     var text = initText
     

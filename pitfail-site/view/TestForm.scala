@@ -6,6 +6,7 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util._
 import scala.xml.{NodeSeq}
+import scala.math._
 import http._
 import js._
 import JsCmds._
@@ -25,7 +26,7 @@ class TestForm extends Page with Loggable {
     
     case class Order(
             sym:   String,
-            count: String
+            count: BigDecimal
         )
     
     lazy val submit = Submit(form, "Send") { order =>
@@ -33,25 +34,27 @@ class TestForm extends Page with Loggable {
         Noop
     }
     
-    lazy val form: Form[Order] = Form(Order, (
-            -StringField(),
-            -StringField(),
-            -submit
-        ))(F( (sym, count, sub) =>
-            <table>
-                <tr>
-                    <td>Symbol:</td>
-                    <td>{sym.main}</td>
-                    <td>{sym.errors}</td>
-                </tr>
-                <tr>
-                    <td>Count:</td>
-                    <td>{count.main}</td>
-                    <td>{count.errors}</td>
-                </tr>
-                <tr><td>{sub.main}</td></tr>
-                <tr><td>{sub.errors}</td></tr>
-            </table>
-        ))
+    lazy val form: Form[Order] = Form(Order,
+        (
+            symField,
+            countField
+        ),
+        <table>
+            <tr>
+                <td>Symbol:</td>
+                <td>{symField.main}</td>
+                <td>{symField.errors}</td>
+            </tr>
+            <tr>
+                <td>Count:</td>
+                <td>{countField.main}</td>
+                <td>{countField.errors}</td>
+            </tr>
+            <tr><td>{submit.main}</td></tr>
+            <tr><td>{submit.errors}</td></tr>
+        </table>
+    )
+    lazy val symField = StringField()
+    lazy val countField = NumberField()
 }
 

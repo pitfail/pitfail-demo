@@ -32,6 +32,9 @@ object Link {
 
     implicit def linkToNumExp[R <: KL] (link: Link[R]): NumericalExpression[_]
         = if (link == null) 0 else link.id.~
+    
+    implicit def linkToAssociated[R <: KL](link: Link[R])(implicit table: Table[R]):
+        AssociatedEntity[R] = KL.associateEntity(linkToRef(link))
 }
 
 implicit def idToLink[R <: KL] (id: Long): Link[R] = Link[R](id)

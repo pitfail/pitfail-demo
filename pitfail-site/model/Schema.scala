@@ -38,6 +38,7 @@ object Schema extends squeryl.Schema {
     case class DontOwnStock(ticker: String) extends Exception
     case class NotEnoughShares(have: BigDecimal, need: BigDecimal) extends Exception
     case object OfferExpired extends Exception
+    case object NotExecutable extends Exception
     
     def trans[A](x: =>A) = inTransaction(x)
     
@@ -472,11 +473,17 @@ object Schema extends squeryl.Schema {
         
         def execute(): Unit = trans {
             val deriv = derivative
+            if (! deriv.early) throw NotExecutable
+                
             val secs  = deriv.securities
             
             for (sec <- secs) {
                 owner.take(sec, peer.owner)
             }
+            
+            peer.remaining -= scale
+            peer.update()
+            this.delete()
         }
     }
     object DerivativeAsset {

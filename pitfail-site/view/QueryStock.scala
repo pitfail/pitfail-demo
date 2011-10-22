@@ -51,16 +51,16 @@ class QueryStock extends Page with Loggable
     lazy val queryForm: Form[Stock] = Form(
         (sym: String) => Stock(sym toUpperCase),
         (
-            -StringField(""),
-            -submitStock
-        ))(F( (tick,sub) =>
-            <div id="search-query">
-                {tick.main & <input id="search-query-field"/>}
-                {tick.errors}
-                {sub.main}
-                {sub.errors}
-            </div>
-        ))
+            tickerField
+        ),
+        <div id="search-query">
+            {tickerField.main & <input id="search-query-field"/>}
+            {tickerField.errors}
+            {submitStock.main}
+            {submitStock.errors}
+        </div>
+    )
+    lazy val tickerField = StringField("")
     
     lazy val submitStock = Submit(queryForm, "Search") { stock =>
         try {
@@ -78,33 +78,37 @@ class QueryStock extends Page with Loggable
     // quoteForm
         
     def quoteForm(quote: Quote) = {
-        lazy val form: Form[BigDecimal] = Form(identity[BigDecimal], (
-            -NumberField("1"),
-            
-            -Submit(form, "Buy") { v =>
-                buyStock(quote, v)
-                page.refresh()
-            },
-            -Submit(form, "Add") { v =>
-                addStockToDerivative(quote, v)
-                page.refresh()
-            }
-        ))(F( (quant,buy,add) =>
+        lazy val form: Form[BigDecimal] = Form(
+            identity[BigDecimal],
+            (
+                volumeField
+            ),
             <div class="block" id="search-buy">
                 <h2>Choose Volume</h2>
                 <p>Enter the amount you would like to purchase in dollars. This will be
                 converted to shares and will be added to your portfolio.</p>
 
                 <p class="price-input">
-                ${quant.main & <input id="search-quantity"/>} {quant.errors}
+                ${volumeField.main & <input id="search-quantity"/>} {volumeField.errors}
                 </p>
 
                 <div class="buttons">
-                {buy.main & <input id="search-button-buy"/>} {buy.errors}
-                {add.main & <input id="search-button-add"/>} {add.errors}
+                {submitBuy.main & <input id="search-button-buy"/>} {submitBuy.errors}
+                {submitBuy.main & <input id="search-button-add"/>} {submitAdd.errors}
                 </div>
             </div>
-        ))
+        )
+        lazy val volumeField = NumberField("1.00")
+    
+        lazy val submitBuy = Submit(form, "Buy") { v =>
+            buyStock(quote, v)
+            page.refresh()
+        }
+        
+        lazy val submitAdd = Submit(form, "Add") { v =>
+            addStockToDerivative(quote, v)
+            page.refresh()
+        }
         
         form.render
     }

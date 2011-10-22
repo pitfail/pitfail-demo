@@ -142,6 +142,10 @@ class Portfolio extends Refreshable with Loggable
                     <td>{deriv.securities toHumanString}</td>
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>
+                    <td> {
+                        if (dl.remaining < 1) dl.remaining.%()
+                        else Nil
+                    } </td>
                 </tr>
             }
             
@@ -151,13 +155,22 @@ class Portfolio extends Refreshable with Loggable
     
     def execDerivative(da: DerivativeAsset) =
         Submit("Exec") {
-            da.refetch() map {_.execute()} match {
+            da.refetch() map {execute _} match {
                 case Some(_) =>
                     Portfolio ! Refresh
                     Noop
-                case None => throw new BadInput("No longer exists")
+                case None => throw BadInput("No longer exists")
             }
         }
+    
+    def execute(da: DerivativeAsset) {
+        try {
+            da.execute()
+        }
+        catch {
+            case NotExecutable => throw BadInput("Not executable")
+        }
+    }
     
     // TODO: This is not right
     def stockVolume(stock: StockAsset): BigDecimal =
