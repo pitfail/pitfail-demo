@@ -1,29 +1,25 @@
 
 package code
-package view
+package snippet
 
 import model.Schema.{
     User
 }
 
-import matteform._
+import intform._
 
 class UserField(
-        // Field name, not the user name
-        name: String,
-        val initText: String
+        initText: String
     )
-    extends Field[User](name) with TextField
+    extends TextField[User](initText)
 {
     def produce() =
         model.Schema.byUsername(text) match {
-            case None =>
-                Error("User `"+text+"` does not exist")
-                
+            case None => Error("No user named " + text)
             case Some(user) => OK(user)
         }
 }
 object UserField {
-    def apply(n: String, i: String) = new UserField(n, i)
+    def apply(i: String = "") = new UserField(i)
 }
 

@@ -109,26 +109,28 @@ div.sellDerivative {
     list-style-type: none;
 }
 
-
-
-
-
-
 /* foo */
 html {
     font-family: sans-serif;
 }
 
-#search {
+.container {
     width: 770px;
     margin: 0 auto;
+}
+
+/* Header */
+h1 {
+    /* TODO: Shouldn't need !important here. */
+    font-size: 3em !important;
+    margin-bottom: 1em;
 }
 
 /* Search */
 #search-query {
     position: relative;
-    height: 55px;
-    margin-bottom: 0.4em;
+    width: 100%;
+    height: 52px;
 }
 
 #search-query input[type=text] {
@@ -155,8 +157,24 @@ html {
 .block {
     border: 1px solid #333;
     border-radius: 6px;
-    padding: 0.2em;
+    padding: 0.5em;
     margin-top: 0.5em;
+}
+
+.block h2 {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+}
+
+form.block {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.buttons {
+    text-align: center;
 }
 
 /* Quote */
@@ -178,11 +196,11 @@ html {
 
 .quote h2 .quote-ticker {
     font-weight: bold;
-    font-size: 1.5em;
+    font-size: 20pt
 }
 
 .quote h2 .quote-company {
-    font-size: 1.2em;
+    font-size: 16pt;
 }
 
 .quote h3 {
@@ -195,11 +213,11 @@ html {
     width: 40%;
     overflow: hidden;
     font-weight: bold;
-    font-size: 2.5em;
+    font-size: 26pt;
 }
 
 .quote h3 .quote-change {
-    font-size: 1.5em;
+    font-size: 20pt;
     margin-left: 1em;
 }
 
@@ -209,7 +227,7 @@ html {
     left: 40%;
     right: 245px;
     padding: 0.5em 0;
-    font-size: 1.2em;
+    font-size: 12pt;
 }
 
 .quote dl dt {
@@ -234,10 +252,41 @@ html {
     right: 0;
 }
 
-/* */
+/* Buy/Add Option */
+p.price-input {
+    margin: 1em 5em;
+    font-size: 16pt;
+}
+
+p.price-input input {
+    width: 7em;
+    border: none;
+    border-bottom: 2px solid #000;
+}
+
+/* Derivative Builder */
+#search-derivative {
+    padding: 0.5em;
+    line-height: 1.5em;
+}
+
+
+#search-derivative table {
+    margin: 1em;
+}
+
+#search-derivative p input {
+    width: 8em;
+    text-align: center;
+    border: none;
+    border-bottom: 2px solid #000;
+}
+
+/* List in Derivative Builder */
 table#search-list {
-    width: 100%;
+    width: 90%;
     padding: 0;
+    margin: 1em  5%;
     background: #EEE;
     border: 1px solid #000;
     border-collapse: separate;
@@ -272,6 +321,7 @@ table#search-list .search-list-ticker,
 table#search-list .search-list-company,
 table#search-list .search-list-price,
 table#search-list .search-list-shares,
+
 table tfoot th {
     border-right: 1px solid #000;
 }

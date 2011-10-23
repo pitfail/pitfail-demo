@@ -6,46 +6,55 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util._
 import scala.xml.{NodeSeq}
+import scala.math._
 import http._
 import js._
 import JsCmds._
 import JE._
 import Helpers._
 
-import matteform._
+import intform._
 import scalaz.Scalaz._
+import up._
+import HList._
+import KList._
+import ~>._
 
-class TestForm extends RefreshableSnippet with Loggable {
+class TestForm extends Page with Loggable {
     
-    var count: Int = 0
+    def render = form.render
     
-    def render(p: RefreshPoint)(in: NodeSeq) = (
-           in
-        |> inc.render(p) _
-        |> dec.render(p) _
-        |> renderCount
-    )
+    case class Order(
+            sym:   String,
+            count: BigDecimal
+        )
     
-    object inc extends Form[Unit](
-        ConstField(()),
-        formID = Some("inc")
-    )
-    {
-        def act(u: Unit) {
-            count += 1
-        }
+    lazy val submit = Submit(form, "Send") { order =>
+        logger.info(order)
+        Noop
     }
     
-    object dec extends Form[Unit](
-        ConstField(()),
-        formID = Some("dec")
+    lazy val form: Form[Order] = Form(Order,
+        (
+            symField,
+            countField
+        ),
+        <table>
+            <tr>
+                <td>Symbol:</td>
+                <td>{symField.main}</td>
+                <td>{symField.errors}</td>
+            </tr>
+            <tr>
+                <td>Count:</td>
+                <td>{countField.main}</td>
+                <td>{countField.errors}</td>
+            </tr>
+            <tr><td>{submit.main}</td></tr>
+            <tr><td>{submit.errors}</td></tr>
+        </table>
     )
-    {
-        def act(u: Unit) {
-            count -= 1
-        }
-    }
-    
-    def renderCount = "#count *" #> count
+    lazy val symField = StringField()
+    lazy val countField = NumberField()
 }
 

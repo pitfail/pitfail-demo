@@ -13,9 +13,7 @@ import JE._
 import Helpers._
 
 object UserLink {
-    def render(in: NodeSeq): NodeSeq = {
-        val user = S.attr("user") openOr "nobody"
-        <a href={"/user/%s" format user}>{user}</a>
-    }
+    def apply(username: String) =
+        <a href={"/user/%s" format username}>{username}</a>
 }
 

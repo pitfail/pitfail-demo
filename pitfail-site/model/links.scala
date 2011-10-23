@@ -13,7 +13,12 @@ import squeryl.PrimitiveTypeMode._
 package object links {
 //
 
-type KL = KeyedEntity[Long]
+trait KL extends KeyedEntity[Long] {
+}
+object KL {
+    implicit def associateEntity[R <: KL](entity: R)(implicit table: Table[R]) =
+        AssociatedEntity(entity, table)
+}
 
 case class Link[R <: KL](val id: Long) extends LongField(id)
 object Link {
@@ -27,6 +32,9 @@ object Link {
 
     implicit def linkToNumExp[R <: KL] (link: Link[R]): NumericalExpression[_]
         = if (link == null) 0 else link.id.~
+    
+    implicit def linkToAssociated[R <: KL](link: Link[R])(implicit table: Table[R]):
+        AssociatedEntity[R] = KL.associateEntity(linkToRef(link))
 }
 
 implicit def idToLink[R <: KL] (id: Long): Link[R] = Link[R](id)
@@ -49,10 +57,16 @@ case class AssociatedEntity[R <: KL](
     def update(): Unit = inTransaction {
         table.update(entity)
     }
+    
+    def refetch(): Option[R] = inTransaction {
+        from(table)( r =>
+            where(
+                r.id === entity.id
+            )
+            select(r)
+        ) headOption
+    }
 }
-
-implicit def associateEntity[R <: KL](entity: R)(implicit table: Table[R]) =
-    AssociatedEntity(entity, table)
 
 //
 }

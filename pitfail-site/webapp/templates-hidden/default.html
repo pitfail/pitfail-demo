@@ -8,14 +8,10 @@
         <title>PitFail</title>
     </head>
     <body>
-        <div id="header">
-            <div id="header_container">
-                <h1>PitFail</h1>
-            </div>
-        </div>
+        <h1 class="container">PitFail</h1>
 
         <lift:QueryStock>
-            <div id="search">
+            <div id="search" class="container">
                 <div id="search-query">
                     <input type="text" name="query" id="search-query-field" value=""/>
                     <input type="submit" name="submit" value="Search"/>
@@ -33,43 +29,67 @@
                     <img class="quote-graph" alt="stock price over time"/>
                 </div>
 
-                <div id="search-buy" class="block">
-                    $<input type="text" name="quantity" value="0.00"/>
-                    <input type="submit" name="submit" value="Buy Shares"/>
-                    <input type="submit" name="submit" value="Add to Derivative"/>
+                <div class="block" id="search-buy">
+                        <h2>Choose Volume</h2>
+                        <p>Enter the amount you would like to purchase in dollars. This will be
+                        converted to shares and will be added to your portfolio.</p>
+
+                        <p class="price-input">
+                        $<input type="text" name="quantity" id="search-quantity" value="0.00"/>
+                        </p>
+
+                        <div class="buttons">
+                            <input type="submit" name="buy" id="search-button-buy" value="Buy Shares"/>
+                            <input type="submit" name="add" id="search-button-add" value="Add to Derivative"/>
+                        </div>
                 </div>
 
-                <table id="search-list" class="block">
-                    <thead>
-                        <tr>
-                            <th class="search-list-ticker">Ticker</th>
-                            <th class="search-list-company">Company</th>
-                            <th class="search-list-price">Price</th>
-                            <th class="search-list-shares">Shares</th>
-                            <th class="search-list-subtotal">Subtotal</th>
-                            <th class="search-list-buttons"/>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr id="search-list-row">
-                            <td class="search-list-ticker"/>
-                            <td class="search-list-company"/>
-                            <td class="search-list-price"/>
-                            <td class="search-list-shares"/>
-                            <td class="search-list-subtotal"/>
-                            <td class="search-list-buttons"><input type="submit" value="Remove" class="search-list-remove"/></td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th colspan="4">Total</th>
-                            <td class="search-list-total"/>
-                            <td class="search-list-buttons"/>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
 
+                <div id="search-derivative" class="block">
+                    <h2>Build a Derivative</h2>
+                    <p>Offer to enter a contract with
+                    <input type="text" name="recipient" class="person" value=""/>
+                    for $<input type="text" name="price-now" class="price" value="0.00"/>. On
+                    the date of <input type="text" name="expiration" class="date" value=""/> this
+                    contract will expire and the following shares of stock will be traded for
+                    $<input type="text" name="price-then" class="price" value="0.00"/>:</p>
+
+                    <table id="search-list" class="block">
+                        <thead>
+                            <tr>
+                                <th class="search-list-ticker">Ticker</th>
+                                <th class="search-list-company">Company</th>
+                                <th class="search-list-price">Price</th>
+                                <th class="search-list-shares">Shares</th>
+                                <th class="search-list-subtotal">Subtotal</th>
+                                <th class="search-list-buttons"/>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="search-list-row">
+                                <td class="search-list-ticker"/>
+                                <td class="search-list-company"/>
+                                <td class="search-list-price"/>
+                                <td class="search-list-shares"/>
+                                <td class="search-list-subtotal"/>
+                                <td class="search-list-buttons"><input type="submit" name="remove" value="Remove" class="search-list-remove"/></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="4">Total</th>
+                                <td class="search-list-total"/>
+                                <td class="search-list-buttons"/>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="buttons">
+                        <input type="submit" name="offer" value="Make Offer"/>
+                        <input type="submit" name="discard" value="Discard"/>
+                    </div>
+                </div>
+            </div>
         </lift:QueryStock>
 
         <div id="body">

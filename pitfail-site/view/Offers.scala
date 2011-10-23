@@ -15,54 +15,87 @@ import Helpers._
 import control.LoginManager
 import lib.formats._
 
-import model.{Schema}
-import Schema.{DerivativeOffer}
-
+import model.Schema._
 import LoginManager.{currentLogin}
-import org.squeryl.PrimitiveTypeMode.inTransaction
+import intform._
 
 class Offers extends Refreshable with Loggable
 {
     def registerWith = Offers
     
-    // Things to show
-    var myOffers: Seq[DerivativeOffer] = Nil
-    
-    override def refresh(): Unit = inTransaction {
-        import Schema._
-        
+    def render = (in: NodeSeq) => trans {
         for {
             name <- currentLogin
             user <- byUsername(name)
-        } {
-            val port = user.mainPortfolio
             
+            port = user.mainPortfolio
             myOffers = port.myOffers
+        } yield {
+            import snippet._
+            
+            def result =
+                <div> {
+                    if (!myOffers.isEmpty) offers
+                    else Nil: NodeSeq
+                } </div>
+            
+            def offers =
+                <h4 id="ifHaveOffers">You have an offer:</h4> ++
+                <ul class="offers">
+                    {myOffers map offer _}
+                </ul>
+            
+            def offer(o: DerivativeOffer) =
+                <li>
+                    {UserLink(o.from.owner.username)}
+                    is offering
+                    {o.derivative toHumanString}
+                    {acceptOffer(o.handle)}
+                    {declineOffer(o.handle)}
+                </li>
+            
+            result
         }
-    }
-    refresh()
+    } getOrElse <span/>
     
-    def render = (
-          ifHaveOffers
-        & offer
-    )
+    def acceptOffer(offerID: String) =
+        Submit("Accept") {
+            import control.LoginManager._
+            
+            try {
+                val user = currentUser
+                user.acceptOffer(offerID)
+                comet.Offers ! Refresh
+                comet.Portfolio ! Refresh
+            }
+            catch {
+                case NotLoggedIn =>
+                    throw new BadInput("You're not logged in")
+                    
+                case OfferExpired =>
+                    throw new BadInput("This offer has expired")
+            }
+        }
     
-    private def ifHaveOffers = "#ifHaveOffers" #> { p =>
-        if (myOffers.isEmpty) Nil
-        else p
-    }
-    
-    private def offer = "#offer" #> { li =>
-        logger.info("Rendering offer " + li)
-        
-        ("*" #> (myOffers map ( o =>
-              "user=blank [user]"    #> o.from.owner.username
-            & "#description"         #> o.derivative.toHumanString
-            & "name=offerID [value]" #> o.handle
-        )))(li)
-    }
+    def declineOffer(offerID: String) =
+        Submit("Decline") {
+            import control.LoginManager._
+            
+            try {
+                val user = currentUser
+                user.declineOffer(offerID)
+                comet.Offers ! Refresh
+                comet.Portfolio ! Refresh
+            }
+            catch {
+                case NotLoggedIn =>
+                    throw new BadInput("You're not logged in")
+                    
+                case OfferExpired =>
+                    throw new BadInput("This offer has expired")
+            }
+        }
 }
 
 object Offers extends RefreshHub
-
 

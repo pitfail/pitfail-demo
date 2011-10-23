@@ -14,15 +14,17 @@ import Helpers._
 
 import scala.math.{BigDecimal}
 import lib.formats._
-import matteform._
-import view.UserField
+import intform._
 
 import model.derivatives._
 import model.Schema.User
 
-class SellDerivative extends RefreshableSnippet with Loggable
+class SellDerivative extends Page with Loggable
 {
-    def render(p: RefreshPoint)(in: NodeSeq) = form.render(p)(in)
+    def render =
+        <div class="sellDerivative">
+            {form.render}
+        </div>
     
     case class Order(
         to:         To,
@@ -35,39 +37,74 @@ class SellDerivative extends RefreshableSnippet with Loggable
     case class ToUser(user: User) extends To
     case object ToAuction extends To
     
-    object form extends Form[Order](
-        AggregateField(Order,
-                CaseField[To]("to",
-                    "user" -> AggregateField(ToUser,
-                                      UserField("recipient", "")
-                                  :^: KNil
-                              ),
-                    "auction" -> ConstField(ToAuction)
-                )
-            :^: ListField[Security]("securities", this,
-                    AggregateField(SecStock,
-                            StringField("ticker", "")
-                        :^: NumberField("shares", "1")
-                        :^: KNil
-                    )
-                )
-            :^: StringField("on", "February 42th")
-            :^: CaseField[Condition]("cond",
-                    "always" -> ConstField(CondAlways),
-                    "when"   -> ConstField(CondAlways)
-                )
-            :^: KNil
+    lazy val form: Form[Order] = Form(Order,
+        (
+            toField,
+            secsField,
+            execField,
+            condField
+        ),
+        formRender
+    )
+    
+    def formRender =
+        <table class="sellDerivative">
+            <tr><td>To:</td>
+                <td>{toRender}</td>
+                <td>{toField.errors}</td>
+            </tr>
+            <tr><td>Securities:</td>
+                <td>(todo)</td>
+            </tr>
+            <tr><td>On:</td>
+                <td>{execField.main}</td>
+                <td>{execField.errors}</td>
+            </tr>
+            <tr><td>If:</td>
+                <td>{condRender}</td>
+                <td>{condField.errors}</td>
+            </tr>
+            
+            <tr><td>{sellSubmit.main}</td></tr>
+            <tr><td>{sellSubmit.errors}</td></tr>
+        </table>
+    
+    lazy val toField = CaseField[To](
+        (
+            recipientField,
+            ConstField(ToAuction)
         )
     )
-    {
-        def act(order: Order) {
-            import comet._
-            userSellDerivative(order)
-            Offers ! Refresh
-        }
-    }
     
-    def userSellDerivative(order: Order) {
+    def toRender =
+        <ul>
+            <li>{toField._1} User: {userField.main} {userField.errors}</li>
+            <li>{toField._2} Auction</li>
+        </ul>
+        
+    lazy val recipientField = AggregateField(ToUser, userField)
+    lazy val userField = UserField("")
+        
+    lazy val secsField = ConstField(Seq[Security]())
+        
+    lazy val execField = StringField()
+
+    lazy val condField = CaseField[Condition](
+        (
+            ConstField(CondAlways),
+            ifField
+        )
+    )
+    
+    def condRender =
+        <ul>
+            <li>{condField._1} Always</li>
+            <li>{condField._2} If (todo)</li>
+        </ul>
+
+    lazy val ifField = ConstField(CondAlways)
+    
+    lazy val sellSubmit = Submit(form, "Sell") { order =>
         import model.Schema._
         import control.LoginManager._
         import org.joda.time.DateTime
@@ -76,7 +113,8 @@ class SellDerivative extends RefreshableSnippet with Loggable
             val deriv = Derivative(
                 order.securities,
                 new DateTime, // TODO: Change this!
-                order.condition
+                order.condition,
+                true
             )
         
             val user = currentUser
@@ -87,6 +125,12 @@ class SellDerivative extends RefreshableSnippet with Loggable
                 case ToAuction =>
                     user.offerDerivativeAtAuction(deriv)
             }
+            
+            comet.Portfolio ! comet.Refresh
+            comet.News      ! comet.Refresh
+            comet.Offers    ! comet.Refresh
+            
+            form.reset()
         }
         catch {
             case NotLoggedIn =>

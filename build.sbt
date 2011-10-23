@@ -24,8 +24,7 @@ includeFilter in Compile in unmanagedSources <<=
 
 scalacOptions ++= Seq(
     "-deprecation",
-    "-unchecked",
-    "-explaintypes"
+    "-unchecked"
 )
 
 // For scalaz

@@ -12,11 +12,8 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import control.LoginManager
 import lib.formats._
-
-import net.liftweb.actor
-import actor._
+import snippet._
 
 class News extends Refreshable
     with Loggable
@@ -25,30 +22,19 @@ class News extends Refreshable
     
     def registerWith = News
     
-    override def render = doRender _
-    
-    def doRender(in: NodeSeq) = trans {
-        val events: Seq[NewsEvent] = recentEvents(10)
-        
-        val headlines = events map { ev =>
-            ev.action match {
-                case "buy" => (
-                      "choice=blank [choice]" #> "buy"
-                    & "user=blank [user]" #> ev.subject.username
-                    & "#ticker *" #> ev.ticker
-                    & "#volume *" #> (ev.price.$)
-                )
-                case "sell" => (
-                      "choice=blank [choice]" #> "sell"
-                    & "user=blank [user]" #> ev.subject.username
-                    & "#ticker *" #> ev.ticker
-                    & "#volume *" #> (ev.price.$)
-                )
-            }
-        }
-        
-        ("#newsItem *" #> headlines)(in)
+    def render = (in: NodeSeq) => trans {
+        <ul class="news"> {
+            recentEvents(10) map event _
+        } </ul>
     }
+    
+    def event(ev: NewsEvent) =
+        ev.action match {
+            case "buy" =>
+                <li>{UserLink(ev.subject.username)} bought {ev.price.$} of {ev.ticker}</li>
+            case "sell" =>
+                <li>{UserLink(ev.subject.username)} sold {ev.price.$} of {ev.ticker}</li>
+        }
 }
 
 object News extends RefreshHub
