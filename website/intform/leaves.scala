@@ -122,3 +122,24 @@ object DateField {
     val format = DateTimeFormat forPattern formatSpec
 }
 
+import org.joda.time.DateTime
+import org.joda.time.format.{DateTimeFormat,DateTimeFormatter}
+
+class DateTimeField(initial: DateTime, formatter: DateTimeFormatter)
+    extends TextField[DateTime](formatter.print(initial))
+{
+    def produce() = 
+        try {
+            OK(formatter.parseDateTime(text))
+        }
+        catch {
+            // TODO: Handle DateTime exceptions.
+            case _: NumberFormatException =>
+                Error("Should be a number")
+        }
+}
+object DateTimeField {
+    def apply(initial: DateTime, formatter: DateTimeFormatter) =
+        new DateTimeField(initial, formatter)
+}
+

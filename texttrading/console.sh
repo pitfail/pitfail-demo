@@ -1,4 +1,7 @@
 #!/bin/sh
 
-sbt -Djline.terminal=jline.UnsupportedTerminal 'run-main texttrading.test.ConsoleTest'
+(
+	cd $(dirname "$0")/../
+	sbt -Djline.terminal=jline.UnsupportedTerminal 'run-main texttrading.test.ConsoleTest'
+)
 
