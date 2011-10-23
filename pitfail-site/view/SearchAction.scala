@@ -106,21 +106,8 @@ class SearchAction extends Page with Loggable
     }
 
     private def addStockToDerivative(quote: Quote, volume: BigDecimal) = {
-        notifyAndRefresh(AddToDerivative(quote, volume))
-        /*
-        order = (order get quote.stock.symbol) match {
-            // Add more shares to an existing stock.
-            case Some((oldQuote, oldVolume)) => {
-                order + ((quote.stock.symbol, (quote, oldVolume + volume)))
-            }
-
-            // Add a new stock.
-            case None => {
-                order + ((quote.stock.symbol, (quote, volume)))
-            }
-        }
         currentQuote = None
-        */
+        notifyAndRefresh(AddToDerivative(quote, volume))
     }
 
     private def notify(action: StockAction): JsCmd =
