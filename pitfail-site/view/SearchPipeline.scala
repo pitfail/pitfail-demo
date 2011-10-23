@@ -30,16 +30,26 @@ class SearchPipeline extends Page with Loggable
 {
     val searchForm = new SearchQuote()
     val actionForm = new SearchAction()
+    val derivativeForm = new SearchDerivativeBuilder()
 
     searchForm.listen(_ match {
         case Some(quote) => actionForm.changeQuote(quote) 
         case None        => actionForm.clearQuote
     })
 
+    actionForm.listen(_ match {
+        case CancelAction()  => searchForm.clearQuote
+        case BuyShares(_, _) => searchForm.clearQuote
+        case AddToDerivative(quote, volume) => {
+            searchForm.clearQuote & derivativeForm.addQuote(quote, volume)
+        }
+    })
+
     private val refreshable = Refreshable(
         <div id="search" class="container">
             {searchForm.render}
             {actionForm.render}
+            {derivativeForm.render}
         </div>
     )
 
