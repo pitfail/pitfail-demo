@@ -29,8 +29,8 @@ import lib.formats._
 class SearchPipeline extends Page with Loggable
 {
     val searchForm = new SearchQuote()
-    val actionForm = new SearchAction()
-    val derivativeForm = new SearchDerivativeBuilder()
+    val actionForm = new StockOrderer()
+    val derivativeForm = new DerivativeBuilder()
 
     searchForm.listen(_ match {
         case Some(quote) => actionForm.changeQuote(quote) 
@@ -38,10 +38,14 @@ class SearchPipeline extends Page with Loggable
     })
 
     actionForm.listen(_ match {
-        case CancelAction()  => searchForm.clearQuote
-        case BuyShares(_, _) => searchForm.clearQuote
-        case AddToDerivative(quote, volume) => {
-            searchForm.clearQuote & derivativeForm.addQuote(quote, volume)
+        case _: NoOrder =>
+            searchForm.clearQuote
+
+        case _: BuyShares =>
+            searchForm.clearQuote
+
+        case order: AddToDerivative => {
+            searchForm.clearQuote & derivativeForm.addOrder(order)
         }
     })
 

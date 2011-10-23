@@ -31,19 +31,17 @@ abstract class Recipient
 case class SpecificUser(username: String) extends Recipient
 case class OpenAuction() extends Recipient
 
-case class Order(quote: Quote, volume: BigDecimal)
-
 case class DerivativeOrder(
     recipient:   Recipient,
-    securities:  Iterable[Order],
+    securities:  Iterable[AddToDerivative],
     expiration:  String,
     price:       BigDecimal,
     strikePrice: BigDecimal
 )
 
-class SearchDerivativeBuilder extends Page with Loggable
+class DerivativeBuilder extends Page with Loggable
 {
-    private var stocks: SortedMap[String, (Quote, BigDecimal)] = TreeMap()
+    private var stocks: SortedMap[String, AddToDerivative] = TreeMap()
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
 
     private val refreshable = Refreshable(
@@ -81,9 +79,7 @@ class SearchDerivativeBuilder extends Page with Loggable
             DerivativeOrder(
                 recipient = SpecificUser(recipient),
                 price = price,
-                securities = (stocks map {
-                    case (_, (quote, volume)) => Order(quote, volume)
-                }),
+                securities = (stocks map { case (_, order) => order }),
                 expiration = expiration,
                 strikePrice = strikePrice)
         ,
@@ -112,7 +108,7 @@ class SearchDerivativeBuilder extends Page with Loggable
                     </tr>
                 </thead>
                 <tbody>
-                    {stocks map { case (symbol, (quote, volume)) => formatStockRow(quote, volume) }}
+                    {stocks map { case (symbol, order) => formatStockRow(order.quote, order.volume) }}
                 </tbody>
                 <tfoot>
                     <tr>
@@ -173,16 +169,16 @@ class SearchDerivativeBuilder extends Page with Loggable
         listeners ::= callback
     }
 
-    def addQuote(quote: Quote, volume: BigDecimal): JsCmd = {
-        stocks = stocks + ((quote.stock.symbol, (quote, volume)))
+    def addOrder(order: AddToDerivative): JsCmd = {
+        stocks = stocks + ((order.quote.stock.symbol, order))
         refreshable.refresh
     }
 
     def getTotalVolume: BigDecimal = {
         (stocks map {
             // TODO: This should be a floor.
-            case (_, (quote, requestedVolume)) => {
-                (requestedVolume / quote.price).floor * quote.price
+            case (_, AddToDerivative(quote, volume)) => {
+                (volume / quote.price).floor * quote.price
             }
         }).fold[BigDecimal](0)(_ + _)
     }

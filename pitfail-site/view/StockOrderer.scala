@@ -27,15 +27,15 @@ import scalaz.Scalaz._
 
 import lib.formats._
 
-abstract class StockAction
-case class CancelAction() extends StockAction
-case class BuyShares(quote: Quote, volume: BigDecimal) extends StockAction
-case class AddToDerivative(quote: Quote, volume: BigDecimal) extends StockAction
+abstract class StockOrder
+case class NoOrder() extends StockOrder
+case class BuyShares(quote: Quote, volume: BigDecimal) extends StockOrder
+case class AddToDerivative(quote: Quote, volume: BigDecimal) extends StockOrder
 
-class SearchAction extends Page with Loggable
+class StockOrderer extends Page with Loggable
 {
     private var currentQuote: Option[Quote] = None;
-    private var listeners: List[StockAction => JsCmd] = Nil;
+    private var listeners: List[StockOrder => JsCmd] = Nil;
 
     private val refreshable = Refreshable(
         currentQuote match {
@@ -79,7 +79,7 @@ class SearchAction extends Page with Loggable
         }
 
         lazy val submitCancel = Submit(form, "Cancel") { v =>
-            notifyAndRefresh(CancelAction())
+            notifyAndRefresh(NoOrder())
         }
         
         form.render
@@ -110,17 +110,17 @@ class SearchAction extends Page with Loggable
         notifyAndRefresh(AddToDerivative(quote, volume))
     }
 
-    private def notify(action: StockAction): JsCmd =
+    private def notify(action: StockOrder): JsCmd =
         (listeners map { (callback) => callback(action) }).foldLeft(Noop)(_ & _)
 
-    private def notifyAndRefresh(action: StockAction): JsCmd = {
+    private def notifyAndRefresh(action: StockOrder): JsCmd = {
         notify(action) & refreshable.refresh
     }
 
     /*
      * Public API
      */
-    def listen(callback: StockAction => JsCmd) {
+    def listen(callback: StockOrder => JsCmd) {
         listeners ::= callback
     }
 
