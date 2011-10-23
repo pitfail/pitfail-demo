@@ -1,0 +1,9 @@
+
+To try this out:
+
+	sbt -Djline.terminal=jline.UnsupportedTerminal 'run-main texttrading.test.ConsoleTest'
+
+or run (from the root directory)
+
+	./texttrading/console.sh
+
