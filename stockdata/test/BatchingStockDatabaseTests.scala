@@ -1,15 +1,17 @@
-package com.github.pitfail
+package stockdata
 
 import org.joda.time.DateTime
-import org.scalatest.Spec
-import org.scalatest.matchers.ShouldMatchers
 import scala.math.BigDecimal
 
+import org.scalatest.Spec
+import org.scalatest.matchers.ShouldMatchers
+
 class BatchingStockDatabaseTests extends Spec with ShouldMatchers {
-  val testStock1 = Stock("NasdaqNM", "MSFT")
-  val testStock2 = Stock("NasdaqNM", "AAPL")
-  val testQuote1 = Quote(testStock1, BigDecimal("25.12"), new DateTime())
-  val testQuote2 = Quote(testStock1, BigDecimal("350.34"), new DateTime())
+  val testStock1 = TH.msft_stock
+  val testStock2 = TH.appl_stock
+
+  val testQuote1 = TH.q1(price = BigDecimal("25.12"))
+  val testQuote2 = TH.q2(price = BigDecimal("350.34"))
   val testQuotes = Map(testStock1 -> testQuote1, testStock2 -> testQuote2)
 
   describe("constructor") {
