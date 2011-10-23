@@ -1,4 +1,4 @@
-package com.github.pitfail
+package stockdata
 
 import org.scalatest.Spec
 import org.scalatest.matchers.ShouldMatchers

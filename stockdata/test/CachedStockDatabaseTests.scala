@@ -1,4 +1,4 @@
-package com.github.pitfail
+package stockdata
 
 import java.io.IOException
 import java.net.URL
@@ -8,8 +8,8 @@ import org.scalatest.matchers.ShouldMatchers
 import scala.math.BigDecimal
 
 class CachedStockDatabaseTests extends Spec with ShouldMatchers {
-  val testStock1 = Stock("NasdaqNM", "MSFT")
-  val testStock2 = Stock("NasdaqNM", "AAPL")
+  val testStock1 = TH.msft_stock
+  val testStock2 = TH.appl_stock
 
   describe("constructor") {
     it("throws when database is null") {
@@ -35,7 +35,7 @@ class CachedStockDatabaseTests extends Spec with ShouldMatchers {
     it("queries if not in cache") {
       // Arrange:
       var queried: Boolean = false
-      val expectedQuote = Quote(testStock1, BigDecimal("1.23"), new DateTime())
+      val expectedQuote = TH.q1(price = BigDecimal("1.23"), time = new DateTime())
       val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
         stocks should equal (Iterable(testStock1))
         queried = true
@@ -54,7 +54,7 @@ class CachedStockDatabaseTests extends Spec with ShouldMatchers {
     it("queries if cache is expired") {
       // Arrange:
       var queryCount: Int = 0
-      val expectedQuote = Quote(testStock1, BigDecimal("1.23"), new DateTime(0L))
+      val expectedQuote = TH.q1(price = BigDecimal("1.23"), time = new DateTime(0L))
       val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
         stocks should equal (Iterable(testStock1))
         queryCount += 1
@@ -75,7 +75,7 @@ class CachedStockDatabaseTests extends Spec with ShouldMatchers {
     it("uses cache if not expired") {
       // Arrange:
       var queryCount: Int = 0
-      val expectedQuote = Quote(testStock1, BigDecimal("1.23"), new DateTime())
+      val expectedQuote = TH.q1(price = BigDecimal("1.23"), time = new DateTime())
       val database = new MockStockDatabase((stocks: Iterable[Stock]) => {
         queryCount match {
           case 0 => { stocks should equal (Iterable(testStock1)) }
@@ -98,8 +98,8 @@ class CachedStockDatabaseTests extends Spec with ShouldMatchers {
 
     it("mixes cache hits and misses") {
       // Arrange:
-      val expectedQuote1 = Quote(testStock1, BigDecimal("1.23"), new DateTime())
-      val expectedQuote2 = Quote(testStock2, BigDecimal("1.23"), new DateTime())
+      val expectedQuote1 = TH.q1(price = BigDecimal("1.23"), time = new DateTime())
+      val expectedQuote2 = TH.q2(price = BigDecimal("1.23"), time = new DateTime())
       val quoteMap = Map(testStock1 -> expectedQuote1, testStock2 -> expectedQuote2)
       var queryCount: Int = 0
 
