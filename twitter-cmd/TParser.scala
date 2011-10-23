@@ -1,24 +1,11 @@
 
-package twitter-cmd
+package twitterCmd
 
 import scala.util.parsing.combinator._
 import scala.util.parsing.input._
 import scala.math._
 
-object TweetParser extends JavaTokenParsers {
-    def main(args: Array[String]) {
-        val cmds = Seq(
-            "buy $23 of MSFT",
-            "buy 23 shares of MSFT",
-            "sell MSFT",
-            "your face"
-        )
-
-        cmds foreach { text =>
-            println("%s:\n%s" format (text, action(text)) )
-            println()
-        }
-    }
+object TParser extends JavaTokenParsers {
 
     sealed abstract class Action
     case class Buy(asset: StockAsset) extends Action
