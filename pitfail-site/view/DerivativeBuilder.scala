@@ -26,6 +26,8 @@ import model.Schema.User
 import scalaz.Scalaz._
 import lib.formats._
 
+import org.joda.time.DateTime
+import org.joda.time.format.{DateTimeFormat,DateTimeFormatter}
 
 abstract class Recipient
 case class SpecificUser(username: String) extends Recipient
@@ -41,6 +43,7 @@ case class DerivativeOrder(
 
 class DerivativeBuilder extends Page with Loggable
 {
+    private val formatter = DateTimeFormat.forPattern("MM/dd/yyyy");
     private var stocks: SortedMap[String, AddToDerivative] = TreeMap()
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
 
@@ -51,15 +54,18 @@ class DerivativeBuilder extends Page with Loggable
             form.render
     )
 
-    implicit def toDollars(price: Option[BigDecimal]) = new {
-        def $: String = {
-            (price map (_.$)) getOrElse "n/a" 
-        }
+    implicit def toDate(str: String) = new {
+        def toDate: DateTime =
+            formatter.parseDateTime(str)
     }
 
-    implicit def toPercent(percent: Option[BigDecimal]) = new {
+    implicit def toDollars(number: Option[BigDecimal]) = new {
+        def $: String = {
+            (number map (_.$)) getOrElse "n/a" 
+        }
+
         def %(): String = {
-            (percent map (_.toString + "%")) getOrElse "n/a"
+            (number map (_.%())) getOrElse "n/a"
         }
     }
 
@@ -92,9 +98,9 @@ class DerivativeBuilder extends Page with Loggable
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
             <p>Offer to enter a contract with {recipientField.main & <input/>}
-            for the price of {priceField.main & <input/>}. On the date
-            {expirationField.main & <input/>} the following stocks will be
-            sold for {strikePriceField.main & <input/>}:</p>
+            for the price of ${priceField.main & <input class="price"/>}. On the date
+            {expirationField.main & <input class="date"/>} the following stocks will be
+            sold for ${strikePriceField.main & <input class="price"/>}:</p>
 
             <table class="block" id="search-list">
                 <thead>
@@ -144,12 +150,12 @@ class DerivativeBuilder extends Page with Loggable
     // TODO: This should allow a public auction.
     lazy val recipientField = StringField("")
 
-    // TODO: This should be tomorrow's date.
-    lazy val expirationField = StringField("")
+    val tomorrow = DateTime.now().plusDays(1)
+    lazy val expirationField = StringField(formatter.print(tomorrow))
 
     // TODO: These should default to the current value of the stocks.
-    lazy val priceField = NumberField("0.00")
-    lazy val strikePriceField = NumberField("0.00")
+    lazy val priceField = NumberField(getTotalVolume.toString)
+    lazy val strikePriceField = NumberField(getTotalVolume.toString)
 
     lazy val offerSubmit = Submit(form, "Offer")  { order => Noop }
     lazy val cancelSubmit = Submit(form, "Cancel") { order => Noop }
