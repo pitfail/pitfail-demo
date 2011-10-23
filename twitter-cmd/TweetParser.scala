@@ -1,5 +1,5 @@
 
-package pitfail
+package twitterCmd
 
 import scala.collection.immutable.ListMap
 
@@ -19,20 +19,20 @@ case class NonDirectedTweet () extends BadParse
 object TweetParser {
   def apply(s: String) = parse(s)
 
-  def h_groupWithIx[A](as: List[A], bs: Map[A, (Int, List[Int])], curr_pos: Int)
-  : Map[A, (Int, List[Int])] = {
+  def h_groupWithIx[A](as: List[A], bs: Map[A, (Int, Set[Int])], curr_pos: Int)
+  : Map[A, (Int, Set[Int])] = {
     if ((as size) == 0) {
       bs
     } else {
       val a = as head
-      val b @ (ct, poses) = bs getOrElse(a, { (0, List()) })
-      val new_bs = bs + ((a, (ct + 1, curr_pos :: poses)))
+      val b @ (ct, poses) = bs getOrElse(a, { (0, Set[Int]()) })
+      val new_bs = bs + ((a, (ct + 1, poses + curr_pos)))
       h_groupWithIx(as tail, new_bs, curr_pos + 1)
     }
   }
 
-  def groupWithIx[A](as: List[A]) : Map[A, (Int, List[Int])] = {
-    h_groupWithIx(as, Map[A, (Int, List[Int])](), 0)
+  def groupWithIx[A](as: List[A]) : Map[A, (Int, Set[Int])] = {
+    h_groupWithIx(as, Map[A, (Int, Set[Int])](), 0)
   }
 
   /* Determine the number of times a particular word is mentioned in the tweet. */
