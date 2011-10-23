@@ -72,6 +72,11 @@ class SearchQuote extends Page with Loggable
         notifyAndRefresh(currentQuote)
     }
 
+    def clearQuote: JsCmd = {
+        currentQuote = None
+        notifyAndRefresh(currentQuote)
+    }
+
     override def render = refreshable.render
     
     /*

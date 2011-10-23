@@ -27,10 +27,15 @@ import scalaz.Scalaz._
 
 import lib.formats._
 
+abstract class StockAction
+case class CancelAction() extends StockAction
+case class BuyShares(quote: Quote, volume: BigDecimal) extends StockAction
+case class AddToDerivative(quote: Quote, volume: BigDecimal) extends StockAction
+
 class SearchAction extends Page with Loggable
 {
     private var currentQuote: Option[Quote] = None;
-    private var listeners: List[(Option[Quote], BigDecimal) => JsCmd] = Nil;
+    private var listeners: List[StockAction => JsCmd] = Nil;
 
     private val refreshable = Refreshable(
         currentQuote match {
@@ -56,8 +61,9 @@ class SearchAction extends Page with Loggable
                 </p>
 
                 <div class="buttons">
-                {submitBuy.main & <input id="search-button-buy"/>} 
-                {submitAdd.main & <input id="search-button-add"/>} 
+                    {submitBuy.main & <input/>} 
+                    {submitAdd.main & <input/>} 
+                    {submitCancel.main & <input/>} 
                 </div>
             </div>
         )
@@ -66,24 +72,27 @@ class SearchAction extends Page with Loggable
     
         lazy val submitBuy = Submit(form, "Buy Shares") { volume =>
             buyStock(quote, volume)
-            form.refresh
         }
         
         lazy val submitAdd = Submit(form, "Add to Derivative") { v =>
-            //addStockToDerivative(quote, v)
-            form.refresh
+            addStockToDerivative(quote, v)
+        }
+
+        lazy val submitCancel = Submit(form, "Cancel") { v =>
+            notifyAndRefresh(CancelAction())
         }
         
         form.render
     }
 
-    private def buyStock(quote: Quote, volume: BigDecimal) = {
+    private def buyStock(quote: Quote, volume: BigDecimal): JsCmd = {
         import control.LoginManager._
         import model.Schema._
 
         try {
             currentUser.mainPortfolio.buyStock(quote.stock.symbol, volume)
             currentQuote = None
+            notifyAndRefresh(BuyShares(quote, volume))
         } catch {
             case NegativeVolume => throw BadInput(
                 "You must buy more than $0.00 of a stock"
@@ -97,6 +106,7 @@ class SearchAction extends Page with Loggable
     }
 
     private def addStockToDerivative(quote: Quote, volume: BigDecimal) = {
+        notifyAndRefresh(AddToDerivative(quote, volume))
         /*
         order = (order get quote.stock.symbol) match {
             // Add more shares to an existing stock.
@@ -113,17 +123,17 @@ class SearchAction extends Page with Loggable
         */
     }
 
-    private def notify(quote: Option[Quote], volume: BigDecimal): JsCmd =
-        (listeners map { (callback) => callback(quote, volume) }).foldLeft(Noop)(_ & _)
+    private def notify(action: StockAction): JsCmd =
+        (listeners map { (callback) => callback(action) }).foldLeft(Noop)(_ & _)
 
-    private def notifyAndRefresh(quote: Option[Quote], volume: BigDecimal): JsCmd = {
-        notify(quote, volume) & refreshable.refresh
+    private def notifyAndRefresh(action: StockAction): JsCmd = {
+        notify(action) & refreshable.refresh
     }
 
     /*
      * Public API
      */
-    def listen(callback: (Option[Quote], BigDecimal) => JsCmd) {
+    def listen(callback: StockAction => JsCmd) {
         listeners ::= callback
     }
 
@@ -139,3 +149,4 @@ class SearchAction extends Page with Loggable
 
     override def render = refreshable.render
 }
+

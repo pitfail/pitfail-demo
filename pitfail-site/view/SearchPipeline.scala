@@ -36,6 +36,12 @@ class SearchPipeline extends Page with Loggable
         case None        => actionForm.clearQuote
     })
 
+    actionForm.listen(_ match {
+        case CancelAction()  => searchForm.clearQuote
+        case BuyShares(_, _) => searchForm.clearQuote
+        case AddToDerivative(quote, volume) => logger.info("Add " + quote + " to derivative.")
+    })
+
     private val refreshable = Refreshable(
         <div id="search" class="container">
             {searchForm.render}
