@@ -3,6 +3,8 @@ name := "pitfail-demo"
 
 scalaVersion := "2.9.1"
 
+target <<= baseDirectory(_ / ".target")
+
 // This is where you'd set the log level. Believe it or not this is
 // not very useful. Defaults to Info.
 // logLevel := Level.Debug

@@ -12,8 +12,9 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import scala.math.{BigDecimal}
-import lib.formats._
+import scala.math._
+import org.joda.time._
+import formats._
 import intform._
 
 import model.derivatives._
@@ -29,7 +30,7 @@ class SellDerivative extends Page with Loggable
     case class Order(
         to:         To,
         securities: Seq[Security],
-        on:         String,
+        on:         DateTime,
         early:      Boolean,
         condition:  Condition
     )
@@ -48,19 +49,23 @@ class SellDerivative extends Page with Loggable
         ),
         <table class="sellDerivative">
             <tr><td>To:</td>
-                <td>{toRender}</td>
+                <td>{toField.main}</td>
                 <td>{toField.errors}</td>
             </tr>
             <tr><td>Securities:</td>
                 <td>{secsField.main}</td>
             </tr>
             <tr><td>On:</td>
-                <td>{execField.main}</td>
+                <td>{execField.main} ({execField.format})</td>
                 <td>{execField.errors}</td>
+            </tr>
+            <tr>
+                <td/>
                 <td>{earlyField.main} can be exercised early</td>
             </tr>
+            <tr/>
             <tr><td>If:</td>
-                <td>{condRender}</td>
+                <td>{condField.main}</td>
                 <td>{condField.errors}</td>
             </tr>
             
@@ -73,14 +78,13 @@ class SellDerivative extends Page with Loggable
         (
             recipientField,
             ConstField(ToAuction)
-        )
+        ),
+        choices =>
+            <ul>
+                <li>{choices._1} User: {userField.main} {userField.errors}</li>
+                <li>{choices._2} Auction</li>
+            </ul>
     )
-    
-    def toRender =
-        <ul>
-            <li>{toField._1} User: {userField.main} {userField.errors}</li>
-            <li>{toField._2} Auction</li>
-        </ul>
         
     lazy val recipientField = AggregateField(
         ToUser,
@@ -117,23 +121,22 @@ class SellDerivative extends Page with Loggable
         )
     }
         
-    lazy val execField = StringField()
+    lazy val execField = DateField()
     lazy val earlyField = BooleanField()
 
     lazy val condField = CaseField[Condition](
         (
             ConstField(CondAlways),
             ifField
-        )
+        ),
+        choices =>
+            <ul>
+                <li>{choices._1} Always</li>
+                <li>{choices._2} If {ifField.main}</li>
+            </ul>
     )
-    
-    def condRender =
-        <ul>
-            <li>{condField._1} Always</li>
-            <li>{condField._2} If (todo)</li>
-        </ul>
 
-    lazy val ifField = ConstField(CondAlways)
+    lazy val ifField = ConditionField()
     
     lazy val sellSubmit = Submit(form, "Sell") { order =>
         import model.Schema._
@@ -143,7 +146,7 @@ class SellDerivative extends Page with Loggable
         try {
             val deriv = Derivative(
                 order.securities,
-                new DateTime, // TODO: Change this!
+                order.on,
                 order.condition,
                 order.early
             )

@@ -1,5 +1,4 @@
 
-package code
 package model
 
 package object derivatives {
@@ -7,7 +6,7 @@ package object derivatives {
 import java.sql.Timestamp
 // Joda time
 import org.joda.time.{DateTime}
-import lib.formats._
+import formats._
 
 import net.liftweb.common.Loggable
 
@@ -63,27 +62,42 @@ case class SecDerivative(
 
 // -------------------------------------------
 
-sealed abstract class Condition
+sealed abstract class Condition {
+    def isTrue: Boolean
+}
 
-case object CondAlways extends Condition
+case object CondAlways extends Condition {
+    def isTrue = true
+}
 
 case class CondGreater(
         a: ComparableSecurity,
         b: ComparableSecurity
-    ) extends Condition
+    )
+    extends Condition
+{
+    def isTrue = a.toDollars > b.toDollars
+}
 
 // -------------------------------------------
 
-sealed abstract class ComparableSecurity
+sealed abstract class ComparableSecurity {
+    def toDollars: BigDecimal
+}
 
 case class CompSecStock(
-        ticker: String,
-        shares: BigDecimal
+        ticker: String
     ) extends ComparableSecurity
+{
+    def toDollars = Stocks.stockPrice(ticker)
+}
 
 case class CompSecDollar(
         amount: BigDecimal
     ) extends ComparableSecurity
+{
+    def toDollars = amount
+}
 
 } // package
 

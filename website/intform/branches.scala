@@ -65,7 +65,8 @@ object AggregateField {
 // CaseField
 
 class CaseField[+A](
-        cases: Seq[Field[A]]
+        cases: Seq[Field[A]],
+        val renderer: CaseChoices => NodeSeq
     )
     extends Field[A]
     with Loggable
@@ -94,8 +95,9 @@ class CaseField[+A](
 }
 object CaseField {
     def apply[A](
-        c: Seq[Field[A]]
-    ) = new CaseField(c)
+        c: Seq[Field[A]],
+        r: CaseChoices => NodeSeq
+    ) = new CaseField(c, r)
 }
 
 // ---------------------------------------------------------------------------

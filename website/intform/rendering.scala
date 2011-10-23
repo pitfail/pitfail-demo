@@ -102,16 +102,30 @@ trait AggregateRender extends FieldRender {
     def main = renderer()
 }
 
-trait CaseRender extends ErrorRender {
+trait CaseRender
+    extends FieldRender
+    with ErrorRender
+{
     val table: Map[String,Field[Any]]
     var selected: Option[String]
+    val renderer: CaseChoices => NodeSeq
     
-    def radios = SHtml.radio(
-        table.keys toList,
-        selected,
-        s => selected = Some(s)
+    def main = renderer(new CaseChoices(
+        {
+            val holder = SHtml.radio(
+                table.keys toList,
+                selected,
+                s => selected = Some(s)
+            )
+            0 to table.keys.length map {holder(_)}
+        }
+    ))
+}
+
+class CaseChoices(
+        radios: Seq[NodeSeq]
     )
-    
+{
     def _1 = radios(0)
     def _2 = radios(1)
     def _3 = radios(2)
@@ -154,5 +168,9 @@ trait CheckBoxRender extends FieldRender {
     var state: Boolean
     
     def main: NodeSeq = SHtml.checkbox(state, state = _)
+}
+
+trait DateRender extends TextRender {
+    def format: NodeSeq = <span>{DateField.formatSpec}</span>
 }
 

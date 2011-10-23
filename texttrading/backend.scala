@@ -1,8 +1,8 @@
 
 package texttrading
 
-import code.lib.formats._
-import code.model.Schema._
+import formats._
+import model.Schema._
 import scalaz.Scalaz._
 
 class PitFailBackend extends Backend {

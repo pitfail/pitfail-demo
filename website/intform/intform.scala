@@ -107,7 +107,7 @@ class Submit[A](
                     errorText = msg
                     Noop
                 case e: Any =>
-                    logger.error("Unhandled error in submission: " + e)
+                    logger.error("Unhandled error in submission", e)
                     errorText = "An unknown error occurred (see log messages)"
                     Noop
             }

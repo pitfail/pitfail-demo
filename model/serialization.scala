@@ -1,4 +1,6 @@
 
+package model
+
 package object serialization {
 //
 

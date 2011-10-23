@@ -2,8 +2,6 @@
 package code
 package control
 
-import lib.Sugar._
-
 import net.liftweb.{common, http, openid, util, json}
 import common._
 import util._
@@ -18,6 +16,9 @@ import builder.api.TwitterApi
 import model.{Token, Verifier, OAuthRequest, Verb, Response}
 import oauth.OAuthService
 import collection.JavaConversions._
+
+// Sugar for :=
+import sessions._
 
 // Secretz
 // These are not in the repo

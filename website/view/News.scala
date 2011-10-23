@@ -12,7 +12,7 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import lib.formats._
+import formats._
 import snippet._
 
 class News extends Refreshable

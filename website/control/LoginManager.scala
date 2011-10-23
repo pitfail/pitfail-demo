@@ -2,13 +2,11 @@
 package code
 package control
 
-import lib.Sugar._
-
 import net.liftweb.{common, http, openid, util, json}
 import common._
 import util._
 import http._
-import http.{SessionVar}
+import sessions._
 import model.Schema._
 
 object LoginManager {

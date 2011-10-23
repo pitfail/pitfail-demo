@@ -14,6 +14,9 @@ import js._
 import JsCmds._
 import JE._
 
+// -----------------------------------------------------------------------
+// TextField
+
 abstract class TextField[+A](initText: String)
     extends Field[A]
     with TextRender
@@ -24,6 +27,9 @@ abstract class TextField[+A](initText: String)
     def reset() { text = initText }
 }
 
+// -----------------------------------------------------------------------
+// StringField
+
 class StringField(initText: String)
     extends TextField[String](initText)
 {
@@ -32,6 +38,9 @@ class StringField(initText: String)
 object StringField {
     def apply(i: String = "") = new StringField(i)
 }
+
+// -----------------------------------------------------------------------
+// NumberField
 
 class NumberField(initText: String)
     extends TextField[BigDecimal](initText)
@@ -48,6 +57,9 @@ object NumberField {
     def apply(i: String = "") = new NumberField(i)
 }
 
+// -----------------------------------------------------------------------
+// ConstField
+
 class ConstField[+A](
         result: A
     )
@@ -59,6 +71,9 @@ class ConstField[+A](
 object ConstField {
     def apply[A](r: A) = new ConstField(r)
 }
+
+// -----------------------------------------------------------------------
+// BooleanField
 
 class BooleanField(
         initState: Boolean
@@ -73,5 +88,37 @@ class BooleanField(
 }
 object BooleanField {
     def apply(i: Boolean = false) = new BooleanField(i)
+}
+
+// -----------------------------------------------------------------------
+// DateField
+
+import org.joda.time._
+import org.joda.time.format._
+
+class DateField(
+        initText: String
+    )
+    extends TextField[DateTime](initText)
+    with DateRender
+{
+    def produce() =
+        try {
+            var date = DateField.format parseDateTime text
+            val now = new DateTime
+            date = date.withYear(now.year.get)
+            if (date isBefore now) date = date.plusYears(1)
+                
+            OK(date)
+        }
+        catch {
+            case _: IllegalArgumentException => Error(DateField.formatSpec)
+        }
+}
+object DateField {
+    def apply(initText: String = "") = new DateField(initText)
+    
+    val formatSpec = "MM/dd"
+    val format = DateTimeFormat forPattern formatSpec
 }
 

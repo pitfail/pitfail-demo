@@ -13,7 +13,7 @@ import JE._
 import Helpers._
 
 import control.LoginManager
-import lib.formats._
+import formats._
 import intform._
 
 import model.Schema._
@@ -166,7 +166,7 @@ class Portfolio extends Refreshable with Loggable
     
     def execute(da: DerivativeAsset) {
         try {
-            da.execute()
+            da.executeManually()
         }
         catch {
             case NotExecutable => throw BadInput("Not executable")

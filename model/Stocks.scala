@@ -1,5 +1,4 @@
 
-package code
 package model
 
 import scala.math.{BigDecimal}
@@ -11,7 +10,7 @@ object Stocks {
         def value: BigDecimal = price * shares
     }
     
-    // This is obviously wrong
+    // TODO: This is obviously wrong
     def stockPrice(ticker: String): BigDecimal =
         BigDecimal("2.93")
     

@@ -1,7 +1,4 @@
 
-package code
-package lib
-
 package object formats {
 //
 
@@ -65,7 +62,7 @@ case class FormattedSecurity(
 ) {
     def toHumanString: String = security match {
         case SecDollar(amount)          => amount.$
-        case SecStock(ticker, shares)   => "%s shares of %s" format (shares.###(), ticker)
+        case SecStock(ticker, shares)   => "%s shrs %s" format (shares.###(), ticker)
         case SecDerivative(name, scale) => "[%s %s]" format (scale.%(), name)
     }
 }
@@ -75,10 +72,22 @@ implicit def securityFormatted(s: Security): FormattedSecurity
 case class FormattedCondition(
     condition: Condition
 ) {
-    def toHumanString: String = "???"
+    def toHumanString = condition match {
+        case CondAlways        => "-"
+        case CondGreater(a, b) => "%s > %s" format (a toHumanString, b toHumanString)
+    }
 }
 implicit def conditionFormatted(c: Condition): FormattedCondition
     = FormattedCondition(c)
+    
+case class CompSecFormatted(c: ComparableSecurity) {
+    def toHumanString = c match {
+        case CompSecStock(ticker)  => ticker
+        case CompSecDollar(amount) => amount.$
+    }
+}
+implicit def compSecFormatted(c: ComparableSecurity): CompSecFormatted
+    = CompSecFormatted(c)
     
 case class FormattedDerivative(
     deriv: Derivative

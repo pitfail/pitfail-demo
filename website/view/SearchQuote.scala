@@ -18,7 +18,6 @@ import Helpers._
 import scala.collection.SortedMap
 import scala.collection.immutable.TreeMap
 import scala.math.{BigDecimal}
-import lib.formats._
 import intform._
 
 import stockdata._
@@ -26,7 +25,7 @@ import model.derivatives._
 import model.Schema.User
 import scalaz.Scalaz._
 
-import lib.formats._
+import formats._
 
 class SearchQuote extends Page with Loggable
 {

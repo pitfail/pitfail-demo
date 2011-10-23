@@ -1,5 +1,4 @@
 
-package code
 package model
 
 import org.squeryl

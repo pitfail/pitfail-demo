@@ -1,5 +1,4 @@
 
-package code
 package model
 
 import scala.math.{BigDecimal}
@@ -21,7 +20,7 @@ import Stocks.{StockShares, stockPrice}
 import derivatives._
 import net.liftweb.common.Loggable
 
-object Schema extends squeryl.Schema {
+object Schema extends squeryl.Schema with Loggable {
     
     type Dollars = BigDecimal
     
@@ -93,6 +92,35 @@ object Schema extends squeryl.Schema {
         )
         .page(0, n)
         .toList
+    }
+    
+    // Check for derivatives that can be exercised
+    def checkForExercise(): Unit = trans {
+        val overdue =
+            from(derivativeLiabilities)(d =>
+                where(d.exec <= now)
+                select(d)
+                orderBy(d.exec)
+            )
+        
+        overdue foreach { dl =>
+            logger.info("Executing " + dl)
+            
+            val assets = from(derivativeAssets)(d =>
+                where(d.peer === dl)
+                select(d)
+            )
+            val deriv = dl.derivative
+            
+            if (deriv.condition.isTrue) {
+                assets foreach (_.executeOnSchedule())
+            }
+            else {
+                assets foreach (_.delete())
+            }
+            
+            dl.delete()
+        }
     }
     
     case class User(
@@ -283,8 +311,7 @@ object Schema extends squeryl.Schema {
             val liab =
                 DerivativeLiability(
                     mode  = offer.mode,
-                    // TODO: This is obviously wrong
-                    exec  = now,
+                    exec  = new Timestamp(deriv.exec.getMillis),
                     owner = offer.from
                 )
             liab.insert()
@@ -474,10 +501,20 @@ object Schema extends squeryl.Schema {
             peer.derivative * scale
         }
         
-        def execute(): Unit = trans {
+        def executeManually(): Unit = trans {
             val deriv = derivative
             if (! deriv.early) throw NotExecutable
-                
+            
+            executeUnchecked()
+        }
+        
+        def executeOnSchedule(): Unit = trans {
+            // Assuming the condition has already been checked!
+            executeUnchecked()
+        }
+        
+        protected def executeUnchecked(): Unit = trans {
+            val deriv = derivative
             val secs  = deriv.securities
             
             for (sec <- secs) {

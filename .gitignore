@@ -3,6 +3,8 @@ target
 project/boot
 project/target
 target/
+.target/
+.*
 .DS_Store
 *~
 *.db

@@ -13,10 +13,10 @@ import JE._
 import Helpers._
 
 import control.LoginManager
-import lib.formats._
+import LoginManager.{currentLogin}
 
 import model.Schema._
-import LoginManager.{currentLogin}
+import formats._
 import intform._
 
 class Offers extends Refreshable with Loggable
