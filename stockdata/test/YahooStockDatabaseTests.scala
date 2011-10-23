@@ -1,4 +1,4 @@
-package com.github.pitfail
+package stockdata
 
 import java.io.IOException
 import java.net.URL
@@ -9,7 +9,7 @@ import scala.math.BigDecimal
 
 class YahooStockDatabaseTests extends Spec with ShouldMatchers {
   val validQueryResponse = """{"query":{"count":1,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":{"quote":{"LastTradePriceOnly":"25.74","Symbol":"MSFT","StockExchange":"NasdaqNM"}}}}"""
-  val testStock = Stock("NasdaqNM", "MSFT")
+  val testStock = Stock("MSFT")
 
   describe("getQuotes") {
     it("Yahoo Finance service responds") {
@@ -49,8 +49,8 @@ class YahooStockDatabaseTests extends Spec with ShouldMatchers {
     }
 
     it("returns one stock with correct attributes") {
-      val stock = Stock("NasdaqNM", "MSFT")
-      val quote = Quote(stock, BigDecimal("25.74"), new DateTime())
+      val stock = TH.msft_stock
+      val quote = TH.q1(price = BigDecimal("25.74"))
 
       val queryService = new MockQueryService(_ => validQueryResponse)
       val database = new YahooStockDatabase(queryService)
@@ -59,10 +59,10 @@ class YahooStockDatabaseTests extends Spec with ShouldMatchers {
     }
 
     it("returns multiple stocks with correct attributes") {
-      val stock1 = Stock("NasdaqNM", "MSFT")
-      val stock2 = Stock("NasdaqNM", "AAPL")
-      val quote1 = Quote(stock1, BigDecimal("25.74"), new DateTime())
-      val quote2 = Quote(stock2, BigDecimal("377.48"), new DateTime())
+      val stock1 = TH.msft_stock
+      val stock2 = TH.appl_stock
+      val quote1 = TH.q1(price = BigDecimal("25.74"))
+      val quote2 = TH.q2(price = BigDecimal("377.48"))
 
       val queryService = new MockQueryService(_ => """{"query":{"count":2,"created":"2011-09-10T06:36:19Z","lang":"en-US","results":[{"quote":{"LastTradePriceOnly":"25.74","Symbol":"MSFT","StockExchange":"NasdaqNM"}},{"quote":{"LastTradePriceOnly":"377.48","Symbol":"AAPL","StockExchange":"NasdaqNM"}}]}}""")
       val database = new YahooStockDatabase(queryService)
@@ -70,19 +70,10 @@ class YahooStockDatabaseTests extends Spec with ShouldMatchers {
       database.getQuotes(Iterable(stock1, stock2)) should equal (Iterable(quote1, quote2))
     }
 
-    it("throws when stock exchange is mismatch") {
-      val queryService = new MockQueryService(_ => validQueryResponse)
-      val database = new YahooStockDatabase(queryService)
-      val stock = Stock("WrongExchange", "MSFT")
-
-      val ex = evaluating { database.getQuotes(Iterable(stock)) } should produce [NoSuchStockException]
-      ex.stock should equal (stock)
-    }
-
     it("throws when stock is missing in response") {
       val queryService = new MockQueryService(_ => validQueryResponse)
       val database = new YahooStockDatabase(queryService)
-      val stock = Stock("NasdaqNM", "FAKESYMBOL")
+      val stock = Stock("FAKESYMBOL")
 
       val ex = evaluating { database.getQuotes(Iterable(stock)) } should produce [NoSuchStockException]
       ex.stock should equal (stock)

@@ -3,12 +3,34 @@ package code
 package lib
 
 package object formats {
+//
 
 import model.derivatives._
 import scala.math.{BigDecimal}
 import org.joda.time.{DateTime}
+import net.liftweb.common.Logger
 
-// -----------------------------------------------
+// ------------------------------------------------------------------
+// Errors
+
+def standardMessage(error: Any) = {
+    import model.Schema._
+    
+    error match {
+        case NegativeVolume               => "You must buy more than $0.00"
+        case NotEnoughCash(have, need)    => "You need %s you have %s" format (have.$, need.$)
+        case DontOwnStock(ticker)         => "You don't own %s" format ticker
+        case NotEnoughShares(have, need)  => "You have %s shares you need %s" format (have.###(), need.###())
+        case OfferExpired                 => "The offer has already expired"
+        case NotExecutable                => "You can't exercise this derivative early"
+        
+        case e =>
+            new Logger { error("An internal error occurred: " + e) }
+            "An internal error occurred. Check the logs."
+    }
+}
+
+// ------------------------------------------------------------------
 // Time
 
 case class DateTimeFormatted(d: DateTime) {
@@ -17,7 +39,7 @@ case class DateTimeFormatted(d: DateTime) {
 }
 implicit def dateTimeFormatted(d: DateTime) = DateTimeFormatted(d)
 
-// -----------------------------------------------
+// ------------------------------------------------------------------
 // Money
 
 case class BigDecimalFormatted(b: BigDecimal) {
@@ -25,9 +47,9 @@ case class BigDecimalFormatted(b: BigDecimal) {
     def %(): String = "%.0f%%" format (b.doubleValue * 100)
     def ###(): String = "%.0f" format (b doubleValue)
 }
-implicit def bigDecimalFormatted(b: BigDecimal) = BigDecimalFormatted(b)
+implicit def bigDecimalFormatted(b: BigDecimal): BigDecimalFormatted = BigDecimalFormatted(b)
     
-// -----------------------------------------------
+// ------------------------------------------------------------------
 // Derivatives
 
 case class FormattedSecurities(
@@ -71,5 +93,6 @@ case class FormattedDerivative(
 implicit def derivativeFormatted(d: Derivative): FormattedDerivative
     = FormattedDerivative(d)
     
-} // package
+//
+}
 

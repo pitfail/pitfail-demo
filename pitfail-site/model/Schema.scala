@@ -166,18 +166,19 @@ object Schema extends squeryl.Schema {
             }
         }
         
-        def sell(stock: StockShares): Unit = trans {
+        def sellStock(ticker: String, volume: Dollars): Unit = trans {
             val asset =
-                haveTicker(stock.ticker) match {
+                haveTicker(ticker) match {
                     case Some(asset) => asset
-                    case None => throw DontOwnStock(stock.ticker)
+                    case None => throw DontOwnStock(ticker)
                 }
+            val shares = volume / stockPrice(ticker)
             
-            if (stock.shares > asset.shares)
-                throw NotEnoughShares(asset.shares, stock.shares)
+            if (shares > asset.shares)
+                throw NotEnoughShares(asset.shares, shares)
             
-            cash += stock.value
-            asset.shares -= stock.shares
+            cash += volume
+            asset.shares -= shares
             if (asset.shares <= 0)
                 asset.delete()
             else
@@ -186,9 +187,9 @@ object Schema extends squeryl.Schema {
             newsEvents insert NewsEvent(
                 action  = "sell",
                 subject = owner,
-                ticker  = stock.ticker,
-                shares  = stock.shares,
-                price   = stock.price
+                ticker  = ticker,
+                shares  = shares,
+                price   = stockPrice(ticker)
             )
             this.update()
         }
