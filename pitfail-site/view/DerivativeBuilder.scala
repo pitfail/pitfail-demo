@@ -36,7 +36,7 @@ case class OpenAuction() extends Recipient
 case class DerivativeOrder(
     recipient:   Recipient,
     securities:  Iterable[AddToDerivative],
-    expiration:  String,
+    expiration:  DateTime,
     price:       BigDecimal,
     strikePrice: BigDecimal
 )
@@ -81,7 +81,7 @@ class DerivativeBuilder extends Page with Loggable
     }
 
     lazy val form: Form[DerivativeOrder] = Form(
-        (recipient: String, price: BigDecimal, expiration: String, strikePrice: BigDecimal) =>
+        (recipient: String, price: BigDecimal, expiration: DateTime, strikePrice: BigDecimal) =>
             DerivativeOrder(
                 recipient = SpecificUser(recipient),
                 price = price,
@@ -150,10 +150,11 @@ class DerivativeBuilder extends Page with Loggable
     // TODO: This should allow a public auction.
     lazy val recipientField = StringField("")
 
-    val tomorrow = DateTime.now().plusDays(1)
-    lazy val expirationField = StringField(formatter.print(tomorrow))
+    // Default to a week in the future.
+    val tomorrow = DateTime.now().plusDays(7)
+    lazy val expirationField = DateTimeField(tomorrow, formatter)
 
-    // TODO: These should default to the current value of the stocks.
+    // Default to the current value of the stocks.
     lazy val priceField = NumberField(getTotalVolume.toString)
     lazy val strikePriceField = NumberField(getTotalVolume.toString)
 
