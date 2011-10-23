@@ -7,6 +7,8 @@ import scala.math._
 
 object parser extends JavaTokenParsers {
     
+    def parseAction(text: String) = action(text)
+    
     lazy val action = buy | sell | sellAll
     
     lazy val buy = "buy" ~ stockAsset ^^ {

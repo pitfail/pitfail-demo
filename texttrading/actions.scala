@@ -1,6 +1,20 @@
 
 package texttrading
 
+// Message in from the frontend:
+
+case class Message(
+    username: String,
+    command:  String,
+    reply:    Reply
+)
+
+trait Reply {
+    def reply(text: String): Unit
+    
+    def apply(text: String) = reply(text)
+}
+
 // Format of the request:
 
 case class Request(username: String, action: Action)
