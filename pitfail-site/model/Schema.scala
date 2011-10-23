@@ -19,6 +19,7 @@ import java.util.UUID
 
 import Stocks.{StockShares, stockPrice}
 import derivatives._
+import net.liftweb.common.Loggable
 
 object Schema extends squeryl.Schema {
     
@@ -127,7 +128,7 @@ object Schema extends squeryl.Schema {
         var cash:          BigDecimal       = 0,
         var owner:         Link[User]       = 0
         )
-        extends KL with net.liftweb.common.Loggable
+        extends KL with Loggable
     {
         def buyStock(ticker: String, volume: Dollars)
             = buy(StockShares(ticker, volume))
@@ -466,6 +467,7 @@ object Schema extends squeryl.Schema {
         var owner: Link[Portfolio] = 0
         )
         extends KL
+        with Loggable
     {
         def derivative: Derivative = trans {
             peer.derivative * scale
@@ -481,8 +483,7 @@ object Schema extends squeryl.Schema {
                 owner.take(sec, peer.owner)
             }
             
-            peer.remaining -= scale
-            peer.update()
+            peer.reduceScale(scale)
             this.delete()
         }
     }
@@ -515,6 +516,13 @@ object Schema extends squeryl.Schema {
     {
         def derivative: Derivative = trans {
             Derivative.deserialize(mode)
+        }
+        
+        def reduceScale(scale: BigDecimal): Unit = trans {
+            remaining -= scale
+            
+            if (remaining <= 0) this.delete()
+            else this.update()
         }
     }
     object DerivativeLiability {

@@ -55,9 +55,23 @@ class ConstField[+A](
 {
     def produce() = OK(result)
     def reset() { }
-    def main = Nil
 }
 object ConstField {
     def apply[A](r: A) = new ConstField(r)
+}
+
+class BooleanField(
+        initState: Boolean
+    )
+    extends Field[Boolean]
+    with CheckBoxRender
+{
+    var state: Boolean = initState
+    
+    def produce() = OK(state)
+    def reset() { state = initState }
+}
+object BooleanField {
+    def apply(i: Boolean = false) = new BooleanField(i)
 }
 

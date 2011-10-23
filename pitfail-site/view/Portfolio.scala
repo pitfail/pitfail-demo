@@ -143,6 +143,7 @@ class Portfolio extends Refreshable with Loggable
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>
                     <td> {
+                        logger.info("Remaining: " + dl.remaining)
                         if (dl.remaining < 1) dl.remaining.%()
                         else Nil
                     } </td>

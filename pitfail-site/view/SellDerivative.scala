@@ -6,7 +6,7 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
 import scala.xml.{NodeSeq}
-import http._
+import http.{js}
 import js._
 import JsCmds._
 import JE._
@@ -23,13 +23,14 @@ class SellDerivative extends Page with Loggable
 {
     def render =
         <div class="sellDerivative">
-            {form.render}
+        {form.render}
         </div>
-    
+        
     case class Order(
         to:         To,
         securities: Seq[Security],
         on:         String,
+        early:      Boolean,
         condition:  Condition
     )
     
@@ -42,23 +43,21 @@ class SellDerivative extends Page with Loggable
             toField,
             secsField,
             execField,
+            earlyField,
             condField
         ),
-        formRender
-    )
-    
-    def formRender =
         <table class="sellDerivative">
             <tr><td>To:</td>
                 <td>{toRender}</td>
                 <td>{toField.errors}</td>
             </tr>
             <tr><td>Securities:</td>
-                <td>(todo)</td>
+                <td>{secsField.main}</td>
             </tr>
             <tr><td>On:</td>
                 <td>{execField.main}</td>
                 <td>{execField.errors}</td>
+                <td>{earlyField.main} can be exercised early</td>
             </tr>
             <tr><td>If:</td>
                 <td>{condRender}</td>
@@ -68,6 +67,7 @@ class SellDerivative extends Page with Loggable
             <tr><td>{sellSubmit.main}</td></tr>
             <tr><td>{sellSubmit.errors}</td></tr>
         </table>
+    )
     
     lazy val toField = CaseField[To](
         (
@@ -82,12 +82,43 @@ class SellDerivative extends Page with Loggable
             <li>{toField._2} Auction</li>
         </ul>
         
-    lazy val recipientField = AggregateField(ToUser, userField)
+    lazy val recipientField = AggregateField(
+        ToUser,
+        userField,
+        <span>{userField.main} {userField.errors}</span>
+    )
     lazy val userField = UserField("")
         
-    lazy val secsField = ConstField(Seq[Security]())
+    // This funny type is working around a Scala compiler bug.
+    // No I don't understand it either.
+    lazy val secsField: Field[Seq[SecStock]] with FieldRender =
+        ListField(
+            stockField,
+            (items, add) => {
+                <table>{items map (i =>
+                    <tr>{i.field ++ i.delete}</tr>
+                )}
+                </table> ++
+                <p>{add}</p>
+            }
+        )
+    
+    def stockField: Field[SecStock] with Renderable = {
+        val sharesField = NumberField("1.00")
+        val tickerField = StringField("")
+        
+        AggregateField(SecStock,
+            (
+                tickerField,
+                sharesField
+            ),
+            <td>{sharesField.main} {sharesField.errors}</td> ++
+            <td>{tickerField.main} {tickerField.errors}</td>
+        )
+    }
         
     lazy val execField = StringField()
+    lazy val earlyField = BooleanField()
 
     lazy val condField = CaseField[Condition](
         (
@@ -114,7 +145,7 @@ class SellDerivative extends Page with Loggable
                 order.securities,
                 new DateTime, // TODO: Change this!
                 order.condition,
-                true
+                order.early
             )
         
             val user = currentUser

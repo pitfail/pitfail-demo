@@ -23,8 +23,7 @@ import ~>._
 // Form
 
 class Form[+A](
-        val field: Field[A],
-        val renderer: () => NodeSeq
+        val field: Field[A] with Renderable
     )
     extends Processable[A]
     with InnerFieldRender
@@ -39,7 +38,7 @@ object Form {
         c: F => A,
         f: KList[Field, F],
         r: => NodeSeq
-    ): Form[A] = new Form(new AggregateField(c, f), () => r)
+    ): Form[A] = new Form(new AggregateField(c, f, ()=>r))
 }
 
 // ------------------------------------------------------------------

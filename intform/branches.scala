@@ -13,15 +13,18 @@ import up._
 import HList._
 import KList._
 import ~>._
+import scalaz.Scalaz._
 
 // ---------------------------------------------------------------------------
 // AggregateField
 
 class AggregateField[+A, F <: HList](
         constructor: F => A,
-        fields: KList[Field, F]
+        fields: KList[Field, F],
+        val renderer: () => NodeSeq
     )
     extends Field[A]
+    with AggregateRender
 {
     import AggregateField._
     
@@ -39,14 +42,15 @@ class AggregateField[+A, F <: HList](
 object AggregateField {
     def apply[A, F <: HList](
         c: F => A,
-        f: KList[Field, F]
-    ): AggregateField[A,F] = new AggregateField(c, f)
+        f: KList[Field, F],
+        r: => NodeSeq
+    ): AggregateField[A,F] = new AggregateField(c, f, () => r)
         
     val mapProcess = new (Field ~> Option) {
         def apply[T](field: Field[T]): Option[T] = field.process()
     }
     
-    val mapExtract = new (Option ~> Id) {
+    val mapExtract = new (Option ~> (~>.Id)) {
         def apply[T](o: Option[T]): T = o match {
             case Some(t) => t
             case _ =>
@@ -92,5 +96,36 @@ object CaseField {
     def apply[A](
         c: Seq[Field[A]]
     ) = new CaseField(c)
+}
+
+// ---------------------------------------------------------------------------
+// ListField
+
+class ListField[A](
+        val generator: () => Field[A] with Renderable,
+        val renderer: (Seq[ItemRender], NodeSeq) => NodeSeq
+    )
+    extends Field[Seq[A]]
+    with ListRender
+{
+    import collection.mutable.ArrayBuffer
+    
+    val items: ArrayBuffer[Field[A] with Renderable] = ArrayBuffer()
+    
+    def addOne() { items append generator()  }
+    def deleteOne(n: Int) { items remove n  }
+    def reset() { items.clear }
+    def produce() =
+        (items map (_.process)).sequence match {
+            case Some(a) => OK(a)
+            case None    => ChildError
+        }
+}
+object ListField {
+    def apply[A](
+            g: => Field[A] with Renderable,
+            r: (Seq[ItemRender], NodeSeq) => NodeSeq
+        )
+        = new ListField[A](() => g, r)
 }
 

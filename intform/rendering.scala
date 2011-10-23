@@ -29,6 +29,14 @@ trait Refreshable extends Renderable {
     
     def refresh(): JsCmd = SetHtml(id, render)
 }
+object Refreshable {
+    class NeedRenderable(r: ()=>NodeSeq) extends Renderable {
+        def render = r()
+    }
+    
+    def apply(r: => NodeSeq) =
+        new NeedRenderable(() => r) with Refreshable
+}
 
 trait Page extends StatefulSnippet with Renderable {
     def dispatch: DispatchIt = {
@@ -43,16 +51,14 @@ trait FieldRender extends Renderable {
     def render = main
     
     def main: NodeSeq
-    def errors: NodeSeq
 }
 
 // -----------------------------------------------------------------
 // Form rendering
 
 trait InnerFieldRender extends Renderable {
-    val renderer: () => NodeSeq
-    
-    def render: NodeSeq = renderer()
+    def field: Renderable
+    def render: NodeSeq = field.render
 }
 
 trait FormOuter extends Renderable {
@@ -90,11 +96,17 @@ trait TextRender extends FieldRender {
     )
 }
 
+trait AggregateRender extends FieldRender {
+    def renderer: () => NodeSeq
+    
+    def main = renderer()
+}
+
 trait CaseRender extends ErrorRender {
     val table: Map[String,Field[Any]]
     var selected: Option[String]
     
-    lazy val radios = SHtml.radio(
+    def radios = SHtml.radio(
         table.keys toList,
         selected,
         s => selected = Some(s)
@@ -106,5 +118,41 @@ trait CaseRender extends ErrorRender {
     def _4 = radios(3)
     def _5 = radios(4)
     def _6 = radios(5)
+}
+
+trait ListRender extends FieldRender {
+    val renderer: (Seq[ItemRender], NodeSeq) => NodeSeq
+    def items: Seq[Field[Any] with Renderable]
+    def addOne(): Unit
+    def deleteOne(n: Int): Unit
+    
+    def main = refresh.render
+    val refresh = Refreshable(renderer(
+        items zip items.indices map { case (item, index) =>
+            ItemRender(item.render, del(index))
+        },
+        add
+    ))
+    
+    def add: NodeSeq = SHtml.ajaxSubmit("Add", { () =>
+        addOne()
+        refresh.refresh()
+    })
+
+    def del(n: Int): NodeSeq = SHtml.ajaxSubmit("Del", { () =>
+        deleteOne(n)
+        refresh.refresh()
+    })
+}
+
+case class ItemRender(
+        field:  NodeSeq,
+        delete: NodeSeq
+    )
+
+trait CheckBoxRender extends FieldRender {
+    var state: Boolean
+    
+    def main: NodeSeq = SHtml.checkbox(state, state = _)
 }
 
