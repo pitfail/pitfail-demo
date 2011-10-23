@@ -23,7 +23,7 @@ class TextTrader(
 }
 
 object TextTrader {
-    
+
     // This is pretty independent. Might as well let you call it standalone.
     def runCommand(
             user:    String,
@@ -32,9 +32,9 @@ object TextTrader {
         ): Seq[String] =
     {
         import parser._
-        
+
         val parsed = parseAction(command)
-        
+
         val huh =
             """|I don't understand your command
                |Try:
@@ -42,12 +42,12 @@ object TextTrader {
                |"""
             .stripMargin
             .format(commandIntro)
-        
+
         parsed match {
             case Success(action, _) =>
                 val request = Request(user, action)
                 val response = backend.perform(request)
-                
+
                 response.extraMsgs :+
                 {
                     response.status match {
@@ -55,7 +55,7 @@ object TextTrader {
                         case Failed(msg) => msg
                     }
                 }
-                
+
             case Failure(_, _) => Seq(huh)
             case Error(_, _)   => Seq(huh)
         }
