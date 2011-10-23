@@ -51,29 +51,66 @@ class SearchAction extends Page with Loggable
                 converted to shares and will be added to your portfolio.</p>
 
                 <p class="price-input">
-                ${volumeField.main & <input id="search-quantity"/>} {volumeField.errors}
+                    ${volumeField.main & <input id="search-quantity"/>} {volumeField.errors}
+                    <span class="error">{submitBuy.errors}{submitAdd.errors}</span>
                 </p>
 
                 <div class="buttons">
-                {submitBuy.main & <input id="search-button-buy"/>} {submitBuy.errors}
-                {submitBuy.main & <input id="search-button-add"/>} {submitAdd.errors}
+                {submitBuy.main & <input id="search-button-buy"/>} 
+                {submitAdd.main & <input id="search-button-add"/>} 
                 </div>
             </div>
         )
 
         lazy val volumeField = NumberField("1.00")
     
-        lazy val submitBuy = Submit(form, "Buy") { v =>
-            //buyStock(quote, v)
-            form.refresh()
+        lazy val submitBuy = Submit(form, "Buy Shares") { volume =>
+            buyStock(quote, volume)
+            form.refresh
         }
         
-        lazy val submitAdd = Submit(form, "Add") { v =>
+        lazy val submitAdd = Submit(form, "Add to Derivative") { v =>
             //addStockToDerivative(quote, v)
-            form.refresh()
+            form.refresh
         }
         
         form.render
+    }
+
+    private def buyStock(quote: Quote, volume: BigDecimal) = {
+        import control.LoginManager._
+        import model.Schema._
+
+        try {
+            currentUser.mainPortfolio.buyStock(quote.stock.symbol, volume)
+            currentQuote = None
+        } catch {
+            case NegativeVolume => throw BadInput(
+                "You must buy more than $0.00 of a stock"
+            )
+            case NotEnoughCash(have, need) => throw BadInput(
+                "You need at least %s you only have %s" format (need.$, have.$)
+            )
+            case NotLoggedIn =>
+                throw BadInput("You must be logged in to buy stock")
+        }
+    }
+
+    private def addStockToDerivative(quote: Quote, volume: BigDecimal) = {
+        /*
+        order = (order get quote.stock.symbol) match {
+            // Add more shares to an existing stock.
+            case Some((oldQuote, oldVolume)) => {
+                order + ((quote.stock.symbol, (quote, oldVolume + volume)))
+            }
+
+            // Add a new stock.
+            case None => {
+                order + ((quote.stock.symbol, (quote, volume)))
+            }
+        }
+        currentQuote = None
+        */
     }
 
     private def notify(quote: Option[Quote], volume: BigDecimal): JsCmd =
