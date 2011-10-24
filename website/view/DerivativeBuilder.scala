@@ -182,7 +182,7 @@ class DerivativeBuilder extends Page with Loggable
         val sharesField = IntField(shares toString)
         val dirField = DirectionField(ToBuyer)
         
-        val remove = Submit(form, "Remove") { order =>
+        val remove = Submit.cancel(form, "Remove") {
             stockRowFields -= quote.stock.symbol
             refreshable.refresh()
         }
