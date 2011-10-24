@@ -34,24 +34,27 @@ class Offers extends Refreshable with Loggable
             import snippet._
             
             def result =
-                <div class="container block"> {
-                    if (!myOffers.isEmpty) offers
-                    else Nil: NodeSeq
-                } </div>
+                if (myOffers.isEmpty)
+                    Nil: NodeSeq
+                else
+                    <div id="offers" class="container block">
+                        <h2>Pending Offers</h2>
+                        <p>You have one or more pending offers to purchase
+                        derivatives. Choose whether to accept or decline
+                        each of the offers below.</p>
+                        <ul class="offers">
+                            {myOffers map offer _}
+                        </ul>
+                    </div>
             
-            def offers =
-                <h4 id="ifHaveOffers">You have an offer:</h4> ++
-                <ul class="offers">
-                    {myOffers map offer _}
-                </ul>
-            
+            // TODO: Each buttons is being rendered in a separate form. Since a
+            // form is a block element this causes layout issues. This should be
+            // changed so the <li/> contains a single form that both buttons are
+            // a member of.
             def offer(o: DerivativeOffer) =
                 <li>
-                    {UserLink(o.from.owner.username)}
-                    is offering
-                    {o.derivative toHumanString}
-                    {acceptOffer(o.handle)}
-                    {declineOffer(o.handle)}
+                    {UserLink(o.from.owner.username)} is offering {o.derivative toHumanString}
+                    {acceptOffer(o.handle)} {declineOffer(o.handle)}
                 </li>
             
             result
