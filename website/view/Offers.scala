@@ -34,7 +34,7 @@ class Offers extends Refreshable with Loggable
             import snippet._
             
             def result =
-                <div> {
+                <div class="container block"> {
                     if (!myOffers.isEmpty) offers
                     else Nil: NodeSeq
                 } </div>
