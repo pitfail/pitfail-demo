@@ -37,33 +37,33 @@ class Portfolio extends Refreshable with Loggable
         } yield
         {
             def result =
-                <table class="tChart">
-                    <col class="left"/>
-                    <col class="right"/>
-                    <tr class="header">
-                        <th>Assets</th>
-                        <th>Liabilities</th>
-                    </tr>
-                    <tr>
-                        <td class="assets">
-                            {cash}<br/>
-                            {stocks}<br/>
-                            {derivativeAssets}
-                        </td>
-                        <td class="liabilities">
-                            {derivativeLiabilities}
-                        </td>
-                    </tr>
-                </table>
+                <div id="portfolio" class="block container">
+                    <h2>Portfolio</h2>
+                    <div class="tchart">
+                        <h3>Assets</h3>
+                        {cash}
+                        <h4>Stocks</h4>
+                        {stocks}
+                        <h4>Derivatives</h4>
+                        {derivativeAssets}
+                    </div>
+
+                    <div class="tchart">
+                        <h3>Liabilities</h3>
+                        <h4>Derivatives</h4>
+                        {derivativeLiabilities}
+                    </div>
+                    <div style="clear:both;"/>
+                </div>
+
+            def cash =
+                <p>{myCashAmount.$}</p>
             
-            def cash = <p>{myCashAmount.$}</p>
-            
-            def stocks = (
-                <h4>Stocks</h4> ++ {
-                    if (!myStockAssets.isEmpty) stockTable
-                    else <p>You have no stocks</p>
-                }
-            )
+            def stocks =
+                if (!myStockAssets.isEmpty)
+                    stockTable
+                else
+                    <p>You have no stocks</p>
             
             def stockTable = (
                 <table class="stocksTable">
@@ -82,24 +82,19 @@ class Portfolio extends Refreshable with Loggable
                     <td>{snippet.SellThisStock(sa.ticker)}</td>
                 </tr>
             
-            def derivativeAssets = (
-                <h4>Derivatives</h4> ++ {
-                    if (!myDerivativeAssets.isEmpty) {
-                        <table class="derivativesTable">
-                            <tr>
-                                <th>Securities</th>
-                                <th>Exec Date</th>
-                                <th>Condition</th>
-                                <th>Peer</th>
-                            </tr>
-                            { myDerivativeAssets map derivativeAsset _ }
-                        </table>
-                    }
-                    else {
-                        <p>You have no derivatives</p>
-                    }
-                }
-            )
+            def derivativeAssets =
+                if (!myDerivativeAssets.isEmpty)
+                    <table class="derivativesTable">
+                        <tr>
+                            <th>Securities</th>
+                            <th>Exec Date</th>
+                            <th>Condition</th>
+                            <th>Peer</th>
+                        </tr>
+                        { myDerivativeAssets map derivativeAsset _ }
+                    </table>
+                else
+                    <p>You have no derivatives</p>
             
             def derivativeAsset(da: DerivativeAsset) = {
                 val deriv = da.derivative
@@ -118,12 +113,10 @@ class Portfolio extends Refreshable with Loggable
             }
             
             def derivativeLiabilities =
-                <h4>Derivatives</h4> ++ {
-                    if (!myDerivativeLiabilities.isEmpty)
-                        derivativeLiabilityTable
-                    else
-                        <p>You have no derivative liabilities</p>
-            }
+                if (!myDerivativeLiabilities.isEmpty)
+                    derivativeLiabilityTable
+                else
+                    <p>You have no derivative liabilities</p>
         
             def derivativeLiabilityTable =
                 <table>
