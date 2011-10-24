@@ -104,8 +104,6 @@ object Schema extends squeryl.Schema with Loggable {
             )
         
         overdue foreach { dl =>
-            logger.info("Executing " + dl)
-            
             val assets = from(derivativeAssets)(d =>
                 where(d.peer === dl)
                 select(d)
@@ -364,8 +362,12 @@ object Schema extends squeryl.Schema with Loggable {
         }
         
         def takeCash(amt: Dollars, peer: Portfolio): Unit = trans {
-            cash += peer.loseCash(amt)
-            this.update()
+            val actual = peer.loseCash(amt)
+            
+            for (me <- this.refetch) {
+                me.cash += actual
+                me.update()
+            }
         }
         
         def loseCash(amt: Dollars): Dollars = trans {

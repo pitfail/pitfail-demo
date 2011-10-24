@@ -282,6 +282,13 @@ p.price-input input {
     border-bottom: 2px solid #000;
 }
 
+#search-list tr input {
+    width: 8em;
+    text-align: center;
+    border: none;
+    border-bottom: 2px solid #000;
+}
+
 /* List in Derivative Builder */
 table#search-list {
     width: 90%;
@@ -321,6 +328,7 @@ table#search-list .search-list-ticker,
 table#search-list .search-list-company,
 table#search-list .search-list-price,
 table#search-list .search-list-shares,
+table#search-list .search-list-dir,
 
 table tfoot th {
     border-right: 1px solid #000;

@@ -12,18 +12,18 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import comet._
 import intform._
 
 class RunChecks extends Page with Loggable
 {
-    def render =
-        Submit("Run Checks") {
-            logger.info("Running all background checks...")
-            model.Schema.checkForExercise()
-            
-            Portfolio ! Refresh
-            News ! Refresh
-        }
+    def render = FormSubmit.rendered("Run Checks") {
+        import comet._
+        
+        logger.info("Running all background checks...")
+        model.Schema.checkForExercise()
+        
+        Portfolio ! Refresh
+        News ! Refresh
+    }
 }
 

@@ -49,6 +49,8 @@ package object intform {
         t._1:^:t._2:^:t._3:^:t._4:^:KNil
     implicit def klist5[K[+_],A,B,C,D,E](t: (K[A],K[B],K[C],K[D],K[E])): KList[K,A:+:B:+:C:+:D:+:E:+:HNil] =
         t._1:^:t._2:^:t._3:^:t._4:^:t._5:^:KNil
+    implicit def klist6[K[+_],A,B,C,D,E,F](t: (K[A],K[B],K[C],K[D],K[E],K[F])): KList[K,A:+:B:+:C:+:D:+:E:+:F:+:HNil] =
+        t._1:^:t._2:^:t._3:^:t._4:^:t._5:^:t._6:^:KNil
     
     // -----------------------------------------------------------------
     

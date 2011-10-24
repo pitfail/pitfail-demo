@@ -16,7 +16,7 @@ import Helpers._
 
 import scala.collection.SortedMap
 import scala.collection.immutable.TreeMap
-import scala.math.{BigDecimal}
+import scala.math._
 import intform._
 
 import stockdata._
@@ -29,28 +29,48 @@ import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat,DateTimeFormatter}
 
 abstract class Recipient
-case class SpecificUser(username: String) extends Recipient
-case class OpenAuction() extends Recipient
+case class SpecificUser(user: User) extends Recipient
+case object OpenAuction extends Recipient
+
+sealed abstract class Direction {
+    def sign(x: BigDecimal): BigDecimal
+    def sign(x: Int): Int
+}
+
+case object ToBuyer  extends Direction {
+    def sign(x: BigDecimal) = x
+    def sign(x: Int) = x
+}
+case object ToSeller extends Direction {
+    def sign(x: BigDecimal) = -x
+    def sign(x: Int) = -x
+}
+
+case class StockInDerivative(
+    quote:     Quote,
+    shares:    Int,
+    direction: Direction
+)
 
 case class DerivativeOrder(
     recipient:   Recipient,
-    securities:  Iterable[AddToDerivative],
-    expiration:  DateTime,
+    stocks:      Iterable[StockInDerivative],
+    execDate:    DateTime,
     price:       BigDecimal,
-    strikePrice: BigDecimal
+    cash:        BigDecimal
 )
 
 class DerivativeBuilder extends Page with Loggable
 {
     private val formatter = DateTimeFormat.forPattern("MM/dd/yyyy");
-    private var stocks: SortedMap[String, AddToDerivative] = TreeMap()
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
+    
+    // Whether this is currently being used
+    private var active: Boolean = false
 
-    private val refreshable = Refreshable(
-        if (stocks isEmpty)
-            Nil
-        else
-            form.render
+    private val refreshable = Refreshable (
+        if (active) form.render
+        else Nil
     )
 
     implicit def toDate(str: String) = new {
@@ -68,60 +88,64 @@ class DerivativeBuilder extends Page with Loggable
         }
     }
 
-    implicit def round(decimal: BigDecimal) = new {
-        def round(decimals: Int, mode: RoundingMode): BigDecimal = {
-            val precision = decimal.precision - decimal.scale + decimals
-            val context = new MathContext(precision, mode)
-            decimal.round(context)
-        }
-
-        def floor: BigDecimal =
-            round(0, RoundingMode.FLOOR)
+    def directionToLabel(d: Direction) = d match {
+        case ToBuyer  => "To Buyer"
+        case ToSeller => "To Seller"
     }
 
     lazy val form: Form[DerivativeOrder] = Form(
-        (recipient: String, price: BigDecimal, expiration: DateTime, strikePrice: BigDecimal) =>
+        (
+            rec: User,
+            price: BigDecimal,
+            exp: DateTime,
+            strike: BigDecimal,
+            cashDir: Direction,
+            stocks: Seq[StockInDerivative]
+        ) =>
             DerivativeOrder(
-                recipient = SpecificUser(recipient),
-                price = price,
-                securities = (stocks map { case (_, order) => order }),
-                expiration = expiration,
-                strikePrice = strikePrice)
+                recipient  = SpecificUser(rec),
+                price      = price,
+                stocks     = stocks,
+                execDate   = exp,
+                cash       = cashDir.sign(strike)
+            )
         ,
         (
             recipientField,
             priceField,
             expirationField,
-            strikePriceField
+            strikePriceField,
+            cashDirField,
+            stocksField
         ),
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
             <p>Offer to enter a contract with {recipientField.main & <input/>}
-            for the price of ${priceField.main & <input class="price"/>}. On the date
-            {expirationField.main & <input class="date"/>} the following stocks will be
-            sold for ${strikePriceField.main & <input class="price"/>}:</p>
-
+            {recipientField.errors} for the price of ${priceField.main & <input
+            class="price"/>}.</p>
+            
+            <p>On the date {expirationField.main & <input class="date"/>} the
+            following will be traded:</p> 
+            
+            <h3>Cash</h3>
+            <p>${strikePriceField.main & <input class="price"/>}) {cashDirField.main}</p>
+    
+            <h3>Stocks</h3>
+            
             <table class="block" id="search-list">
                 <thead>
                     <tr>
                         <th class="search-list-ticker">Ticker</th>
                         <th class="search-list-company">Company</th>
-                        <th class="search-list-price">Price</th>
                         <th class="search-list-shares">Shares</th>
-                        <th class="search-list-subtotal">Subtotal</th>
+                        <th class="search-list-dir"> </th>
+                        <th class="search-list-price">Current Price</th>
                         <th class="search-list-buttons"/>
                     </tr>
                 </thead>
                 <tbody>
-                    {stocks map { case (symbol, order) => formatStockRow(order.quote, order.volume) }}
+                    {stocksField.main}
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="4">Total</th>
-                        <td class="search-list-total">{getTotalVolume.$}</td>
-                        <td class="search-list-buttons"/>
-                    </tr>
-                </tfoot>
             </table>
 
             <div class="buttons">
@@ -131,36 +155,118 @@ class DerivativeBuilder extends Page with Loggable
         </div>
     )
 
-    private def formatStockRow(quote: Quote, requestedVolume: BigDecimal) = {
-        val shares = (requestedVolume / quote.price).floor
-        val actualVolume = shares * quote.price
-        <tr>
-            <td class="search-list-ticker">{quote.stock.symbol}</td>
-            <td class="search-list-company">{quote.company}</td>
-            <td class="search-list-price">{quote.price.$}</td>
-            <td class="search-list-shares">{shares}</td>
-            <td class="search-list-subtotal">{actualVolume.$}</td>
-            <td class="search-list-buttons">
-                <input type="submit" value="Remove" class="search-list-remove"/>
-            </td>
-        </tr>
-    }
-
     // TODO: This should allow a public auction.
-    lazy val recipientField = StringField("")
+    lazy val recipientField = UserField("")
 
     // Default to a week in the future.
     val tomorrow = DateTime.now().plusDays(7)
     lazy val expirationField = DateTimeField(tomorrow, formatter)
 
-    // Default to the current value of the stocks.
-    lazy val priceField = NumberField(getTotalVolume.toString)
+    // We can't really pick a good default
+    lazy val priceField = NumberField("0.00")
     lazy val strikePriceField = NumberField(getTotalVolume.toString)
+    lazy val cashDirField = DirectionField(ToSeller)
 
-    lazy val offerSubmit = Submit(form, "Offer")  { order => Noop }
-    lazy val cancelSubmit = Submit(form, "Cancel") { order => Noop }
+    lazy val stocksField: Field[Seq[StockInDerivative]] with FieldRender =
+        DependentListField(
+            stockRowFields.values toList,
+            (stockRowFields map (_._2.main)).foldLeft[NodeSeq](Nil)(_ ++ _)
+        )
+    
+    type StockRowField = Field[StockInDerivative] with FieldRender
+    var stockRowFields: SortedMap[String,StockRowField] = TreeMap()
+    
+    def makeStockRowField(init: AddToDerivative): StockRowField = {
+        val AddToDerivative(quote, shares) = init
+        
+        val sharesField = IntField(shares toString)
+        val dirField = DirectionField(ToBuyer)
+        
+        val remove = Submit(form, "Remove") { order =>
+            stockRowFields -= quote.stock.symbol
+            refreshable.refresh()
+        }
+        
+        AggregateField(
+            (sh: Int, dir: Direction) =>
+                StockInDerivative(
+                    quote     = quote,
+                    shares    = sh,
+                    direction = dir
+                ),
+            (
+                sharesField: Field[Int],
+                dirField
+            ),
+            <tr>
+                <td class="search-list-ticker">{quote.stock.symbol}</td>
+                <td class="search-list-company">{quote.company}</td>
+                <td class="search-list-shares">{sharesField.main} {sharesField.errors}</td>
+                <td class="search-list-dir">{dirField.main}</td>
+                <td class="search-list-price">{quote.price.$}/sh</td>
+                <td class="search-list-buttons">
+                    {remove.main & <input class="search-list-remove"/>}
+                    {remove.errors}
+                </td>
+            </tr>
+        )
+    }
+    
+    lazy val offerSubmit = Submit(form, "Offer")  { order =>
+        import control.LoginManager._
+        
+        try {
+            val stocks = order.stocks map {
+                case StockInDerivative(quote, shares, dir) =>
+                    SecStock(quote.stock.symbol, dir.sign(shares))
+            } toList
+            // TODO: Direction
+            val secs = SecDollar(order.cash) :: stocks
+            
+            val deriv = Derivative(
+                securities = secs,
+                exec       = order.execDate,
+                condition  = CondAlways,
+                early      = true
+            )
+            
+            val user = currentUser
+            order.recipient match {
+                case SpecificUser(recip) => user.offerDerivativeTo(recip, deriv)
+                case OpenAuction         => user.offerDerivativeAtAuction(deriv)
+            }
+            
+            comet.Portfolio ! comet.Refresh
+            comet.News      ! comet.Refresh
+            comet.Offers    ! comet.Refresh
+            
+            clearAll()
+        }
+        catch {
+            case NotLoggedIn => throw BadInput("You're not logged in")
+        }
+    }
+    
+    lazy val cancelSubmit = Submit.cancel(form, "Cancel") {
+        clearAll()
+    }
 
-
+    def DirectionField(init: Direction): SelectField[Direction] =
+        SelectField(
+            Seq(
+                (ToBuyer, "To Buyer"),
+                (ToSeller, "To Seller")
+            ),
+            init
+        )
+    
+    private def clearAll() = {
+        form.reset()
+        stockRowFields = TreeMap()
+        active = false
+        refreshable.refresh()
+    }
+    
     private def notify(quote: Option[Quote]): JsCmd =
         (listeners map { (callback) => callback(quote) }).foldLeft(Noop)(_ & _)
 
@@ -176,18 +282,18 @@ class DerivativeBuilder extends Page with Loggable
     }
 
     def addOrder(order: AddToDerivative): JsCmd = {
-        stocks = stocks + ((order.quote.stock.symbol, order))
+        stockRowFields = stockRowFields + ((
+            order.quote.stock.symbol,
+            makeStockRowField(order)
+        ))
+    
+        active = true
         refreshable.refresh
     }
 
-    def getTotalVolume: BigDecimal = {
-        (stocks map {
-            // TODO: This should be a floor.
-            case (_, AddToDerivative(quote, volume)) => {
-                (volume / quote.price).floor * quote.price
-            }
-        }).fold[BigDecimal](0)(_ + _)
-    }
+    // TODO: This is wrong
+    def getTotalVolume: BigDecimal = BigDecimal("3.14")
 
     override def render = refreshable.render
 }
+

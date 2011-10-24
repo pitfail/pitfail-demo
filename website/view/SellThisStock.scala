@@ -12,17 +12,20 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import comet._
 import intform._
 
-class SellThisStock(ticker: String) extends Loggable
+class SellThisStock(ticker: String)
+    extends Renderable
+    with Loggable
 {
-    def render =
-        Submit("Sell") {
-            userSellStock()
-            Portfolio ! Refresh
-            News ! Refresh
-        }
+    def render = FormSubmit.rendered("Sell") {
+        import comet._
+        
+        userSellStock()
+        
+        Portfolio ! Refresh
+        News ! Refresh
+    }
     
     def userSellStock() {
         import control.LoginManager._

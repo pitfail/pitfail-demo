@@ -143,7 +143,6 @@ class Portfolio extends Refreshable with Loggable
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>
                     <td> {
-                        logger.info("Remaining: " + dl.remaining)
                         if (dl.remaining < 1) dl.remaining.%()
                         else Nil
                     } </td>
@@ -154,15 +153,14 @@ class Portfolio extends Refreshable with Loggable
         }
     } getOrElse <p>Login to view your portfolio</p>
     
-    def execDerivative(da: DerivativeAsset) =
-        Submit("Exec") {
-            da.refetch() map {execute _} match {
-                case Some(_) =>
-                    Portfolio ! Refresh
-                    Noop
-                case None => throw BadInput("No longer exists")
-            }
+    def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Exec") {
+        da.refetch() map {execute _} match {
+            case Some(_) =>
+                Portfolio ! Refresh
+                Noop
+            case None => throw BadInput("No longer exists")
         }
+    }
     
     def execute(da: DerivativeAsset) {
         try {

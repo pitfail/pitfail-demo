@@ -58,43 +58,41 @@ class Offers extends Refreshable with Loggable
         }
     } getOrElse <span/>
     
-    def acceptOffer(offerID: String) =
-        Submit("Accept") {
-            import control.LoginManager._
-            
-            try {
-                val user = currentUser
-                user.acceptOffer(offerID)
-                comet.Offers ! Refresh
-                comet.Portfolio ! Refresh
-            }
-            catch {
-                case NotLoggedIn =>
-                    throw new BadInput("You're not logged in")
-                    
-                case OfferExpired =>
-                    throw new BadInput("This offer has expired")
-            }
+    def acceptOffer(offerID: String) = FormSubmit.rendered("Accept") {
+        import control.LoginManager._
+        
+        try {
+            val user = currentUser
+            user.acceptOffer(offerID)
+            comet.Offers ! Refresh
+            comet.Portfolio ! Refresh
         }
+        catch {
+            case NotLoggedIn =>
+                throw new BadInput("You're not logged in")
+                
+            case OfferExpired =>
+                throw new BadInput("This offer has expired")
+        }
+    }
     
-    def declineOffer(offerID: String) =
-        Submit("Decline") {
-            import control.LoginManager._
-            
-            try {
-                val user = currentUser
-                user.declineOffer(offerID)
-                comet.Offers ! Refresh
-                comet.Portfolio ! Refresh
-            }
-            catch {
-                case NotLoggedIn =>
-                    throw new BadInput("You're not logged in")
-                    
-                case OfferExpired =>
-                    throw new BadInput("This offer has expired")
-            }
+    def declineOffer(offerID: String) = FormSubmit.rendered("Decline") {
+        import control.LoginManager._
+        
+        try {
+            val user = currentUser
+            user.declineOffer(offerID)
+            comet.Offers ! Refresh
+            comet.Portfolio ! Refresh
         }
+        catch {
+            case NotLoggedIn =>
+                throw new BadInput("You're not logged in")
+                
+            case OfferExpired =>
+                throw new BadInput("This offer has expired")
+        }
+    }
 }
 
 object Offers extends RefreshHub

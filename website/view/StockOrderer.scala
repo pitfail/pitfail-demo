@@ -29,7 +29,7 @@ import formats._
 abstract class StockOrder
 case class NoOrder() extends StockOrder
 case class BuyShares(quote: Quote, volume: BigDecimal) extends StockOrder
-case class AddToDerivative(quote: Quote, volume: BigDecimal) extends StockOrder
+case class AddToDerivative(quote: Quote, shares: Int) extends StockOrder
 
 class StockOrderer extends Page with Loggable
 {
@@ -42,7 +42,22 @@ class StockOrderer extends Page with Loggable
             case None        => Nil
         }
     )
+    
+    implicit def round(decimal: BigDecimal) = new {
+        def round(decimals: Int, mode: RoundingMode): BigDecimal = {
+            val precision = decimal.precision - decimal.scale + decimals
+            
+            if (precision <= 0) BigDecimal(0)
+            else {
+                val context = new MathContext(precision, mode)
+                decimal.round(context)
+            }
+        }
 
+        def floor: BigDecimal =
+            round(0, RoundingMode.FLOOR)
+    }
+    
     def purchaseForm(quote: Quote): NodeSeq = {
         lazy val form: Form[BigDecimal] = Form(
             identity[BigDecimal],
@@ -106,7 +121,7 @@ class StockOrderer extends Page with Loggable
 
     private def addStockToDerivative(quote: Quote, volume: BigDecimal) = {
         currentQuote = None
-        notifyAndRefresh(AddToDerivative(quote, volume))
+        notifyAndRefresh(AddToDerivative(quote, (volume / quote.price).floor.intValue ))
     }
 
     private def notify(action: StockOrder): JsCmd =

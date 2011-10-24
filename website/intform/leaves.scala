@@ -57,6 +57,24 @@ object NumberField {
     def apply(i: String = "") = new NumberField(i)
 }
 
+// --------------------------------------------------------------
+// IntField
+
+class IntField(initText: String)
+    extends TextField[Int](initText)
+{
+    def produce() =
+        try {
+            OK(Integer.parseInt(text))
+        }
+        catch { case _: NumberFormatException =>
+            Error("Should be an integer")
+        }
+}
+object IntField {
+    def apply(i: String = "") = new IntField(i)
+}
+
 // -----------------------------------------------------------------------
 // ConstField
 

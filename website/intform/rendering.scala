@@ -174,3 +174,9 @@ trait DateRender extends TextRender {
     def format: NodeSeq = <span>{DateField.formatSpec}</span>
 }
 
+trait DependentListRender extends FieldRender {
+    val renderer: () => NodeSeq
+    
+    def main: NodeSeq = renderer()
+}
+
