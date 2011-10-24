@@ -25,11 +25,17 @@ import model.derivatives._
 import model.Schema.User
 import scalaz.Scalaz._
 
+import org.joda.time.Duration
+
 import formats._
 
 class SearchQuote extends Page with Loggable
 {
-    private val stockDatabase: StockDatabase = new YahooStockDatabase(new HttpQueryService("GET"))
+    private val stockDatabase: StockDatabase = new CachedStockDatabase(
+        new YahooStockDatabase(new HttpQueryService("GET")),
+        // TODO: This timeout should be moved to a configuration file.
+        new Duration(1000 * 60 * 5)
+    )
     private var currentQuote: Option[Quote] = None;
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
 
