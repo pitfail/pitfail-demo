@@ -12,8 +12,6 @@ import JsCmds._
 import JE._
 import Helpers._
 
-import matteform._
-
 object ClearDatabase
 {
     def render =
