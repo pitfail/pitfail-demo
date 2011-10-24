@@ -58,14 +58,21 @@ class SearchDerivativeBuilder extends Page with Loggable
             Nil
         else
             <table class="block" id="search-list">
+                <col class="search-list-ticker"/>
+                <col class="search-list-company"/>
+                <col class="search-list-price"/>
+                <col class="search-list-price"/>
+                <col class="search-list-shares"/>
+                <col class="search-list-subtotal"/>
+                <col class="search-list-buttons"/>
                 <thead>
                     <tr>
-                        <th class="search-list-ticker">Ticker</th>
-                        <th class="search-list-company">Company</th>
-                        <th class="search-list-price">Price</th>
-                        <th class="search-list-shares">Shares</th>
-                        <th class="search-list-subtotal">Subtotal</th>
-                        <th class="search-list-buttons"/>
+                        <th>Ticker</th>
+                        <th>Company</th>
+                        <th>Price</th>
+                        <th>Shares</th>
+                        <th>Subtotal</th>
+                        <th/>
                     </tr>
                 </thead>
                 <tbody>
@@ -85,14 +92,12 @@ class SearchDerivativeBuilder extends Page with Loggable
         val shares = (requestedVolume / quote.price).floor
         val actualVolume = shares * quote.price
         <tr>
-            <td class="search-list-ticker">{quote.stock.symbol}</td>
-            <td class="search-list-company">{quote.company}</td>
-            <td class="search-list-price">{quote.price.$}</td>
-            <td class="search-list-shares">{shares}</td>
-            <td class="search-list-subtotal">{actualVolume.$}</td>
-            <td class="search-list-buttons">
-                <input type="submit" value="Remove"/>
-            </td>
+            <td>{quote.stock.symbol}</td>
+            <td>{quote.company}</td>
+            <td>{quote.price.$}</td>
+            <td>{shares}</td>
+            <td>{actualVolume.$}</td>
+            <td><input type="submit" value="Remove"/></td>
         </tr>
     }
 
