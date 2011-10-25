@@ -58,11 +58,12 @@ class SearchQuote extends Page with Loggable
         }
     }
 
-    private def notify(quote: Option[Quote]): JsCmd =
+    private def notify(quote: Option[Quote], cmd: JsCmd = Noop): JsCmd =
         (listeners map { (callback) => callback(quote) }).foldLeft(Noop)(_ & _)
 
-    private def notifyAndRefresh(quote: Option[Quote]): JsCmd = {
-        notify(quote) & refreshable.refresh
+    private def notifyAndRefresh(quote: Option[Quote], cmd: JsCmd = Noop): JsCmd = {
+        // This order is important because cmd may apply to the new contents.
+        notify(quote, Noop) & refreshable.refresh & cmd
     }
 
     /*
@@ -74,12 +75,12 @@ class SearchQuote extends Page with Loggable
 
     def changeQuote(stock: Stock): JsCmd = {
         currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
-        notifyAndRefresh(currentQuote)
+        notifyAndRefresh(currentQuote, Focus("search-quantity"))
     }
 
     def clearQuote: JsCmd = {
         currentQuote = None
-        notifyAndRefresh(currentQuote)
+        notifyAndRefresh(currentQuote, Focus("search-query-field"))
     }
 
     override def render = refreshable.render
