@@ -1,9 +1,6 @@
 
 package model
 
-import scala.math.{BigDecimal}
-import java.math.{MathContext,RoundingMode}
-
 import org.squeryl
 import squeryl.PrimitiveTypeMode._
 import squeryl.annotations.Column
@@ -42,85 +39,6 @@ object Schema extends squeryl.Schema with Loggable {
     case object NoSuchAuction extends Exception
     case class BidTooSmall(going: Dollars) extends Exception
     
-    implicit def bigDecimalOps(b: BigDecimal) = new {
-        def round(decimals: Int, mode: RoundingMode): BigDecimal = {
-            val precision = b.precision - b.scale + decimals
-            if (precision > 0) {
-                val context = new MathContext(precision, mode)
-                b.round(context)
-            }
-            else BigDecimal("0")
-        }
-
-        def floor: BigDecimal =
-            round(0, RoundingMode.FLOOR)
-    }
-    
-    case class Dollars(dollars: BigDecimal) extends BigDecimalField(dollars) with Ordered[Dollars] {
-        def +(other: Dollars) = Dollars(dollars + other.dollars)
-        def -(other: Dollars) = Dollars(dollars - other.dollars)
-        def *(scale: Scale)   = Dollars(scale.scale * dollars)
-        def unary_- = copy(dollars = -dollars)
-        
-        // This makes me suspicious.
-        // def /(shares: Shares) = Price(dollars / shares.shares)
-        
-        def ~/~(price: Price) = Shares(dollars / price.price)
-        def /-/(price: Price) = Shares((dollars / price.price).floor)
-
-        def compare(other: Dollars) = dollars.compare(other.dollars)
-
-        def $: String = "$%.2f" format (dollars doubleValue)
-    }
-    object Dollars {
-        def apply(str: String): Dollars = Dollars(BigDecimal(str))
-    }
-
-    case class Shares(shares: BigDecimal) extends BigDecimalField(shares) with Ordered[Shares] {
-        def +(other: Shares) = Shares(shares + other.shares)
-        def -(other: Shares) = Shares(shares - other.shares)
-        def *(price: Price)  = Dollars(price.price * shares)
-        def *(scale: Scale)   = Shares(scale.scale * shares)
-        def unary_- = copy(shares = -shares)
-        
-        def compare(other: Shares) = shares.compare(other.shares)
-
-        def ###(): String = "%.0f" format (shares doubleValue)
-    }
-    object Shares {
-        def apply(str: String): Shares = Shares(BigDecimal(str))
-    }
-
-    case class Price(price: BigDecimal) extends BigDecimalField(price) with Ordered[Price] {
-        def +(other: Price)   = Price(price + other.price)
-        def -(other: Price)   = Price(price - other.price)
-        def *(shares: Shares) = Dollars(shares.shares * price)
-        def *(scale: Scale)   = Price(scale.scale * price)
-
-        def compare(other: Price) = price.compare(other.price)
-
-        def $: String = "$%.2f" format (price doubleValue)
-    }
-    object Price {
-        def apply(str: String): Price = Price(BigDecimal(str))
-    }
-
-    case class Scale(scale: BigDecimal) extends BigDecimalField(scale) with Ordered[Scale] {
-        def +(other: Scale)              = Scale(scale + other.scale)
-        def -(other: Scale)              = Scale(scale - other.scale)
-        def *(dollars: Dollars): Dollars = Dollars(scale * dollars.dollars)
-        def *(price: Price): Price       = Price(scale * price.price)
-        def *(shares: Shares): Shares    = Shares(scale * shares.shares)
-        def *(other: Scale): Scale       = Scale(scale * other.scale)
-
-        def compare(other: Scale) = scale.compare(other.scale)
-
-        def %(): String = "%.0f%%" format ((scale doubleValue) * 100)
-    }
-    object Scale {
-        def apply(str: String): Scale = Scale(str)
-    }
-
     def trans[A](x: =>A) = inTransaction(x)
     
     def byUsername(name: String): Option[User] =
@@ -255,7 +173,7 @@ object Schema extends squeryl.Schema with Loggable {
     
     case class Portfolio(
         var id:            Long             = 0,
-        var cash:          Dollars          = Dollars(0),
+        var cash:          DollarsField     = Dollars(0),
         var owner:         Link[User]       = 0
         )
         extends KL with Loggable
@@ -272,7 +190,7 @@ object Schema extends squeryl.Schema with Loggable {
             
             val asset = stockAsset(ticker)
             
-            asset.shares += shares
+            asset.shares = (asset.shares: Shares) + shares
             cash -= dollars
 
             newsEvents insert NewsEvent(
@@ -280,7 +198,8 @@ object Schema extends squeryl.Schema with Loggable {
                 subject = owner,
                 ticker  = ticker,
                 shares  = shares,
-                price   = price
+                price   = price,
+                dollars = dollars
             )
             this.update()
             asset.update()
@@ -308,7 +227,7 @@ object Schema extends squeryl.Schema with Loggable {
             if (shares > asset.shares)
                 throw NotEnoughShares(asset.shares, shares)
             
-            cash += dollars
+            cash = (cash: Dollars) + dollars
             asset.shares -= shares
             if (asset.shares <= Shares(0))
                 asset.delete()
@@ -320,7 +239,8 @@ object Schema extends squeryl.Schema with Loggable {
                 subject = owner,
                 ticker  = ticker,
                 shares  = shares,
-                price   = stockPrice(ticker)
+                price   = stockPrice(ticker),
+                dollars = dollars
             )
             this.update()
         }
@@ -336,7 +256,7 @@ object Schema extends squeryl.Schema with Loggable {
             val price = stockPrice(asset.ticker)
             val dollars = shares * price
             
-            cash += dollars
+            cash = (cash: Dollars) + dollars
             
             newsEvents insert NewsEvent(
                 action  = "sell",
@@ -473,15 +393,15 @@ object Schema extends squeryl.Schema with Loggable {
             val actual = peer.loseCash(amt)
             
             for (me <- this.refetch) {
-                me.cash += actual
+                me.cash = (me.cash: Dollars) + actual
                 me.update()
             }
         }
         
         def loseCash(amt: Dollars): Dollars = trans {
             val (actual, nextCash) =
-                if (amt > cash) (cash, Dollars("0"))
-                else (amt, cash - amt)
+                if (amt > cash) (cash:Dollars, Dollars("0"))
+                else (amt, (cash:Dollars) - amt)
             
             cash = nextCash
             this.update()
@@ -493,7 +413,7 @@ object Schema extends squeryl.Schema with Loggable {
             val actual = peer.loseStock(ticker, shares)
             val asset = stockAsset(ticker)
             
-            asset.shares += actual
+            asset.shares = (asset.shares: Shares) + actual
             asset.update()
         }
         
@@ -569,7 +489,7 @@ object Schema extends squeryl.Schema with Loggable {
                     else {
                         val newLiab = replicateLiability(origLiab, scale - myAsset.scale)
                         myAsset.delete()
-                        (origLiab, myAsset.scale) :: (newLiab, Scale("1.0")) :: Nil
+                        (origLiab, myAsset.scale: Scale) :: (newLiab, Scale("1.0")) :: Nil
                     }
             }
         }
@@ -611,7 +531,7 @@ object Schema extends squeryl.Schema with Loggable {
     case class StockAsset(
         var id:            Long             = 0,
         var ticker:        String           = "",
-        var shares:        Shares           = Shares(0),
+        var shares:        SharesField      = Shares(0),
         var portfolio:     Link[Portfolio]  = 0
         )
         extends KL
@@ -619,7 +539,7 @@ object Schema extends squeryl.Schema with Loggable {
     case class DerivativeAsset(
         var id:    Long            = 0,
         var peer:  Link[DerivativeLiability] = 0,
-        var scale: Scale           = Scale(0),
+        var scale: ScaleField      = Scale(0),
         var owner: Link[Portfolio] = 0
         )
         extends KL
@@ -674,7 +594,7 @@ object Schema extends squeryl.Schema with Loggable {
         var id:         Long            = 0,
         var name:       String          = UUID.randomUUID.toString.substring(0, 5),
         var mode:       Array[Byte]     = Array(),
-        var remaining:  Scale           = Scale("1.0"),
+        var remaining:  ScaleField      = Scale("1.0"),
         var exec:       Timestamp       = now,
         var owner:      Link[Portfolio] = 0
         )
@@ -709,7 +629,7 @@ object Schema extends squeryl.Schema with Loggable {
         @Column("sender")
         var from:   Link[Portfolio] = 0,
         var to:     Link[Portfolio] = 0,
-        var price:  Dollars         = Dollars("0.0")
+        var price:  DollarsField    = Dollars("0.0")
         )
         extends KL
     {
@@ -720,7 +640,7 @@ object Schema extends squeryl.Schema with Loggable {
         var id:       Long             = 0,
         var mode:     Array[Byte]      = Array(),
         var offerer:  Link[Portfolio]  = 0,
-        var price:    Dollars          = Dollars("0.0"),
+        var price:    DollarsField     = Dollars("0.0"),
         var when:     Timestamp        = now,
         var expires:  Timestamp        = now
         )
@@ -736,7 +656,7 @@ object Schema extends squeryl.Schema with Loggable {
             
             bids map (_.price) match {
                 case Nil => price
-                case x@_ => x max
+                case x@_ => x map (x => x: Dollars) max
             }
         }
         
@@ -747,7 +667,7 @@ object Schema extends squeryl.Schema with Loggable {
             ) toList
             
             if (bids.isEmpty) None
-            else Some(bids maxBy (_.price))
+            else Some(bids maxBy (_.price: Dollars))
         }
         
         def close(): Unit = trans {
@@ -765,11 +685,13 @@ object Schema extends squeryl.Schema with Loggable {
             
             val deriv = derivative
             
+            val owner = offerer
+            val exec = new Timestamp(deriv.exec.getMillis)
             val liab =
                 DerivativeLiability(
                     mode  = mode,
-                    exec  = new Timestamp(deriv.exec.getMillis),
-                    owner = offerer
+                    exec  = exec,
+                    owner = owner
                 )
             liab.insert()
             
@@ -798,21 +720,22 @@ object Schema extends squeryl.Schema with Loggable {
         var id:    Long                = 0,
         var offer: Link[AuctionOffer]  = 0,
         var by:    Link[Portfolio]     = 0,
-        var price: Dollars             = Dollars("0")
+        var price: DollarsField        = Dollars("0")
         )
         extends KL
     {
     }
         
     case class NewsEvent(
-        var id:        Long       = 0,
-        var when:      Timestamp  = now,
-        var action:    String     = "",
-        var subject:   Link[User] = 0,
-        var recipient: Link[User] = 0,
-        var ticker:    String     = "",
-        var shares:    Shares     = Shares(0),
-        var price:     Price      = Price(0)
+        var id:        Long         = 0,
+        var when:      Timestamp    = now,
+        var action:    String       = "",
+        var subject:   Link[User]   = 0,
+        var recipient: Link[User]   = 0,
+        var ticker:    String       = "",
+        var shares:    SharesField  = Shares(0),
+        var dollars:   DollarsField = Dollars(0),
+        var price:     PriceField   = Price(0)
         )
         extends KL
         

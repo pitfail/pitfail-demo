@@ -16,6 +16,7 @@ import control.LoginManager
 import formats._
 import intform._
 
+import model._
 import model.Schema._
 import LoginManager.{currentLogin}
 import stockdata._

@@ -21,6 +21,7 @@ import intform._
 
 import stockdata._
 import model.derivatives._
+import model._
 import model.Schema._
 import scalaz.Scalaz._
 
