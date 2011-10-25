@@ -1,37 +1,28 @@
 
-#header_container h1 {
+#header-container h1 {
     padding: 0 0 0 0;
     margin: 0 0 0 0;
 }
 
-#left_container li {
+#left-container li {
     margin-left: -2em;
-}
-
-div.thebox {
-    margin-left:    2em;
-    margin-right:   2em;
-    padding-top:    2em;
-    padding-bottom: 2em;
-    padding-left:   2em;
-    padding-right:  2em;
-    border: 3px solid #555;
-    background-color: #eed;
-}
-
-div.set_form {
-    margin-left: 2em;
-    margin-top: 0.5em;
-    padding-left: 1em;
-    padding-top: 0.5em;
-    padding-bottom: 1em;
-    background-color: #edb;
 }
 
 /* ---------------------------------------------- */
 /* Portfolio */
 
+#portfolio h3 {
+    text-align: left;
+    font-size: normal;
+    font-style: italic;
+    font-weight: normal;
+    
+    margin-top: 3em;
+    margin-left: 3em;
+}
+
 table.tChart {
+    margin-top: 2em;
     border-collapse: collapse;
 }
 
@@ -64,32 +55,27 @@ table.stocksTable th {
 }
 
 /* ---------------------------------------------- */
-/* Trading (myActions) */
+/* Offers */
 
-table.buyStock td {
-    text-align: right
+#offers h3 {
+    text-align: left;
+    font-size: normal;
+    font-style: italic;
+    font-weight: normal;
+    
+    margin-top: 3em;
+    margin-left: 3em;
 }
 
-table.buyStock input {
-    width: 4em;
+table.offers {
+    margin-top: 2em;
 }
 
-div.buyStock {
-    padding-left: 1em;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
-    margin: 0.2em;
-    background-color: #edc;
-    border-radius: 5px;
-}
+/* ---------------------------------------------- */
+/* News */
 
-div.sellDerivative {
-    padding-left: 1em;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
-    margin: 0.2em;
-    background-color: #dec;
-    border-radius: 5px;
+li.event {
+    font-size: small;
 }
 
 /* ---------------------------------------------- */
@@ -346,3 +332,13 @@ table .search-list-price    { text-align: right;  }
 table .search-list-shares   { text-align: center; }
 table .search-list-subtotal { text-align: right;  }
 table .search-list-buttons  { text-align: left;   width: 100px; }
+
+#left-bar h3 {
+    text-align: left;
+    font-size: normal;
+    font-style: italic;
+    font-weight: normal;
+    
+    margin-top: 2em;
+}
+

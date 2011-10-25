@@ -34,25 +34,37 @@ class Offers extends Refreshable with Loggable
             import snippet._
             
             def result =
-                <div> {
+                <div id="offers"> {
                     if (!myOffers.isEmpty) offers
                     else Nil: NodeSeq
                 } </div>
             
             def offers =
-                <h4 id="ifHaveOffers">You have an offer:</h4> ++
-                <ul class="offers">
+                <h3 id="ifHaveOffers">You have an offer:</h3> ++
+                <table class="offers">
+                    <tr>
+                        <th>From</th>
+                        <th>Securities</th>
+                        <th>On</th>
+                        <th>If</th>
+                        <th>For</th>
+                    </tr>
                     {myOffers map offer _}
-                </ul>
+                </table>
             
-            def offer(o: DerivativeOffer) =
-                <li>
-                    {UserLink(o.from.owner.username)}
-                    is offering
-                    {o.derivative toHumanString}
-                    {acceptOffer(o.handle)}
-                    {declineOffer(o.handle)}
-                </li>
+            def offer(o: DerivativeOffer) = {
+                val deriv = o.derivative
+                
+                <tr>
+                    <td>{UserLink(o.from.owner.username)}</td>
+                    <td>{deriv.securities toHumanString}</td>
+                    <td>{deriv.exec toNearbyString}</td>
+                    <td>{deriv.condition toHumanString}</td>
+                    <td>{"todo"}</td>
+                    <td>{acceptOffer(o.handle)}</td>
+                    <td>{declineOffer(o.handle)}</td>
+                </tr>
+            }
             
             result
         }
