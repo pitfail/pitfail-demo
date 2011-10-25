@@ -91,6 +91,9 @@ class StockOrderer extends Page with Loggable
         try {
             currentUser.mainPortfolio.buyStock(quote.stock.symbol, Dollars(volume))
             currentQuote = None
+
+            comet.Portfolio ! comet.Refresh
+            comet.News      ! comet.Refresh
             notifyAndRefresh(BuyShares(quote, volume))
         } catch {
             case NegativeVolume => throw BadInput(
