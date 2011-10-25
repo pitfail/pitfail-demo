@@ -120,10 +120,20 @@ html {
 }
 
 /* Header */
-h1 {
+#header {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+#header h1 {
     /* TODO: Shouldn't need !important here. */
     font-size: 3em !important;
-    margin-bottom: 1em;
+}
+
+#header #account {
+    position: absolute;
+    right: 0;
+    top: 1em;
 }
 
 /* Search */
@@ -346,3 +356,9 @@ table .search-list-price    { text-align: right;  }
 table .search-list-shares   { text-align: center; }
 table .search-list-subtotal { text-align: right;  }
 table .search-list-buttons  { text-align: left;   width: 100px; }
+
+/* Portfolio View */
+.tchart {
+    width: 50%;
+    float: left;
+}
