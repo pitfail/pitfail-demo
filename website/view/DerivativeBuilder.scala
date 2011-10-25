@@ -33,18 +33,18 @@ case class SpecificUser(user: User) extends Recipient
 case object OpenAuction extends Recipient
 
 sealed abstract class Direction {
-    def sign(x: BigDecimal): BigDecimal
+    def sign(x: Dollars): Dollars
     def sign(x: Shares): Shares
     def sign(x: Int): Int
 }
 
 case object ToBuyer  extends Direction {
-    def sign(x: BigDecimal) = x
+    def sign(x: Dollars) = x
     def sign(x: Shares) = x
     def sign(x: Int) = x
 }
 case object ToSeller extends Direction {
-    def sign(x: BigDecimal) = -x
+    def sign(x: Dollars) = -x
     def sign(x: Shares) = x * Scale("-1")
     def sign(x: Int) = -x
 }
@@ -59,8 +59,8 @@ case class DerivativeOrder(
     recipient:   Recipient,
     stocks:      Iterable[StockInDerivative],
     execDate:    DateTime,
-    price:       BigDecimal,
-    cash:        BigDecimal,
+    price:       Dollars,
+    cash:        Dollars,
     condition:   Condition
 )
 
@@ -82,13 +82,9 @@ class DerivativeBuilder extends Page with Loggable
             formatter.parseDateTime(str)
     }
 
-    implicit def toDollars(number: Option[BigDecimal]) = new {
+    implicit def toDollars(number: Option[Dollars]) = new {
         def $: String = {
-            (number map (_.$)) getOrElse "n/a" 
-        }
-
-        def %(): String = {
-            (number map (_.%())) getOrElse "n/a"
+            number map (_.$) getOrElse "n/a" 
         }
     }
 
@@ -100,9 +96,9 @@ class DerivativeBuilder extends Page with Loggable
     lazy val form: Form[DerivativeOrder] = Form(
         (
             rec: Recipient,
-            price: BigDecimal,
+            price: Dollars,
             exp: DateTime,
-            strike: BigDecimal,
+            strike: Dollars,
             cashDir: Direction,
             stocks: Seq[StockInDerivative],
             cond: Condition
@@ -191,8 +187,9 @@ class DerivativeBuilder extends Page with Loggable
     lazy val expirationField = DateTimeField(tomorrow, formatter)
 
     // We can't really pick a good default
-    lazy val priceField = NumberField("0.00")
-    lazy val strikePriceField = NumberField(getTotalVolume.toString)
+    lazy val priceField = DollarField("0.00")
+    // TODO: Default to current total volume
+    lazy val strikePriceField = NumberField("")
     lazy val cashDirField = DirectionField(ToSeller)
 
     lazy val stocksField: Field[Seq[StockInDerivative]] with FieldRender =
@@ -249,7 +246,7 @@ class DerivativeBuilder extends Page with Loggable
         def compSecField = new TextField[ComparableSecurity]("") {
             def produce() = OK {
                 try {
-                    CompSecDollar(BigDecimal(text))
+                    CompSecDollar(Price(text))
                 }
                 catch { case _: NumberFormatException =>
                     CompSecStock(text)
@@ -288,7 +285,7 @@ class DerivativeBuilder extends Page with Loggable
                     SecStock(quote.stock.symbol, dir.sign(Shares(shares)))
             } toList
             // TODO: Direction
-            val secs = SecDollar(Dollars(order.cash)) :: stocks
+            val secs = SecDollar(order.cash) :: stocks
             
             val deriv = Derivative(
                 securities = secs,
@@ -357,9 +354,6 @@ class DerivativeBuilder extends Page with Loggable
         active = true
         refreshable.refresh
     }
-
-    // TODO: This is wrong
-    def getTotalVolume: BigDecimal = BigDecimal("3.14")
 
     override def render = refreshable.render
 }

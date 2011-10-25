@@ -47,6 +47,7 @@ object Schema extends squeryl.Schema with Loggable {
         def /(shares: Shares) = Price(dollars / shares.shares)
         def /(price: Price)   = Shares(dollars / price.price)
         def *(scale: Scale)   = Dollars(scale.scale * dollars)
+        def unary_- = copy(dollars = -dollars)
 
         def compare(other: Dollars) = dollars.compare(other.dollars)
 
@@ -61,6 +62,7 @@ object Schema extends squeryl.Schema with Loggable {
         def -(other: Shares) = Shares(shares - other.shares)
         def *(price: Price)  = Dollars(price.price * shares)
         def *(scale: Scale)   = Shares(scale.scale * shares)
+        def unary_- = copy(shares = -shares)
         
         def compare(other: Shares) = shares.compare(other.shares)
 
@@ -120,7 +122,7 @@ object Schema extends squeryl.Schema with Loggable {
                     // TODO: Starting cash should be moved to a properties file.
                     val port = Portfolio(
                         owner = user,
-                        cash  = Dollars(BigDecimal("2000.0"))
+                        cash  = Dollars("2000.0")
                     )
                     portfolios insert port
                     
@@ -649,7 +651,7 @@ object Schema extends squeryl.Schema with Loggable {
         var id:         Long            = 0,
         var name:       String          = UUID.randomUUID.toString.substring(0, 5),
         var mode:       Array[Byte]     = Array(),
-        var remaining:  Scale           = Scale(BigDecimal("1.0")),
+        var remaining:  Scale           = Scale("1.0"),
         var exec:       Timestamp       = now,
         var owner:      Link[Portfolio] = 0
         )
@@ -684,7 +686,7 @@ object Schema extends squeryl.Schema with Loggable {
         @Column("sender")
         var from:   Link[Portfolio] = 0,
         var to:     Link[Portfolio] = 0,
-        var price:  BigDecimal      = BigDecimal("0.0")
+        var price:  Dollars         = Dollars("0.0")
         )
         extends KL
     {
@@ -692,22 +694,22 @@ object Schema extends squeryl.Schema with Loggable {
     }
     
     case class AuctionOffer(
-        var id:     Long               = 0,
-        var mode:   Array[Byte]        = Array(),
-        var offerer:   Link[Portfolio] = 0,
-        var price:  BigDecimal         = BigDecimal("0.0"),
-        var when:   Timestamp          = now,
-        var expires: Timestamp         = now
+        var id:       Long             = 0,
+        var mode:     Array[Byte]      = Array(),
+        var offerer:  Link[Portfolio]  = 0,
+        var price:    Dollars          = Dollars("0.0"),
+        var when:     Timestamp        = now,
+        var expires:  Timestamp        = now
         )
         extends KL
     {
         def derivative: Derivative = Derivative.deserialize(mode)
         
-        def goingPrice: BigDecimal = trans {
+        def goingPrice: Dollars = trans {
             val head = from(auctionBids)(bid =>
                 where(bid.offer === this)
                 compute(max(bid.price))
-            )
+            ) headOption
             
             head getOrElse price
         }
@@ -748,7 +750,7 @@ object Schema extends squeryl.Schema with Loggable {
             val asset =
                 DerivativeAsset(
                     peer  = liab,
-                    scale = BigDecimal("1.0"),
+                    scale = Scale("1.0"),
                     owner = bid.by
                 )
             asset.insert()
@@ -770,7 +772,7 @@ object Schema extends squeryl.Schema with Loggable {
         var id:    Long                = 0,
         var offer: Link[AuctionOffer]  = 0,
         var by:    Link[Portfolio]     = 0,
-        var price: BigDecimal          = 0
+        var price: Dollars             = Dollars("0")
         )
         extends KL
     {
