@@ -31,6 +31,8 @@ object Schema extends squeryl.Schema with Loggable {
     implicit val derivativeAssets      = table[DerivativeAsset]
     implicit val derivativeLiabilities = table[DerivativeLiability]
     implicit val derivativeOffers      = table[DerivativeOffer]
+    implicit val auctionOffers         = table[AuctionOffer]
+    implicit val auctionBids           = table[AuctionBid]
     
     // Errors that can occur during model operations
     case object NegativeVolume extends Exception
@@ -39,6 +41,8 @@ object Schema extends squeryl.Schema with Loggable {
     case class NotEnoughShares(have: BigDecimal, need: BigDecimal) extends Exception
     case object OfferExpired extends Exception
     case object NotExecutable extends Exception
+    case object NoSuchAuction extends Exception
+    case class BidTooSmall(going: Dollars) extends Exception
     
     def trans[A](x: =>A) = inTransaction(x)
     
@@ -121,6 +125,15 @@ object Schema extends squeryl.Schema with Loggable {
         }
     }
     
+    def recentAuctions(n: Int): Seq[AuctionOffer] = trans {
+        from(auctionOffers)(o =>
+            select(o)
+            orderBy(o.when desc)
+        )
+        .page(0, n)
+        .toList
+    }
+    
     case class User(
         var id:            Long             = 0,
         var username:      String           = "",
@@ -128,20 +141,33 @@ object Schema extends squeryl.Schema with Loggable {
         )
         extends KL
     {
-        def offerDerivativeTo(recip: User, deriv: Derivative): Unit = trans {
-            // Can anything go wrong here? I'm not aware...
+        def offerDerivativeTo(
+            recip: User,
+            deriv: Derivative,
+            price: Dollars
+        ): Unit = trans {
             val offer = DerivativeOffer(
                 handle = UUID.randomUUID.toString,
                 mode   = deriv.serialize,
                 from   = this.mainPortfolio,
-                to     = recip.mainPortfolio
+                to     = recip.mainPortfolio,
+                price  = price
             )
             
-            derivativeOffers.insert(offer)
+            offer.insert()
         }
         
-        def offerDerivativeAtAuction(deriv: Derivative): Unit = trans {
-            throw new IllegalStateException("Not implemented, sorry ;( ;( ;(")
+        def offerDerivativeAtAuction(
+            deriv: Derivative,
+            price: Dollars
+        ): Unit = trans {
+            val offer = AuctionOffer(
+                mode     = deriv.serialize,
+                offerer  = this.mainPortfolio,
+                price    = price
+            )
+            
+            offer.insert()
         }
         
         def acceptOffer(offerID: String) { mainPortfolio.acceptOffer(offerID) }
@@ -480,6 +506,25 @@ object Schema extends squeryl.Schema with Loggable {
             
             newLiab
         }
+        
+        def castBid(auction: AuctionOffer, amount: Dollars): Unit = trans {
+            val going = auction.goingPrice
+            if (amount <= going) throw BidTooSmall(going)
+            
+            val bid = AuctionBid(
+                offer = auction,
+                by    = this,
+                price = amount
+            )
+            bid.insert()
+        }
+        
+        def myAuctionOffers: Seq[AuctionOffer] = trans {
+            from(auctionOffers)( a =>
+                where(a.offerer === this)
+                select(a)
+            ) toList
+        }
     }
 
     case class StockAsset(
@@ -582,11 +627,97 @@ object Schema extends squeryl.Schema with Loggable {
         var mode:   Array[Byte]     = Array(),
         @Column("sender")
         var from:   Link[Portfolio] = 0,
-        var to:     Link[Portfolio] = 0
+        var to:     Link[Portfolio] = 0,
+        var price:  BigDecimal      = BigDecimal("0.0")
         )
         extends KL
     {
         def derivative: Derivative = Derivative.deserialize(mode)
+    }
+    
+    case class AuctionOffer(
+        var id:     Long               = 0,
+        var mode:   Array[Byte]        = Array(),
+        var offerer:   Link[Portfolio] = 0,
+        var price:  BigDecimal         = BigDecimal("0.0"),
+        var when:   Timestamp          = now,
+        var expires: Timestamp         = now
+        )
+        extends KL
+    {
+        def derivative: Derivative = Derivative.deserialize(mode)
+        
+        def goingPrice: BigDecimal = trans {
+            val head = from(auctionBids)(bid =>
+                where(bid.offer === this)
+                compute(max(bid.price))
+            )
+            
+            head getOrElse price
+        }
+        
+        def highBid: Option[AuctionBid] = trans {
+            val bids = from(auctionBids)(bid =>
+                where(bid.offer === this)
+                select(bid)
+            ) toList
+            
+            if (bids.isEmpty) None
+            else Some(bids maxBy (_.price))
+        }
+        
+        def close(): Unit = trans {
+            highBid match {
+                case None =>
+                    this.delete()
+                    
+                case Some(bid) =>
+                    actOn(bid)
+            }
+        }
+        
+        def actOn(bid: AuctionBid): Unit = trans {
+            offerer.takeCash(bid.price, bid.by)
+            
+            val deriv = derivative
+            
+            val liab =
+                DerivativeLiability(
+                    mode  = mode,
+                    exec  = new Timestamp(deriv.exec.getMillis),
+                    owner = offerer
+                )
+            liab.insert()
+            
+            val asset =
+                DerivativeAsset(
+                    peer  = liab,
+                    scale = BigDecimal("1.0"),
+                    owner = bid.by
+                )
+            asset.insert()
+            this.delete()
+        }
+    }
+    object AuctionOffer {
+        def byID(id: Long): AuctionOffer = trans {
+            val opt = from(auctionOffers)(o =>
+                where(o.id === id)
+                select(o)
+            ) headOption
+            
+            opt getOrElse (throw NoSuchAuction)
+        }
+    }
+    
+    case class AuctionBid(
+        var id:    Long                = 0,
+        var offer: Link[AuctionOffer]  = 0,
+        var by:    Link[Portfolio]     = 0,
+        var price: BigDecimal          = 0
+        )
+        extends KL
+    {
     }
         
     case class NewsEvent(

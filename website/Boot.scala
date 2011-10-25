@@ -46,7 +46,8 @@ class Boot extends Loggable {
         val entries = List(
             Menu.i("Home") / "index",
             Menu.i("Test") / "testform",
-            Menu.i("Schema") / "schema"
+            Menu.i("Schema") / "schema",
+            Menu.i("...") / "auction"
         )
         setSiteMap(SiteMap(entries:_*))
 

@@ -8,7 +8,7 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
 import scala.xml.{NodeSeq}
-import http._
+import http.{StringField => _, _}
 import js._
 import JsCmds._
 import JE._
@@ -57,7 +57,8 @@ case class DerivativeOrder(
     stocks:      Iterable[StockInDerivative],
     execDate:    DateTime,
     price:       BigDecimal,
-    cash:        BigDecimal
+    cash:        BigDecimal,
+    condition:   Condition
 )
 
 class DerivativeBuilder extends Page with Loggable
@@ -95,33 +96,38 @@ class DerivativeBuilder extends Page with Loggable
 
     lazy val form: Form[DerivativeOrder] = Form(
         (
-            rec: User,
+            rec: Recipient,
             price: BigDecimal,
             exp: DateTime,
             strike: BigDecimal,
             cashDir: Direction,
-            stocks: Seq[StockInDerivative]
+            stocks: Seq[StockInDerivative],
+            cond: Condition
         ) =>
             DerivativeOrder(
-                recipient  = SpecificUser(rec),
+                recipient  = rec,
                 price      = price,
                 stocks     = stocks,
                 execDate   = exp,
-                cash       = cashDir.sign(strike)
+                cash       = cashDir.sign(strike),
+                condition  = cond
             )
         ,
         (
-            recipientField,
+            toField,
             priceField,
             expirationField,
             strikePriceField,
             cashDirField,
-            stocksField
+            stocksField,
+            conditionField
         ),
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
-            <p>Offer to enter a contract with {recipientField.main & <input/>}
-            {recipientField.errors} for the price of ${priceField.main & <input
+            
+            <p>Offer to enter a contract with {toField.main}</p>
+            
+            <p>for the price of ${priceField.main & <input
             class="price"/>}.</p>
             
             <p>On the date {expirationField.main & <input class="date"/>} the
@@ -147,6 +153,8 @@ class DerivativeBuilder extends Page with Loggable
                     {stocksField.main}
                 </tbody>
             </table>
+            
+            {conditionField.main}
 
             <div class="buttons">
                 {offerSubmit.main & <input/>}
@@ -155,8 +163,25 @@ class DerivativeBuilder extends Page with Loggable
         </div>
     )
 
+    lazy val toField = CaseField[Recipient](
+        Seq(
+            toUserField,
+            ConstField(OpenAuction)
+        ),
+        choices =>
+            <ul>
+                <li>{choices._1} User: {toUserField.main}</li>
+                <li>{choices._2} Public Auction</li>
+            </ul>
+    )
+
     // TODO: This should allow a public auction.
     lazy val recipientField = UserField("")
+    lazy val toUserField = AggregateField(
+        SpecificUser,
+        recipientField,
+        recipientField.main ++ recipientField.errors
+    )
 
     // Default to a week in the future.
     val tomorrow = DateTime.now().plusDays(7)
@@ -212,6 +237,45 @@ class DerivativeBuilder extends Page with Loggable
         )
     }
     
+    lazy val conditionField = new Field[Condition] with FieldRender {
+        lazy val useField = BooleanField()
+        
+        lazy val aField = compSecField
+        lazy val bField = compSecField
+        
+        def compSecField = new TextField[ComparableSecurity]("") {
+            def produce() = OK {
+                try {
+                    CompSecDollar(BigDecimal(text))
+                }
+                catch { case _: NumberFormatException =>
+                    CompSecStock(text)
+                }
+            }
+        }
+        
+        def produce() = useField.process flatMap { use =>
+            if (use)
+                for {
+                    a <- aField.process
+                    b <- bField.process
+                } yield OK(CondGreater(b, a))
+            else
+                Some(OK(CondAlways))
+        } getOrElse ChildError
+        
+        def reset() {
+            useField.reset
+            aField.reset
+            bField.reset
+        }
+        
+        def main =
+            <p>{useField.main} Provided that
+                {aField.main} &lt; {bField.main}
+            </p>
+    }
+    
     lazy val offerSubmit = Submit(form, "Offer")  { order =>
         import control.LoginManager._
         
@@ -226,14 +290,14 @@ class DerivativeBuilder extends Page with Loggable
             val deriv = Derivative(
                 securities = secs,
                 exec       = order.execDate,
-                condition  = CondAlways,
+                condition  = order.condition,
                 early      = true
             )
             
             val user = currentUser
             order.recipient match {
-                case SpecificUser(recip) => user.offerDerivativeTo(recip, deriv)
-                case OpenAuction         => user.offerDerivativeAtAuction(deriv)
+                case SpecificUser(recip) => user.offerDerivativeTo(recip, deriv, order.price)
+                case OpenAuction         => user.offerDerivativeAtAuction(deriv, order.price)
             }
             
             comet.Portfolio ! comet.Refresh
