@@ -626,5 +626,18 @@ object Schema extends squeryl.Schema with Loggable {
         createSchema()
         ensureUser("ellbur_k_a")
     }
+    
+    def schemaDDL: String = {
+        var schema: String = ""
+        trans {
+            this.printDdl {st =>
+                schema += st
+                schema += "\n"
+                schema += "\n"
+            }
+        }
+        
+        schema
+    }
 }
 

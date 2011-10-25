@@ -29,12 +29,24 @@ class Boot extends Loggable {
             dispatch
         }
 
+        // Look at this example:
+        // https://gist.github.com/166669
+        LiftRules.liftRequest.append {
+            case req
+                if (req.path.partPath match {
+                    case "servlet" :: _ => true
+                    case _              => false
+                })
+                => false
+        }
+
         // where to search snippet
         LiftRules.addToPackages("code")
 
         val entries = List(
             Menu.i("Home") / "index",
-            Menu.i("Test") / "testform"
+            Menu.i("Test") / "testform",
+            Menu.i("Schema") / "schema"
         )
         setSiteMap(SiteMap(entries:_*))
 
