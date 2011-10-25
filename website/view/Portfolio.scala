@@ -16,6 +16,7 @@ import control.LoginManager
 import formats._
 import intform._
 
+import model._
 import model.Schema._
 import LoginManager.{currentLogin}
 import stockdata._
@@ -146,11 +147,11 @@ class Portfolio extends Refreshable with Loggable
     }
     
     // TODO: This is not right
-    def stockVolume(asset: StockAsset): BigDecimal = {
+    def stockVolume(asset: StockAsset): Dollars = {
         val shares = asset.shares
         val stock  = Stock(asset.ticker)
         val quote  = stockDatabase.getQuotes(Seq(stock)).head
-        (shares * Price(quote.price)).dollars
+        shares * quote.price
     }
 }
 
