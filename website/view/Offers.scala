@@ -56,6 +56,7 @@ class Offers extends Refreshable with Loggable
                             <col class="expiration"/>
                             <col class="condition"/>
                             <col class="strike-price"/>
+                            <col class="buttons"/>
                             <thead>
                                 <tr>
                                     <th>From</th>
@@ -63,6 +64,7 @@ class Offers extends Refreshable with Loggable
                                     <th>On</th>
                                     <th>If</th>
                                     <th>For</th>
+                                    <th/>
                                 </tr>
                             </thead>
                             <tbody>
@@ -80,8 +82,7 @@ class Offers extends Refreshable with Loggable
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>
                     <td>{"todo"}</td>
-                    <td>{acceptOffer(o.handle)}</td>
-                    <td>{declineOffer(o.handle)}</td>
+                    <td>{acceptOffer(o.handle)} {declineOffer(o.handle)}</td>
                 </tr>
             }
             
