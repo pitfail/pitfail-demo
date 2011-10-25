@@ -33,26 +33,58 @@ class Offers extends Refreshable with Loggable
         } yield {
             import snippet._
             
-            def result =
-                <div> {
-                    if (!myOffers.isEmpty) offers
-                    else Nil: NodeSeq
-                } </div>
+            def result: NodeSeq =
+                if (myOffers isEmpty) 
+                    Nil
+                else
+                    <div id="offers" class="container block">
+                        <h2>Pending Offer</h2>
+                        {
+                        if (myOffers.length == 1)
+                            <p>Another user has offered to sell you a derivative.
+                            Look at the table below for more information and
+                            choose whether to accept or decline this offer.</p>
+                        else 
+                            <p>Other users have offered to sell you
+                            derivatives. Look at the table below for
+                            information about the derivatives and choose
+                            whether to accept or decline the offers.</p>
+                        }
+                        <table>
+                            <col class="from"/>
+                            <col class="securities"/>
+                            <col class="expiration"/>
+                            <col class="condition"/>
+                            <col class="strike-price"/>
+                            <col class="buttons"/>
+                            <thead>
+                                <tr>
+                                    <th>From</th>
+                                    <th>Securities</th>
+                                    <th>On</th>
+                                    <th>If</th>
+                                    <th>For</th>
+                                    <th/>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {myOffers map offer _}
+                            </tbody>
+                        </table>
+                    </div>
             
-            def offers =
-                <h4 id="ifHaveOffers">You have an offer:</h4> ++
-                <ul class="offers">
-                    {myOffers map offer _}
-                </ul>
-            
-            def offer(o: DerivativeOffer) =
-                <li>
-                    {UserLink(o.from.owner.username)}
-                    is offering
-                    {o.derivative toHumanString}
-                    {acceptOffer(o.handle)}
-                    {declineOffer(o.handle)}
-                </li>
+            def offer(o: DerivativeOffer) = {
+                val deriv = o.derivative
+                
+                <tr>
+                    <td>{UserLink(o.from.owner.username)}</td>
+                    <td>{deriv.securities toHumanString}</td>
+                    <td>{deriv.exec toNearbyString}</td>
+                    <td>{deriv.condition toHumanString}</td>
+                    <td>{"todo"}</td>
+                    <td>{acceptOffer(o.handle)} {declineOffer(o.handle)}</td>
+                </tr>
+            }
             
             result
         }

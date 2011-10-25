@@ -1,12 +1,6 @@
 
 <lift:children>
 
-<lift:ClearDatabase form="post">
-<input type="submit" name="submit" value="Clear Database"/>
-</lift:ClearDatabase>
-
-<lift:RunChecks/>
-
 <lift:LoginStatus.ifLoggedIn>
 <p>Logged in as <lift:LoginStatus.username/></p>
 <p><a href="/logout">Logout</a></p>
@@ -16,11 +10,31 @@
 <p><a href="/twitter/login">Login</a></p>
 </lift:LoginStatus.ifLoggedOut>
 
-<h3>Places</h3>
-<lift:Menu.builder/>
+<h3>Auctions</h3>
+<lift:comet type="AuctionThumbnail"/>
+
+<h3>Recent Trades</h3>
+<lift:comet type="News"/>
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
 <!-- Error messages and such -->
 <lift:msgs/>
+
+<lift:ClearDatabase form="post">
+<input type="submit" name="submit" value="Clear Database"/>
+</lift:ClearDatabase>
+
+<lift:RunChecks/>
+
+<h3>Places</h3>
+<lift:Menu.builder/>
 
 </lift:children>
 

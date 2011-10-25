@@ -33,14 +33,14 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
       queryService.query(url)
     } catch {
       case ex: IOException =>
-        throw new DatabaseException("Yahoo Finance query failed.")
+        throw new DatabaseException("Yahoo Finance query failed.", ex)
     }
 
     val root = try {
       JsonParser.parse(response)
     } catch {
       case ex: JsonParser.ParseException =>
-        throw new DatabaseException("Yahoo Finance returned invalid JSON.")
+        throw new DatabaseException("Yahoo Finance returned invalid JSON.", ex)
     }
 
     val quoteMap = try {
@@ -77,10 +77,10 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
       )}).toMap
     } catch {
       case ex: MappingException =>
-        throw new DatabaseException("Yahoo Finance returned JSON with unexpected structure.")
+        throw new DatabaseException("Yahoo Finance returned JSON with unexpected structure.", ex)
 
       case ex: NumberFormatException =>
-        throw new DatabaseException("Yahoo Finance returned an invalid stock price.")
+        throw new DatabaseException("Yahoo Finance returned an invalid stock price.", ex)
     }
 
     stocks map { (stock) => {

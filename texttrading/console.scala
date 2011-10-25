@@ -11,7 +11,7 @@ class ConsoleFrontend(
     def messages = scala.io.Source.stdin.getLines map { line =>
         Message(username, line, reply)
     }
-    
+
     val reply = new Reply {
         def reply(text: String) = println(text)
     }

@@ -43,21 +43,6 @@ class StockOrderer extends Page with Loggable
         }
     )
     
-    implicit def round(decimal: BigDecimal) = new {
-        def round(decimals: Int, mode: RoundingMode): BigDecimal = {
-            val precision = decimal.precision - decimal.scale + decimals
-            
-            if (precision <= 0) BigDecimal(0)
-            else {
-                val context = new MathContext(precision, mode)
-                decimal.round(context)
-            }
-        }
-
-        def floor: BigDecimal =
-            round(0, RoundingMode.FLOOR)
-    }
-    
     def purchaseForm(quote: Quote): NodeSeq = {
         lazy val form: Form[BigDecimal] = Form(
             identity[BigDecimal],
@@ -104,8 +89,15 @@ class StockOrderer extends Page with Loggable
         import model.Schema._
 
         try {
-            currentUser.mainPortfolio.buyStock(quote.stock.symbol, volume)
+            // TODO: Throw an exception if actualVolume is 0.
+            val shares = (volume / quote.price).floor
+            val actualVolume = shares * quote.price
+
+            currentUser.mainPortfolio.buyStock(quote.stock.symbol, Dollars(actualVolume))
             currentQuote = None
+
+            comet.Portfolio ! comet.Refresh
+            comet.News      ! comet.Refresh
             notifyAndRefresh(BuyShares(quote, volume))
         } catch {
             case NegativeVolume => throw BadInput(

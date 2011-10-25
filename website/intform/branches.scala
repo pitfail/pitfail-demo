@@ -135,20 +135,20 @@ object ListField {
 // DependentListField
 
 class DependentListField[A](
-        val fields: Seq[Field[A]],
+        val fields: () => Seq[Field[A]],
         val renderer: () => NodeSeq
     )
     extends Field[Seq[A]]
     with DependentListRender
 {
-    def produce() = (fields map (_.process)).sequence match {
+    def produce() = (fields() map (_.process)).sequence match {
         case Some(a) => OK(a)
         case None    => ChildError
     }
-    def reset() { fields map (_.reset) }
+    def reset() { fields() map (_.reset) }
 }
 object DependentListField {
-    def apply[A](f: Seq[Field[A]], r: =>NodeSeq) =
-        new DependentListField[A](f, () => r)
+    def apply[A](f: =>Seq[Field[A]], r: =>NodeSeq) =
+        new DependentListField[A](() => f, () => r)
 }
 

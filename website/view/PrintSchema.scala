@@ -12,7 +12,11 @@ import JsCmds._
 import JE._
 import Helpers._
 
-object choice {
-    def render(in: NodeSeq): NodeSeq = Nil
+object PrintSchema
+{
+    def render =
+        <pre>
+        {model.Schema.schemaDDL}
+        </pre>
 }
 

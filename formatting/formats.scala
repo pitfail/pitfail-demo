@@ -4,8 +4,10 @@ package object formats {
 
 import model.derivatives._
 import scala.math.{BigDecimal}
+import java.math.{MathContext,RoundingMode}
 import org.joda.time.{DateTime}
 import net.liftweb.common.Logger
+import java.sql.Timestamp
 
 // ------------------------------------------------------------------
 // Errors
@@ -35,6 +37,7 @@ case class DateTimeFormatted(d: DateTime) {
     def toNearbyString: String = d toString "M/d"
 }
 implicit def dateTimeFormatted(d: DateTime) = DateTimeFormatted(d)
+implicit def timestampFormatted(t: Timestamp) = DateTimeFormatted(new DateTime(t.getTime))
 
 // ------------------------------------------------------------------
 // Money
@@ -43,8 +46,28 @@ case class BigDecimalFormatted(b: BigDecimal) {
     def $: String = "$%.2f" format (b doubleValue)
     def %(): String = "%.0f%%" format (b.doubleValue * 100)
     def ###(): String = "%.0f" format (b doubleValue)
+
+    def round(decimals: Int, mode: RoundingMode): BigDecimal = {
+        val precision = b.precision - b.scale + decimals
+        val context = new MathContext(precision, mode)
+        b.round(context)
+    }
+
+    def floor: BigDecimal =
+        round(0, RoundingMode.FLOOR)
 }
 implicit def bigDecimalFormatted(b: BigDecimal): BigDecimalFormatted = BigDecimalFormatted(b)
+
+case class BigDecimalOptionFormatted(b: Option[BigDecimal]) {
+    def $: String = {
+        (b map (_.$)) getOrElse "n/a" 
+    }
+
+    def %(): String = {
+        (b map (_.toString + "%")) getOrElse "n/a"
+    }
+}
+implicit def bigDecimalOptionFormatted(b: Option[BigDecimal]): BigDecimalOptionFormatted = BigDecimalOptionFormatted(b)
     
 // ------------------------------------------------------------------
 // Derivatives

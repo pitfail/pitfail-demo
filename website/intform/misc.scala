@@ -31,6 +31,12 @@ package object intform {
         case t1:+:t2:+:t3:+:t4:+:t5:+:t6:+:HNil => m(t1, t2, t3, t4, t5, t6)
     }
     
+    implicit def hlistify7[T1,T2,T3,T4,T5,T6,T7,A](m: (T1,T2,T3,T4,T5,T6,T7) => A):
+        (T1:+:T2:+:T3:+:T4:+:T5:+:T6:+:T7:+:HNil) => A =
+    {
+        case t1:+:t2:+:t3:+:t4:+:t5:+:t6:+:t7:+:HNil => m(t1, t2, t3, t4, t5, t6, t7)
+    }
+    
     // -----------------------------------------------------------------
     
     implicit def tuplist1[A](a: A) = Seq[A](a)
@@ -51,11 +57,24 @@ package object intform {
         t._1:^:t._2:^:t._3:^:t._4:^:t._5:^:KNil
     implicit def klist6[K[+_],A,B,C,D,E,F](t: (K[A],K[B],K[C],K[D],K[E],K[F])): KList[K,A:+:B:+:C:+:D:+:E:+:F:+:HNil] =
         t._1:^:t._2:^:t._3:^:t._4:^:t._5:^:t._6:^:KNil
+    implicit def klist7[K[+_],A,B,C,D,E,F,G](t: (K[A],K[B],K[C],K[D],K[E],K[F],K[G])):
+        KList[K,A:+:B:+:C:+:D:+:E:+:F:+:G:+:HNil] =
+        t._1:^:t._2:^:t._3:^:t._4:^:t._5:^:t._6:^:t._7:^:KNil
     
     // -----------------------------------------------------------------
     
     class MergeAttr(n1: NodeSeq) {
-        def &(n2: NodeSeq) = n1 // TODO obviously not right
+        def &(n2: NodeSeq) = {
+            import scala.xml.{Attribute,Elem,Node,NodeSeq,Null,Text}
+
+            assert (n1.length == 1)
+            assert (n2.length == 1)
+
+            n1.head match {
+                case e1: Elem =>
+                    e1 % n2.head.attributes
+            }
+        }
     }
     implicit def mergeAttr(n1: NodeSeq) = new MergeAttr(n1)
 }

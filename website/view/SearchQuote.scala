@@ -31,6 +31,8 @@ import formats._
 
 class SearchQuote extends Page with Loggable
 {
+    // TODO: This should be a singleton object to take full advantage of
+    //       caching.
     private val stockDatabase: StockDatabase = new CachedStockDatabase(
         new YahooStockDatabase(new HttpQueryService("GET")),
         // TODO: This timeout should be moved to a configuration file.
@@ -46,23 +48,12 @@ class SearchQuote extends Page with Loggable
         </div>
     )
 
-    implicit def toDollars(price: Option[BigDecimal]) = new {
-        def $: String = {
-            (price map (_.$)) getOrElse "n/a" 
-        }
-    }
-
-    implicit def toPercent(percent: Option[BigDecimal]) = new {
-        def %(): String = {
-            (percent map (_.toString + "%")) getOrElse "n/a"
-        }
-    }
-
-    private def notify(quote: Option[Quote]): JsCmd =
+    private def notify(quote: Option[Quote], cmd: JsCmd = Noop): JsCmd =
         (listeners map { (callback) => callback(quote) }).foldLeft(Noop)(_ & _)
 
-    private def notifyAndRefresh(quote: Option[Quote]): JsCmd = {
-        notify(quote) & refreshable.refresh
+    private def notifyAndRefresh(quote: Option[Quote], cmd: JsCmd = Noop): JsCmd = {
+        // This order is important because cmd may apply to the new contents.
+        notify(quote, Noop) & refreshable.refresh & cmd
     }
 
     /*
@@ -74,12 +65,12 @@ class SearchQuote extends Page with Loggable
 
     def changeQuote(stock: Stock): JsCmd = {
         currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
-        notifyAndRefresh(currentQuote)
+        notifyAndRefresh(currentQuote, Focus("search-quantity"))
     }
 
     def clearQuote: JsCmd = {
         currentQuote = None
-        notifyAndRefresh(currentQuote)
+        notifyAndRefresh(currentQuote, Focus("search-query-field"))
     }
 
     override def render = refreshable.render
@@ -93,9 +84,11 @@ class SearchQuote extends Page with Loggable
             tickerField
         ),
         <div id="search-query">
-            {tickerField.main & <input id="search-query-field"/>}
+            <div id="search-query-field-hack">
+                {tickerField.main & <input id="search-query-field"/>}
+            </div>
             {tickerField.errors}
-            {submitStock.main}
+            {submitStock.main & <input id="search-query-button"/>}
             {submitStock.errors}
         </div>
     )
