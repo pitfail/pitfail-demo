@@ -47,7 +47,7 @@ case class WithUser(user: User) {
                asset
             |> toVolume _
             |> { case StockVolume(ticker, volume) =>
-                    user.mainPortfolio.buyStock(ticker, volume)
+                    user.mainPortfolio.buyStock(ticker, Dollars(volume))
                }
             |> { _ => OK }
         )
@@ -58,7 +58,7 @@ case class WithUser(user: User) {
                asset
             |> toVolume _
             |> { case StockVolume(ticker, volume) =>
-                    user.mainPortfolio.sellStock(ticker, volume)
+                    user.mainPortfolio.sellStock(ticker, Dollars(volume))
                }
             |> { _ => OK }
         )

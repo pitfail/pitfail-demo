@@ -21,7 +21,7 @@ import intform._
 
 import stockdata._
 import model.derivatives._
-import model.Schema.User
+import model.Schema.{User,Dollars,Price,Shares,Scale}
 import scalaz.Scalaz._
 import formats._
 
@@ -34,15 +34,18 @@ case object OpenAuction extends Recipient
 
 sealed abstract class Direction {
     def sign(x: BigDecimal): BigDecimal
+    def sign(x: Shares): Shares
     def sign(x: Int): Int
 }
 
 case object ToBuyer  extends Direction {
     def sign(x: BigDecimal) = x
+    def sign(x: Shares) = x
     def sign(x: Int) = x
 }
 case object ToSeller extends Direction {
     def sign(x: BigDecimal) = -x
+    def sign(x: Shares) = x * Scale("-1")
     def sign(x: Int) = -x
 }
 
@@ -282,10 +285,10 @@ class DerivativeBuilder extends Page with Loggable
         try {
             val stocks = order.stocks map {
                 case StockInDerivative(quote, shares, dir) =>
-                    SecStock(quote.stock.symbol, dir.sign(shares))
+                    SecStock(quote.stock.symbol, dir.sign(Shares(shares)))
             } toList
             // TODO: Direction
-            val secs = SecDollar(order.cash) :: stocks
+            val secs = SecDollar(Dollars(order.cash)) :: stocks
             
             val deriv = Derivative(
                 securities = secs,

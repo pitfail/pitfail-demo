@@ -31,6 +31,8 @@ import formats._
 
 class SearchQuote extends Page with Loggable
 {
+    // TODO: This should be a singleton object to take full advantage of
+    //       caching.
     private val stockDatabase: StockDatabase = new CachedStockDatabase(
         new YahooStockDatabase(new HttpQueryService("GET")),
         // TODO: This timeout should be moved to a configuration file.
@@ -45,18 +47,6 @@ class SearchQuote extends Page with Loggable
             {quoteBlock}
         </div>
     )
-
-    implicit def toDollars(price: Option[BigDecimal]) = new {
-        def $: String = {
-            (price map (_.$)) getOrElse "n/a" 
-        }
-    }
-
-    implicit def toPercent(percent: Option[BigDecimal]) = new {
-        def %(): String = {
-            (percent map (_.toString + "%")) getOrElse "n/a"
-        }
-    }
 
     private def notify(quote: Option[Quote], cmd: JsCmd = Noop): JsCmd =
         (listeners map { (callback) => callback(quote) }).foldLeft(Noop)(_ & _)
