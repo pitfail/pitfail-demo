@@ -306,6 +306,7 @@ object Schema extends squeryl.Schema with Loggable {
                     select(a)
                 ) toList
             }
+        def getMyStockAssets: java.util.List[StockAsset] = myStockAssets
         
         def myDerivativeAssets: Seq[DerivativeAsset] =
             trans {
