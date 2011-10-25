@@ -24,7 +24,7 @@ class TwitterFrontend(
   val token = Token(app.accessToken, app.accessTokenSecret)
 
   def send_to_user(user: String, message: String) = {
-    h(twitter.Status.update("@%s " format user + message, consumer, token) >| )
+    h(twitter.Status.update("@%s " format user + message, consumer, token) >>> System.out)
   }
 
   val user_stream = UserStream.open(consumer, token, None) { message : JValue =>
