@@ -8,6 +8,8 @@ import dispatch.twitter._
 import dispatch.json.JsHttp._
 import net.liftweb.json.JsonAST._
 
+import net.liftweb.common.Loggable
+
 class TwitterFrontend(
         app : {
           val consumerKey: String
@@ -17,17 +19,23 @@ class TwitterFrontend(
           val accessUser: String
         },
         backend: Backend
-    )
+    ) extends Loggable
 {
   val h = new nio.Http with NoLogging
   val consumer = Consumer(app.consumerKey, app.consumerSecret)
   val token = Token(app.accessToken, app.accessTokenSecret)
 
   def send_to_user(user: String, message: String) = {
-    h(twitter.Status.update("@%s " format user + message, consumer, token) >| )
+    h(twitter.Status.update("@%s " format user + message, consumer, token) >>> System.out)
   }
 
-  val user_stream = UserStream.open(consumer, token, None) { message : JValue =>
+  def follow_user(user:String) = {
+    /* TODO: follow the specfied user */
+  }
+
+  val user_stream = UserStream.open(consumer, token, None, FollowAll) { message : JValue =>
+    logger.info("[US RECV] " + message)
+
     for {
       JString(line) <- message \ "text"
       JString(user) <- message \ "user" \ "screen_name"
