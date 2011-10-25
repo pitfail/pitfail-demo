@@ -296,11 +296,35 @@ table tfoot th {
 }
 
 
-/* Portfolio View */
-.tchart {
+/* ------------------------------------------------------------------ */
+/* Portfolio */
+table.tchart {
     width: 50%;
     float: left;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
 }
+
+table.tchart tbody {
+    background: transparent;
+}
+
+table.tchart .buttons {
+    text-align: right;
+}
+
+table.assets {
+    border-right: 1px solid #000;
+    margin-right: -1px;
+}
+
+.tchart h3 {
+    font-weight: bold;
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Pending Offers */
