@@ -1,95 +1,8 @@
-
-#header_container h1 {
-    padding: 0 0 0 0;
-    margin: 0 0 0 0;
-}
-
-#left_container li {
-    margin-left: -2em;
-}
-
-div.thebox {
-    margin-left:    2em;
-    margin-right:   2em;
-    padding-top:    2em;
-    padding-bottom: 2em;
-    padding-left:   2em;
-    padding-right:  2em;
-    border: 3px solid #555;
-    background-color: #eed;
-}
-
-div.set_form {
-    margin-left: 2em;
-    margin-top: 0.5em;
-    padding-left: 1em;
-    padding-top: 0.5em;
-    padding-bottom: 1em;
-    background-color: #edb;
-}
-
 /* ---------------------------------------------- */
-/* Portfolio */
+/* News */
 
-table.tChart {
-    border-collapse: collapse;
-}
-
-table.tChart col.left {
-    border-right: 1px solid #000;
-}
-
-table.tChart tr.header {
-    border-bottom: 1px solid #000;
-}
-
-table.tChart td {
-    vertical-align: top;
-    padding-left: 2em;
-    padding-right: 2em;
-}
-
-table.tChart td h4 {
-    font-size: normal;
-    font-style: italic;
-    font-weight: normal;
-    margin-bottom: 0;
-}
-
-table.stocksTable th {
-    font-size: normal;
-    font-weight: normal;
-    color: #444;
-    padding-right: 2em;
-}
-
-/* ---------------------------------------------- */
-/* Trading (myActions) */
-
-table.buyStock td {
-    text-align: right
-}
-
-table.buyStock input {
-    width: 4em;
-}
-
-div.buyStock {
-    padding-left: 1em;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
-    margin: 0.2em;
-    background-color: #edc;
-    border-radius: 5px;
-}
-
-div.sellDerivative {
-    padding-left: 1em;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
-    margin: 0.2em;
-    background-color: #dec;
-    border-radius: 5px;
+li.event {
+    font-size: 70%;
 }
 
 /* ---------------------------------------------- */
@@ -109,14 +22,47 @@ div.sellDerivative {
     list-style-type: none;
 }
 
-/* foo */
+/* General Style */
 html {
     font-family: sans-serif;
 }
 
-.container {
-    width: 770px;
-    margin: 0 auto;
+#center-container {
+    padding-right: 20px;
+}
+
+table {
+    width: 90%;
+    padding: 0;
+    margin: 1em  5%;
+    background: #EEE;
+    border: 1px solid #000;
+    border-collapse: separate;
+    border-radius: 6px;
+}
+
+table td {
+    padding: 0.3em;
+}
+
+table th {
+    font-weight: bold;
+    padding: 0.3em;
+}
+
+table thead th,
+table thead td {
+    text-align: center;
+    border-bottom: 1px solid #000;
+}
+
+table tbody {
+    background: #FFF;
+}
+
+table tfoot th,
+table tfoot td {
+    border-top: 1px solid #000;
 }
 
 /* Header */
@@ -143,19 +89,25 @@ html {
     height: 52px;
 }
 
-#search-query input[type=text] {
-    position: absolute;
-    left:  0;
-    right: 50px;
-    padding: 4px;
+
+#search-query #search-query-field {
+    width: 100%;
     height: 40px;
+    padding: 4px 4px;
     font-size: 1.5em;
     border: 1px solid #333;
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
 }
 
-#search-query input[type=submit] {
+#search-query #search-query-field-hack {
+    position: absolute;
+    top: 0;
+    left:  0px;
+    right: 58px;
+}
+
+#search-query #search-query-button {
     position: absolute;
     right: 0;
     width: 50px;
@@ -307,7 +259,6 @@ table#search-list {
     background: #EEE;
     border: 1px solid #000;
     border-collapse: separate;
-    border-radius: 6px;
 }
 
 table#search-list td {
@@ -344,21 +295,38 @@ table tfoot th {
     border-right: 1px solid #000;
 }
 
-table tfoot .search-list-total {
-    text-align: right;
-    border-right: 1px solid #000;
-    background: #FFF;
-}
-
-table .search-list-ticker   { text-align: left;   width: 10%; }
-table .search-list-company  { text-align: left;   width: 40%; }
-table .search-list-price    { text-align: right;  }
-table .search-list-shares   { text-align: center; }
-table .search-list-subtotal { text-align: right;  }
-table .search-list-buttons  { text-align: left;   width: 100px; }
 
 /* Portfolio View */
 .tchart {
     width: 50%;
     float: left;
 }
+
+/* ------------------------------------------------------------------ */
+/* Pending Offers */
+
+#offers table {
+    padding-bottom: 6px;
+}
+
+#offers table div,
+#offers table form {
+    /* Hack to ignore all of the block elements that Lift inserts. */
+    display: inline;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sidebar */
+
+#left-bar h3 {
+    text-align: left;
+    font-size: normal;
+    font-style: italic;
+    font-weight: normal;
+    
+    margin-top: 2em;
+}
+
+#left-bar li {
+}
+

@@ -24,16 +24,24 @@ class News extends Refreshable
     
     def render = (in: NodeSeq) => trans {
         <ul class="news"> {
-            recentEvents(10) map event _
+            recentEvents(10) map ( ev =>
+                <li class="event">{event(ev)}</li>
+            )
         } </ul>
     }
     
     def event(ev: NewsEvent) =
         ev.action match {
             case "buy" =>
-                <li>{UserLink(ev.subject.username)} bought {ev.price.$} of {ev.ticker}</li>
+                <span>
+                    {UserLink(ev.subject.username)} bought
+                    {ev.price.$} of {ev.ticker}
+                </span>
             case "sell" =>
-                <li>{UserLink(ev.subject.username)} sold {ev.price.$} of {ev.ticker}</li>
+                <span>
+                    {UserLink(ev.subject.username)} sold
+                    {ev.price.$} of {ev.ticker}
+                </span>
         }
 }
 

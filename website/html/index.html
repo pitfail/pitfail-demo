@@ -1,9 +1,11 @@
 
 <lift:surround with="default" at="content">
 
-<lift:embed what="dashboard"/>
-<hr/>
-<lift:embed what="newsfeed"/>
+<lift:SearchPipeline/>
+
+<lift:LoginStatus.ifLoggedIn>
+    <lift:comet type="Offers"/>
+    <lift:comet type="Portfolio"/>
+</lift:LoginStatus.ifLoggedIn>
 
 </lift:surround>
-
