@@ -1,95 +1,28 @@
 
-#header_container h1 {
+#header-container h1 {
     padding: 0 0 0 0;
     margin: 0 0 0 0;
 }
 
-#left_container li {
-    margin-left: -2em;
-}
-
-div.thebox {
-    margin-left:    2em;
-    margin-right:   2em;
-    padding-top:    2em;
-    padding-bottom: 2em;
-    padding-left:   2em;
-    padding-right:  2em;
-    border: 3px solid #555;
-    background-color: #eed;
-}
-
-div.set_form {
-    margin-left: 2em;
-    margin-top: 0.5em;
-    padding-left: 1em;
-    padding-top: 0.5em;
-    padding-bottom: 1em;
-    background-color: #edb;
-}
-
 /* ---------------------------------------------- */
-/* Portfolio */
+/* Offers */
 
-table.tChart {
-    border-collapse: collapse;
-}
-
-table.tChart col.left {
-    border-right: 1px solid #000;
-}
-
-table.tChart tr.header {
-    border-bottom: 1px solid #000;
-}
-
-table.tChart td {
-    vertical-align: top;
-    padding-left: 2em;
-    padding-right: 2em;
-}
-
-table.tChart td h4 {
+#offers h3 {
+    text-align: left;
     font-size: normal;
     font-style: italic;
     font-weight: normal;
-    margin-bottom: 0;
 }
 
-table.stocksTable th {
-    font-size: normal;
-    font-weight: normal;
-    color: #444;
-    padding-right: 2em;
+table.offers {
+    margin-top: 1em;
 }
 
 /* ---------------------------------------------- */
-/* Trading (myActions) */
+/* News */
 
-table.buyStock td {
-    text-align: right
-}
-
-table.buyStock input {
-    width: 4em;
-}
-
-div.buyStock {
-    padding-left: 1em;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
-    margin: 0.2em;
-    background-color: #edc;
-    border-radius: 5px;
-}
-
-div.sellDerivative {
-    padding-left: 1em;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
-    margin: 0.2em;
-    background-color: #dec;
-    border-radius: 5px;
+li.event {
+    font-size: 70%;
 }
 
 /* ---------------------------------------------- */
@@ -362,3 +295,19 @@ table .search-list-buttons  { text-align: left;   width: 100px; }
     width: 50%;
     float: left;
 }
+
+/* ------------------------------------------------------------------ */
+/* Sidebar */
+
+#left-bar h3 {
+    text-align: left;
+    font-size: normal;
+    font-style: italic;
+    font-weight: normal;
+    
+    margin-top: 2em;
+}
+
+#left-bar li {
+}
+

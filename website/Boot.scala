@@ -28,7 +28,7 @@ class Boot extends Loggable {
             setSiteMap, ajaxStart, ajaxEnd, jsArtifacts, early,
             dispatch
         }
-
+        
         // Look at this example:
         // https://gist.github.com/166669
         LiftRules.liftRequest.append {
@@ -39,7 +39,7 @@ class Boot extends Loggable {
                 })
                 => false
         }
-
+        
         // where to search snippet
         LiftRules.addToPackages("code")
 

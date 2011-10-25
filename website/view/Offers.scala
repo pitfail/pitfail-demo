@@ -34,28 +34,37 @@ class Offers extends Refreshable with Loggable
             import snippet._
             
             def result =
-                if (myOffers.isEmpty)
-                    Nil: NodeSeq
-                else
-                    <div id="offers" class="container block">
-                        <h2>Pending Offers</h2>
-                        <p>You have one or more pending offers to purchase
-                        derivatives. Choose whether to accept or decline
-                        each of the offers below.</p>
-                        <ul class="offers">
-                            {myOffers map offer _}
-                        </ul>
-                    </div>
+                <div id="offers" class="container block"> {
+                    if (!myOffers.isEmpty) offers
+                    else Nil: NodeSeq
+                } </div>
             
-            // TODO: Each buttons is being rendered in a separate form. Since a
-            // form is a block element this causes layout issues. This should be
-            // changed so the <li/> contains a single form that both buttons are
-            // a member of.
-            def offer(o: DerivativeOffer) =
-                <li>
-                    {UserLink(o.from.owner.username)} is offering {o.derivative toHumanString}
-                    {acceptOffer(o.handle)} {declineOffer(o.handle)}
-                </li>
+            def offers =
+                <h3 id="ifHaveOffers">You have an offer:</h3> ++
+                <table class="offers">
+                    <tr>
+                        <th>From</th>
+                        <th>Securities</th>
+                        <th>On</th>
+                        <th>If</th>
+                        <th>For</th>
+                    </tr>
+                    {myOffers map offer _}
+                </table>
+            
+            def offer(o: DerivativeOffer) = {
+                val deriv = o.derivative
+                
+                <tr>
+                    <td>{UserLink(o.from.owner.username)}</td>
+                    <td>{deriv.securities toHumanString}</td>
+                    <td>{deriv.exec toNearbyString}</td>
+                    <td>{deriv.condition toHumanString}</td>
+                    <td>{"todo"}</td>
+                    <td>{acceptOffer(o.handle)}</td>
+                    <td>{declineOffer(o.handle)}</td>
+                </tr>
+            }
             
             result
         }

@@ -1,3 +1,4 @@
+
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:lift="http://liftweb.net/">
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
@@ -9,25 +10,36 @@
     </head>
     <body>
         <div id="header" class="container">
-            <h1>PitFail</h1>
-            <div id="account">
-                <lift:LoginStatus.ifLoggedOut>
-                    <a href="/twitter/login">Login</a>
-                </lift:LoginStatus.ifLoggedOut>
-                <lift:LoginStatus.ifLoggedIn>
-                    <a href="/logout">Logout</a>
-                </lift:LoginStatus.ifLoggedIn>
-            </div>
+            <h1 class="container">PitFail</h1>
         </div>
 
-        <lift:SearchPipeline/>
+        <div id="body">
+            <div id="center-outer">
+                <div id="center">
+                    <div id="center-container">
+                        <lift:bind name="content"/>
+                    </div>
+                </div>
+            </div>
 
-        <lift:LoginStatus.ifLoggedIn>
-            <lift:comet type="Offers"/>
-            <lift:comet type="Portfolio"/>
-        </lift:LoginStatus.ifLoggedIn>
+            <div id="left-outer">
+                <div id="left-bar">
+                    <div id="left-container">
+                        <lift:embed what="sidebar"/>
+                    </div>
+                </div>
+            </div>
 
-        <div><lift:embed what="sidebar"/></div>
+            <!--
+            <div id="right-outer">
+                <div id="right-bar">
+                    <div id="right-container">
+                        <lift:embed what="rightbar"/>
+                    </div>
+                </div>
+            </div>
+            -->
+        </div>
     </body>
 </html>
 
