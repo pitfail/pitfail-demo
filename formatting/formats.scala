@@ -7,6 +7,7 @@ import scala.math.{BigDecimal}
 import java.math.{MathContext,RoundingMode}
 import org.joda.time.{DateTime}
 import net.liftweb.common.Logger
+import java.sql.Timestamp
 
 // ------------------------------------------------------------------
 // Errors
@@ -36,6 +37,7 @@ case class DateTimeFormatted(d: DateTime) {
     def toNearbyString: String = d toString "M/d"
 }
 implicit def dateTimeFormatted(d: DateTime) = DateTimeFormatted(d)
+implicit def timestampFormatted(t: Timestamp) = DateTimeFormatted(new DateTime(t.getTime))
 
 // ------------------------------------------------------------------
 // Money

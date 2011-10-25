@@ -150,6 +150,9 @@ object FormSubmit {
     def apply(r: Refreshable, text: String)(callback: =>JsCmd) =
         new FormSubmit(r, text, () => callback)
     
+    def apply(text: String)(callback: =>Unit) =
+        new FormSubmit(Refreshable(Nil), text, () => {callback; Noop})
+    
     def rendered(text: String)(callback: =>JsCmd) = {
         lazy val sub: FormSubmit = new FormSubmit(ref, text, () => callback)
         lazy val ref: Refreshable = Refreshable(

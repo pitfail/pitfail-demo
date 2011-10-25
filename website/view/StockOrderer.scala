@@ -89,7 +89,11 @@ class StockOrderer extends Page with Loggable
         import model.Schema._
 
         try {
-            currentUser.mainPortfolio.buyStock(quote.stock.symbol, Dollars(volume))
+            // TODO: Throw an exception if actualVolume is 0.
+            val shares = (volume / quote.price).floor
+            val actualVolume = shares * quote.price
+
+            currentUser.mainPortfolio.buyStock(quote.stock.symbol, Dollars(actualVolume))
             currentQuote = None
 
             comet.Portfolio ! comet.Refresh
