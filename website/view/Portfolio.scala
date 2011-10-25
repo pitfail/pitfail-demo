@@ -18,9 +18,19 @@ import intform._
 
 import model.Schema._
 import LoginManager.{currentLogin}
+import stockdata._
+import org.joda.time.Duration
 
 class Portfolio extends Refreshable with Loggable
 {
+    // TODO: This should be a singleton object to take full advantage of
+    //       caching.
+    private val stockDatabase: StockDatabase = new CachedStockDatabase(
+        new YahooStockDatabase(new HttpQueryService("GET")),
+        // TODO: This timeout should be moved to a configuration file.
+        new Duration(1000 * 60 * 5)
+    )
+
     def registerWith = Portfolio
     
     def render = (in: NodeSeq) => trans {
@@ -136,8 +146,12 @@ class Portfolio extends Refreshable with Loggable
     }
     
     // TODO: This is not right
-    def stockVolume(stock: StockAsset): BigDecimal =
-        BigDecimal("3.14")
+    def stockVolume(asset: StockAsset): BigDecimal = {
+        val shares = asset.shares
+        val stock  = Stock(asset.ticker)
+        val quote  = stockDatabase.getQuotes(Seq(stock)).head
+        shares * quote.price
+    }
 }
 
 object Portfolio extends RefreshHub

@@ -24,34 +24,12 @@ import model.derivatives._
 import model.Schema.User
 import scalaz.Scalaz._
 import formats._
+import org.joda.time.Duration
 
 class SearchDerivativeBuilder extends Page with Loggable
 {
     private var stocks: SortedMap[String, (Quote, BigDecimal)] = TreeMap()
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
-
-    implicit def toDollars(price: Option[BigDecimal]) = new {
-        def $: String = {
-            (price map (_.$)) getOrElse "n/a" 
-        }
-    }
-
-    implicit def toPercent(percent: Option[BigDecimal]) = new {
-        def %(): String = {
-            (percent map (_.toString + "%")) getOrElse "n/a"
-        }
-    }
-
-    implicit def round(decimal: BigDecimal) = new {
-        def round(decimals: Int, mode: RoundingMode): BigDecimal = {
-            val precision = decimal.precision - decimal.scale + decimals
-            val context = new MathContext(precision, mode)
-            decimal.round(context)
-        }
-
-        def floor: BigDecimal =
-            round(0, RoundingMode.FLOOR)
-    }
 
     private val refreshable = Refreshable(
         if (stocks.isEmpty)

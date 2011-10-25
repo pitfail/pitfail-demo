@@ -43,21 +43,6 @@ class StockOrderer extends Page with Loggable
         }
     )
     
-    implicit def round(decimal: BigDecimal) = new {
-        def round(decimals: Int, mode: RoundingMode): BigDecimal = {
-            val precision = decimal.precision - decimal.scale + decimals
-            
-            if (precision <= 0) BigDecimal(0)
-            else {
-                val context = new MathContext(precision, mode)
-                decimal.round(context)
-            }
-        }
-
-        def floor: BigDecimal =
-            round(0, RoundingMode.FLOOR)
-    }
-    
     def purchaseForm(quote: Quote): NodeSeq = {
         lazy val form: Form[BigDecimal] = Form(
             identity[BigDecimal],
