@@ -94,9 +94,11 @@ class SearchQuote extends Page with Loggable
             tickerField
         ),
         <div id="search-query">
-            {tickerField.main & <input id="search-query-field"/>}
+            <div id="search-query-field-hack">
+                {tickerField.main & <input id="search-query-field"/>}
+            </div>
             {tickerField.errors}
-            {submitStock.main}
+            {submitStock.main & <input id="search-query-button"/>}
             {submitStock.errors}
         </div>
     )
