@@ -12,16 +12,15 @@ import Loc._
 
 import code.control
 
-import texttrading.{TwitterFrontend, PitFailBackend}
-import code.keys.RWTwitter
 
 
 class Boot extends Loggable {
+
     def boot {
         logger.info("Booting...");
 
         /* Start the twitter server */
-        (new TwitterFrontend(RWTwitter, new PitFailBackend)).run()
+        texttrading.twit.run()
 
         val lr = LiftRules.realInstance
         import lr.{
