@@ -114,11 +114,6 @@ html {
     font-family: sans-serif;
 }
 
-.container {
-    width: 770px;
-    margin: 0 auto;
-}
-
 /* Header */
 #header {
     position: relative;
@@ -134,6 +129,12 @@ html {
     position: absolute;
     right: 0;
     top: 1em;
+}
+
+/* Container */
+#container {
+    width: 770px;
+    margin: 0 auto;
 }
 
 /* Search */

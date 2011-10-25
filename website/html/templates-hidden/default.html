@@ -23,12 +23,14 @@
             </div>
         </div>
 
-        <lift:SearchPipeline/>
+        <div id="container">
+            <lift:SearchPipeline/>
 
-        <lift:LoginStatus.ifLoggedIn>
-            <lift:comet type="Offers"/>
-            <lift:comet type="Portfolio"/>
-        </lift:LoginStatus.ifLoggedIn>
+            <lift:LoginStatus.ifLoggedIn>
+                <lift:comet type="Offers"/>
+                <lift:comet type="Portfolio"/>
+            </lift:LoginStatus.ifLoggedIn>
+        </div>
 
         <div><lift:embed what="sidebar"/></div>
     </body>
