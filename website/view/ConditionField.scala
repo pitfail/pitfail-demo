@@ -2,6 +2,7 @@
 package code
 package snippet
 
+import model.Schema.Price
 import model.derivatives._
 import intform._
 
@@ -31,7 +32,7 @@ class CompSecField
 {
     def produce() =
         try {
-            OK(CompSecDollar(BigDecimal(text)))
+            OK(CompSecDollar(Price(text)))
         }
         catch {
             case _: NumberFormatException => OK(CompSecStock(text))

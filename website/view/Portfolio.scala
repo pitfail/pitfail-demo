@@ -115,7 +115,7 @@ class Portfolio extends Refreshable with Loggable
                         <tr>
                             <td colspan="2">{liability.derivative toHumanString}</td>
                             <td>{
-                                if (liability.remaining < 1)
+                                if (liability.remaining < Scale("1"))
                                     liability.remaining.%()
                                 else
                                     Nil
@@ -150,7 +150,7 @@ class Portfolio extends Refreshable with Loggable
         val shares = asset.shares
         val stock  = Stock(asset.ticker)
         val quote  = stockDatabase.getQuotes(Seq(stock)).head
-        shares * quote.price
+        (shares * Price(quote.price)).dollars
     }
 }
 

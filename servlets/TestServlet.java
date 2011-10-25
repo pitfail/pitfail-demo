@@ -32,6 +32,7 @@ public class TestServlet extends HttpServlet {
     )
         throws ServletException, IOException
     {
+    /*
         PrintWriter out = response.getWriter();
         
         // Get the 10 most recent events
@@ -44,6 +45,7 @@ public class TestServlet extends HttpServlet {
         User user = ensureUser("ellbur_k_a");
         Portfolio port = user.mainPortfolio().fetch(portfolios());
         port.buyStock("ABC", BigDecimal.valueOf(23.00));
+    */
     }
     
     @Override

@@ -7,6 +7,7 @@ import java.sql.Timestamp
 // Joda time
 import org.joda.time.{DateTime}
 import formats._
+import Schema._
 
 import net.liftweb.common.Loggable
 
@@ -21,7 +22,7 @@ case class Derivative(
 ) {
     def serialize: Array[Byte] = serialization.serialize(this)
     
-    def *(scale: BigDecimal): Derivative = this.copy(
+    def *(scale: Scale): Derivative = this.copy(
         securities = securities map (_ * scale)
     )
 }
@@ -34,30 +35,30 @@ object Derivative extends Loggable {
 // -------------------------------------------
 
 sealed abstract class Security {
-    def *(scale: BigDecimal): Security
+    def *(scale: Scale): Security
 }
 
 case class SecDollar(
-        amount: BigDecimal
+        amount: Dollars
     ) extends Security
 {
-    def *(scale: BigDecimal) = SecDollar(amount * scale)
+    def *(scale: Scale) = SecDollar(amount * scale)
 }
 
 case class SecStock(
         ticker: String,
-        shares: BigDecimal
+        shares: Shares
     ) extends Security
 {
-    def *(scale: BigDecimal) = SecStock(ticker, shares*scale)
+    def *(scale: Scale) = SecStock(ticker, shares*scale)
 }
 
 case class SecDerivative(
         name:  String,
-        scale: BigDecimal
+        scale: Scale 
     ) extends Security
 {
-    def *(nextScale: BigDecimal) = SecDerivative(name, scale*nextScale)
+    def *(nextScale: Scale) = SecDerivative(name, scale*nextScale)
 }
 
 // -------------------------------------------
@@ -76,27 +77,27 @@ case class CondGreater(
     )
     extends Condition
 {
-    def isTrue = a.toDollars > b.toDollars
+    def isTrue = a.toPrice > b.toPrice
 }
 
 // -------------------------------------------
 
 sealed abstract class ComparableSecurity {
-    def toDollars: BigDecimal
+    def toPrice: Price
 }
 
 case class CompSecStock(
         ticker: String
     ) extends ComparableSecurity
 {
-    def toDollars = Stocks.stockPrice(ticker)
+    def toPrice = Stocks.stockPrice(ticker)
 }
 
 case class CompSecDollar(
-        amount: BigDecimal
+        amount: Price
     ) extends ComparableSecurity
 {
-    def toDollars = amount
+    def toPrice = amount
 }
 
 } // package

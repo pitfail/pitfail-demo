@@ -89,7 +89,7 @@ class StockOrderer extends Page with Loggable
         import model.Schema._
 
         try {
-            currentUser.mainPortfolio.buyStock(quote.stock.symbol, volume)
+            currentUser.mainPortfolio.buyStock(quote.stock.symbol, Dollars(volume))
             currentQuote = None
             notifyAndRefresh(BuyShares(quote, volume))
         } catch {

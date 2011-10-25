@@ -16,6 +16,7 @@ import scala.math._
 import org.joda.time._
 import formats._
 import intform._
+import model.Schema._
 
 import model.derivatives._
 import model.Schema.User
@@ -111,7 +112,8 @@ class SellDerivative extends Page with Loggable
         val sharesField = NumberField("1.00")
         val tickerField = StringField("")
         
-        AggregateField(SecStock,
+        AggregateField(
+            (symbol: String, shares: BigDecimal) => SecStock(symbol, Shares(shares)),
             (
                 tickerField,
                 sharesField
