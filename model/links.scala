@@ -19,13 +19,14 @@ object KL {
         AssociatedEntity(entity, table)
 }
 
-case class Link[R <: KL](val id: Long) extends LongField(id)
+case class Link[R <: KL](val id: Long) extends LongField(id) {
+    def fetch(implicit table: Table[R]): R = inTransaction {
+        from(table){t => where(t.id === this.id) select(t)} head
+    }
+}
 object Link {
     implicit def linkToRef[R <: KL]
-        (link: Link[R])(implicit table: Table[R]): R =
-    inTransaction {
-        from(table){t => where(t.id === link.id) select(t)} head
-    }
+        (link: Link[R])(implicit table: Table[R]): R = link.fetch
 
     implicit def linkToID[R <: KL] (link: Link[R]): Long = link.id
 
