@@ -22,9 +22,17 @@ implicit def bigDecimalOps(b: BigDecimal) = new {
         round(0, RoundingMode.FLOOR)
 }
 
+//
+}
+
+package model {
+//
+
 case class Dollars(dollars: BigDecimal)
     extends Ordered[Dollars]
 {
+    def this(str: String) = this(BigDecimal(str))
+    
     def +(other: Dollars) = Dollars(dollars + other.dollars)
     def -(other: Dollars) = Dollars(dollars - other.dollars)
     def *(scale: Scale)   = Dollars(scale.scale * dollars)
@@ -56,6 +64,8 @@ object DollarsField {
 }
 
 case class Shares(shares: BigDecimal) extends Ordered[Shares] {
+    def this(str: String) = this(BigDecimal(str))
+    
     def +(other: Shares) = Shares(shares + other.shares)
     def -(other: Shares) = Shares(shares - other.shares)
     def *(price: Price)  = Dollars(price.price * shares)
@@ -81,6 +91,8 @@ object SharesField {
 }
 
 case class Price(price: BigDecimal) extends Ordered[Price] {
+    def this(str: String) = this(BigDecimal(str))
+    
     def +(other: Price)   = Price(price + other.price)
     def -(other: Price)   = Price(price - other.price)
     def *(shares: Shares) = Dollars(shares.shares * price)
@@ -126,5 +138,6 @@ object ScaleField {
     implicit def fromField(s: ScaleField) = Scale(s.scale)
 }
 
+//
 }
 

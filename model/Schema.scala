@@ -18,6 +18,8 @@ import Stocks.stockPrice
 import derivatives._
 import net.liftweb.common.Loggable
 
+import scala.collection.JavaConversions._
+
 object Schema extends squeryl.Schema with Loggable {
     implicit val users                 = table[User]
     implicit val portfolios            = table[Portfolio]
@@ -93,6 +95,7 @@ object Schema extends squeryl.Schema with Loggable {
         .page(0, n)
         .toList
     }
+    def getRecentEvents(n: Int): java.util.List[NewsEvent] = recentEvents(n)
     
     // Check for derivatives that can be exercised
     def checkForExercise(): Unit = trans {
@@ -137,6 +140,10 @@ object Schema extends squeryl.Schema with Loggable {
         )
         extends KL
     {
+        def getMainPortfolio(): Portfolio = trans {
+            mainPortfolio
+        }
+        
         def offerDerivativeTo(
             recip: User,
             deriv: Derivative,
