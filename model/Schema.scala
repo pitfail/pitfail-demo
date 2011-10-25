@@ -706,12 +706,12 @@ object Schema extends squeryl.Schema with Loggable {
         def derivative: Derivative = Derivative.deserialize(mode)
         
         def goingPrice: Dollars = trans {
-            val head = from(auctionBids)(bid =>
+            val bids = from(auctionBids)(bid =>
                 where(bid.offer === this)
-                compute(max(bid.price))
-            ) headOption
+                select(bid)
+            ) toList
             
-            head getOrElse price
+            bids map (_.price) max
         }
         
         def highBid: Option[AuctionBid] = trans {

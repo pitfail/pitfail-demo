@@ -187,9 +187,9 @@ class DerivativeBuilder extends Page with Loggable
     lazy val expirationField = DateTimeField(tomorrow, formatter)
 
     // We can't really pick a good default
-    lazy val priceField = DollarField("0.00")
+    lazy val priceField = DollarsField("0.00")
     // TODO: Default to current total volume
-    lazy val strikePriceField = NumberField("")
+    lazy val strikePriceField = DollarsField("")
     lazy val cashDirField = DirectionField(ToSeller)
 
     lazy val stocksField: Field[Seq[StockInDerivative]] with FieldRender =

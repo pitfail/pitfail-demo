@@ -76,7 +76,7 @@ class AuctionPage extends Page with Loggable {
                 </p>
                 <p>{castSubmit.errors}</p>
             )
-            lazy val bidField = NumberField(goingPrice.###())
+            lazy val bidField = DollarsField(goingPrice.$)
             lazy val castSubmit = Submit(bidForm, "Cast") { case Bid(amt) =>
                 import control.LoginManager._
                 
@@ -102,7 +102,7 @@ class AuctionPage extends Page with Loggable {
         }
     }
     
-    case class Bid(amount: BigDecimal)
+    case class Bid(amount: Dollars)
     
     def error = <p>This auction does not seem to exist anymore.</p>
 }
