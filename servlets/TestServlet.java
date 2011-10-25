@@ -40,6 +40,12 @@ public class TestServlet extends HttpServlet {
         User user = Schema.ensureUser("ellbur_k_a");
         Portfolio port = user.getMainPortfolio();
         port.buyStock("ABC", new Dollars("23.00"));
+        
+        out.println();
+        out.printf("Cash: %s\n", port.cash().dollars());
+        for (StockAsset asset : port.getMyStockAssets()) {
+            out.printf("Asset: %s\n", asset);
+        }
     }
     
     @Override
