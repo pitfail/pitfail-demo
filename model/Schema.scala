@@ -2,6 +2,7 @@
 package model
 
 import scala.math.{BigDecimal}
+import java.math.{MathContext,RoundingMode}
 
 import org.squeryl
 import squeryl.PrimitiveTypeMode._
@@ -16,7 +17,7 @@ import links._
 import java.sql.Timestamp
 import java.util.UUID
 
-import Stocks.{StockShares, stockPrice}
+import Stocks.stockPrice
 import derivatives._
 import net.liftweb.common.Loggable
 
@@ -41,13 +42,31 @@ object Schema extends squeryl.Schema with Loggable {
     case object NoSuchAuction extends Exception
     case class BidTooSmall(going: Dollars) extends Exception
     
+    implicit def bigDecimalOps(b: BigDecimal) = new {
+        def round(decimals: Int, mode: RoundingMode): BigDecimal = {
+            val precision = b.precision - b.scale + decimals
+            if (precision > 0) {
+                val context = new MathContext(precision, mode)
+                b.round(context)
+            }
+            else BigDecimal("0")
+        }
+
+        def floor: BigDecimal =
+            round(0, RoundingMode.FLOOR)
+    }
+    
     case class Dollars(dollars: BigDecimal) extends BigDecimalField(dollars) with Ordered[Dollars] {
         def +(other: Dollars) = Dollars(dollars + other.dollars)
         def -(other: Dollars) = Dollars(dollars - other.dollars)
-        def /(shares: Shares) = Price(dollars / shares.shares)
-        def /(price: Price)   = Shares(dollars / price.price)
         def *(scale: Scale)   = Dollars(scale.scale * dollars)
         def unary_- = copy(dollars = -dollars)
+        
+        // This makes me suspicious.
+        // def /(shares: Shares) = Price(dollars / shares.shares)
+        
+        def ~/~(price: Price) = Shares(dollars / price.price)
+        def /-/(price: Price) = Shares((dollars / price.price).floor)
 
         def compare(other: Dollars) = dollars.compare(other.dollars)
 
@@ -241,26 +260,27 @@ object Schema extends squeryl.Schema with Loggable {
         )
         extends KL with Loggable
     {
-        def buyStock(ticker: String, dollars: Dollars)
-            = buy(StockShares(ticker, dollars))
+        def buyStock(ticker: String, dollars: Dollars): StockAsset =
+            buyStock(ticker, dollars /-/ stockPrice(ticker))
         
-        def buy(stock: StockShares): StockAsset = trans {
-            if (cash < stock.value)
-                throw NotEnoughCash(cash, stock.value)
-            if (stock.shares < Shares(0))
-                throw NegativeVolume
+        def buyStock(ticker: String, shares: Shares): StockAsset = trans {
+            val price = stockPrice(ticker)
+            val dollars = shares * price
             
-            val asset = stockAsset(stock.ticker)
+            if (cash < dollars) throw NotEnoughCash(cash, dollars)
+            if (shares < Shares(0)) throw NegativeVolume
             
-            asset.shares += stock.shares
-            cash -= stock.value
+            val asset = stockAsset(ticker)
+            
+            asset.shares += shares
+            cash -= dollars
 
             newsEvents insert NewsEvent(
                 action  = "buy",
                 subject = owner,
-                ticker  = stock.ticker,
-                shares  = stock.shares,
-                price   = stock.price
+                ticker  = ticker,
+                shares  = shares,
+                price   = price
             )
             this.update()
             asset.update()
@@ -283,7 +303,7 @@ object Schema extends squeryl.Schema with Loggable {
                     case Some(asset) => asset
                     case None => throw DontOwnStock(ticker)
                 }
-            val shares = dollars / stockPrice(ticker)
+            val shares = dollars ~/~ stockPrice(ticker)
             
             if (shares > asset.shares)
                 throw NotEnoughShares(asset.shares, shares)
@@ -312,15 +332,18 @@ object Schema extends squeryl.Schema with Loggable {
                     case None => throw DontOwnStock(ticker)
                 }
             
-            val stock = StockShares(asset.ticker, asset.shares)
-            cash += stock.value
+            val shares = asset.shares
+            val price = stockPrice(asset.ticker)
+            val dollars = shares * price
+            
+            cash += dollars
             
             newsEvents insert NewsEvent(
                 action  = "sell",
                 subject = owner,
-                ticker  = stock.ticker,
-                shares  = stock.shares,
-                price   = stock.price
+                ticker  = ticker,
+                shares  = shares,
+                price   = price
             )
             asset.delete()
             this.update()
@@ -493,7 +516,7 @@ object Schema extends squeryl.Schema with Loggable {
             
             if (leftover > Shares(0)) {
                 val price = stockPrice(ticker)
-                val sharesFromCash = cash / price
+                val sharesFromCash = cash ~/~ price
                 if (sharesFromCash > leftover) {
                     cash -= leftover * price
                     leftover = Shares(0)
@@ -711,7 +734,10 @@ object Schema extends squeryl.Schema with Loggable {
                 select(bid)
             ) toList
             
-            bids map (_.price) max
+            bids map (_.price) match {
+                case Nil => price
+                case x@_ => x max
+            }
         }
         
         def highBid: Option[AuctionBid] = trans {

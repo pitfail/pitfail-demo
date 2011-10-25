@@ -2,8 +2,6 @@
 package code
 package snippet
 
-import java.math.{MathContext,RoundingMode}
-
 import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}

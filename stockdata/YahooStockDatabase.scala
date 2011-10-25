@@ -8,7 +8,7 @@ import org.joda.time.format.DateTimeFormat
 import net.liftweb.json.JsonAST.JValue
 
 import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
-import scala.math.BigDecimal
+import model.Schema.{Dollars, Shares, Price}
 
 class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
   private implicit val formats = DefaultFormats
@@ -59,7 +59,7 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
           stock      = Stock((quoteElement\"Symbol").extract[String]),
           company    = (quoteElement\"Name").extract[String],
           exchange   = (quoteElement\"StockExchange").extract[String],
-          price      = BigDecimal((quoteElement\"LastTradePriceOnly").extract[String]),
+          price      = Price((quoteElement\"LastTradePriceOnly").extract[String]),
           updateTime = dateTimeFormat.parseDateTime(
               (quoteElement\"LastTradeDate").extract[String]
             + " "

@@ -21,15 +21,15 @@ import intform._
 
 import stockdata._
 import model.derivatives._
-import model.Schema.User
+import model.Schema._
 import scalaz.Scalaz._
 
 import formats._
 
 abstract class StockOrder
 case class NoOrder() extends StockOrder
-case class BuyShares(quote: Quote, volume: BigDecimal) extends StockOrder
-case class AddToDerivative(quote: Quote, shares: Int) extends StockOrder
+case class BuyShares(quote: Quote, dollars: Dollars) extends StockOrder
+case class AddToDerivative(quote: Quote, shares: Shares) extends StockOrder
 
 class StockOrderer extends Page with Loggable
 {
@@ -44,8 +44,8 @@ class StockOrderer extends Page with Loggable
     )
     
     def purchaseForm(quote: Quote): NodeSeq = {
-        lazy val form: Form[BigDecimal] = Form(
-            identity[BigDecimal],
+        lazy val form: Form[Dollars] = Form(
+            identity[Dollars],
             (
                 volumeField
             ),
@@ -67,14 +67,14 @@ class StockOrderer extends Page with Loggable
             </div>
         )
 
-        lazy val volumeField = NumberField("1.00")
+        lazy val volumeField = DollarsField("1.00")
     
         lazy val submitBuy = Submit(form, "Buy Shares") { volume =>
             buyStock(quote, volume)
         }
         
         lazy val submitAdd = Submit(form, "Add to Derivative") { v =>
-            addStockToDerivative(quote, v)
+            addStockToDerivative(quote, v /-/ quote.price)
         }
 
         lazy val submitCancel = Submit(form, "Cancel") { v =>
@@ -84,21 +84,21 @@ class StockOrderer extends Page with Loggable
         form.render
     }
 
-    private def buyStock(quote: Quote, volume: BigDecimal): JsCmd = {
+    private def buyStock(quote: Quote, dollars: Dollars): JsCmd = {
         import control.LoginManager._
         import model.Schema._
 
         try {
             // TODO: Throw an exception if actualVolume is 0.
-            val shares = (volume / quote.price).floor
+            val shares = dollars /-/ quote.price
             val actualVolume = shares * quote.price
 
-            currentUser.mainPortfolio.buyStock(quote.stock.symbol, Dollars(actualVolume))
+            currentUser.mainPortfolio.buyStock(quote.stock.symbol, actualVolume)
             currentQuote = None
 
             comet.Portfolio ! comet.Refresh
             comet.News      ! comet.Refresh
-            notifyAndRefresh(BuyShares(quote, volume))
+            notifyAndRefresh(BuyShares(quote, dollars))
         } catch {
             case NegativeVolume => throw BadInput(
                 "You must buy more than $0.00 of a stock"
@@ -111,9 +111,9 @@ class StockOrderer extends Page with Loggable
         }
     }
 
-    private def addStockToDerivative(quote: Quote, volume: BigDecimal) = {
+    private def addStockToDerivative(quote: Quote, shares: Shares) = {
         currentQuote = None
-        notifyAndRefresh(AddToDerivative(quote, (volume / quote.price).floor.intValue ))
+        notifyAndRefresh(AddToDerivative(quote, shares))
     }
 
     private def notify(action: StockOrder): JsCmd =

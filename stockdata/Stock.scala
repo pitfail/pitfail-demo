@@ -1,7 +1,8 @@
+
 package stockdata
 
 import org.joda.time.DateTime
-import scala.math.BigDecimal
+import model.Schema._
 
 case class Stock(symbol: String) {
   override val toString = symbol
@@ -10,7 +11,7 @@ case class Stock(symbol: String) {
 case class Quote(stock: Stock,
                  exchange: String,
                  company: String,
-                 price: BigDecimal,
+                 price: Price,
                  updateTime: DateTime,
                  info: QuoteInfo) {
   override val toString = "%s=%s".format(stock.toString, price.toString)
