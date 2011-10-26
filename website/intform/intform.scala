@@ -50,13 +50,13 @@ abstract class Field[+A]
     def produce(): SubmitResult[A]
     def process(): Option[A] = produce() match {
         case OK(a) =>
-            errorText = ""
+            error = None
             Some(a)
         case Error(msg) =>
-            errorText = msg
+            error = Some(msg)
             None
         case ChildError =>
-            errorText = ""
+            error = None
             None
     }
     
@@ -64,21 +64,31 @@ abstract class Field[+A]
 }
 
 trait BasicErrors {
-    var errorText: String = ""
+    var error: Option[String] = None
+
+    def isError = error.isDefined
+
+    def errorText: String = error getOrElse("")
     
     def runWithErrors(cmd: =>JsCmd): JsCmd =
         try {
             cmd
         }
         catch {
-            case BadInput(msg) =>
-                new Logger { info("Bad input: " + msg) }
-                errorText = msg
+            case BadInput(msg) => {
+                error = Some(msg)
                 Noop
-            case e: Any =>
-                new Logger { error("Unhandled error in submission", e) }
-                errorText = "An unknown error occurred (see log messages)"
+            }
+
+            case BadFieldInput(cause, msg) => {
+                cause.error = Some(msg)
+                Noop
+            }
+
+            case e: Any => {
+                error = Some("An unknown error occurred (see log messages)")
                 throw e
+            }
         }
 }
 
@@ -167,6 +177,7 @@ object FormSubmit {
 // Validation
 
 case class BadInput(msg: String) extends Exception
+case class BadFieldInput(cause: BasicErrors, msg: String) extends Exception
 
 abstract class SubmitResult[+A]
 case class OK[+A](res: A) extends SubmitResult[A]

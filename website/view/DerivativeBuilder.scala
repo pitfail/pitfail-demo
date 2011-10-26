@@ -123,16 +123,14 @@ class DerivativeBuilder extends Page with Loggable
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
             
-            <p>Offer to enter a contract with {toField.main}</p>
-            
-            <p>for the price of ${priceField.main & <input
-            class="price"/>}.</p>
-            
-            <p>On the date {expirationField.main & <input class="date"/>} the
+            <p>Offer to enter a contract with </p>
+            <p>{toField.main}</p>
+            <p>for the price of ${priceField.main & <input class="price"/>}.On
+            the date {expirationField.main & <input class="date"/>} the
             following will be traded:</p> 
             
             <h3>Cash</h3>
-            <p>${strikePriceField.main & <input class="price"/>}) {cashDirField.main}</p>
+            <p>${strikePriceField.main & <input class="price"/>} {cashDirField.main}</p>
     
             <h3>Stocks</h3>
             

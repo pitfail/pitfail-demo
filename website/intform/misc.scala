@@ -3,7 +3,7 @@ import up._
 import HList._
 import KList._
 import ~>._
-import scala.xml.NodeSeq
+import scala.xml._
 
 package object intform {
     
@@ -64,7 +64,7 @@ package object intform {
     // -----------------------------------------------------------------
     
     class MergeAttr(n1: NodeSeq) {
-        def &(n2: NodeSeq) = {
+        def &(n2: Node) = {
             import scala.xml.{Attribute,Elem,Node,NodeSeq,Null,Text}
 
             assert (n1.length == 1)
@@ -75,6 +75,19 @@ package object intform {
                     e1 % n2.head.attributes
             }
         }
+
+        def leafMap(f: Node => Node): NodeSeq =
+            n1 match {
+                case e: Elem => Elem(
+                    prefix = e.prefix,
+                    label  = e.label,
+                    attributes = e.attributes,
+                    scope = e.scope,
+                    child = (e leafMap f)
+                )
+
+                case e: Any => e
+            }
     }
     implicit def mergeAttr(n1: NodeSeq) = new MergeAttr(n1)
 }

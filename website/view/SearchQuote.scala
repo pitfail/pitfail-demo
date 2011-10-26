@@ -21,8 +21,9 @@ import scala.math.{BigDecimal}
 import intform._
 
 import stockdata._
-import model.derivatives._
+import model.StockPriceSource
 import model.Schema.User
+import model.derivatives._
 import scalaz.Scalaz._
 
 import org.joda.time.Duration
@@ -31,13 +32,6 @@ import formats._
 
 class SearchQuote extends Page with Loggable
 {
-    // TODO: This should be a singleton object to take full advantage of
-    //       caching.
-    private val stockDatabase: StockDatabase = new CachedStockDatabase(
-        new YahooStockDatabase(new HttpQueryService("GET")),
-        // TODO: This timeout should be moved to a configuration file.
-        new Duration(1000 * 60 * 5)
-    )
     private var currentQuote: Option[Quote] = None;
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
 
@@ -64,7 +58,7 @@ class SearchQuote extends Page with Loggable
     }
 
     def changeQuote(stock: Stock): JsCmd = {
-        currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
+        currentQuote = Some(StockPriceSource.getQuotes(Iterable(stock)).head)
         notifyAndRefresh(currentQuote, Focus("search-quantity"))
     }
 
