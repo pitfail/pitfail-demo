@@ -24,9 +24,15 @@ object LoginManager {
     
     def loginAsTwitter(name: String) {
         import model.Schema
+        import comet._
         
         _currentLogin := Some(name)
         Schema.ensureUser(name)
+        
+        Portfolio        ! Refresh
+        News             ! Refresh
+        AuctionThumbnail ! Refresh
+        Offers           ! Refresh
     }
     
     def logout() {
