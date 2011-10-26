@@ -63,31 +63,38 @@ package object intform {
     
     // -----------------------------------------------------------------
     
+    implicit def nodeSeqPlus(n: Seq[Node]): NodeSeqPlus = NodeSeqPlus(n)
+    implicit def nodeSeqPlus(n: NodeSeq): NodeSeqPlus = NodeSeqPlus(n)
+    implicit def nodePlus(n: Node): NodePlus = NodePlus(n)
+    
+    case class NodeSeqPlus(n: NodeSeq) {
+        def leafMap(f: Elem => Elem): NodeSeq = n map (_ leafMap f)
+    }
+    
+    case class NodePlus(n: Node) {
+        def leafMap(f: Elem => Elem): Node = n match {
+            case e: Elem if (e.child isEmpty) => f(e)
+            case e: Elem =>
+                Elem(
+                    prefix     = e.prefix,
+                    label      = e.label,
+                    attributes = e.attributes,
+                    scope      = e.scope,
+                    child      = e.child leafMap f :_*
+                )
+            case x@_ => x
+        }
+    }
+    
     class MergeAttr(n1: NodeSeq) {
         def &(n2: Node) = {
-            import scala.xml.{Attribute,Elem,Node,NodeSeq,Null,Text}
-
             assert (n1.length == 1)
             assert (n2.length == 1)
 
-            n1.head match {
-                case e1: Elem =>
-                    e1 % n2.head.attributes
+            n1 leafMap { el =>
+                el % n2.head.attributes
             }
         }
-
-        def leafMap(f: Node => Node): NodeSeq =
-            n1 match {
-                case e: Elem => Elem(
-                    prefix = e.prefix,
-                    label  = e.label,
-                    attributes = e.attributes,
-                    scope = e.scope,
-                    child = (e leafMap f)
-                )
-
-                case e: Any => e
-            }
     }
     implicit def mergeAttr(n1: NodeSeq) = new MergeAttr(n1)
 }
