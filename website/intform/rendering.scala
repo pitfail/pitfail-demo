@@ -53,6 +53,17 @@ trait FieldRender extends Renderable {
     def main: NodeSeq
 }
 
+trait FieldErrorRender extends FieldRender {
+    def error: Option[String]
+    def errorText: String
+
+    abstract override def main = 
+        <span class="input-error">
+            {super.main}
+            {(for (message <- error) yield <span class="error">{message}</span>) getOrElse(Nil)}
+        </span>
+}
+
 // -----------------------------------------------------------------
 // Form rendering
 

@@ -75,14 +75,20 @@ trait BasicErrors {
             cmd
         }
         catch {
-            case BadInput(msg) =>
-                new Logger { info("Bad input: " + msg) }
+            case BadInput(msg) => {
                 error = Some(msg)
                 Noop
-            case e: Any =>
-                new Logger { error("Unhandled error in submission", e) }
+            }
+
+            case BadFieldInput(cause, msg) => {
+                cause.error = Some(msg)
+                Noop
+            }
+
+            case e: Any => {
                 error = Some("An unknown error occurred (see log messages)")
                 throw e
+            }
         }
 }
 
@@ -171,6 +177,7 @@ object FormSubmit {
 // Validation
 
 case class BadInput(msg: String) extends Exception
+case class BadFieldInput(cause: BasicErrors, msg: String) extends Exception
 
 abstract class SubmitResult[+A]
 case class OK[+A](res: A) extends SubmitResult[A]
