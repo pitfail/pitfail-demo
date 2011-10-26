@@ -33,7 +33,7 @@ class TwitterFrontend(
 
   def send_to_user(user: String, message: String) = {
     logger.info("Sending the following to the user %S: %S" format(user, message))
-    h(twitter.Status.update("@%s " format user + message, consumer, token) >~ { src =>
+    h(twitter.Status.update("@" + user + " " + message, consumer, token) >~ { src =>
       logger.info("STU: " + src.getLines.mkString)
     })
   }
@@ -44,7 +44,6 @@ class TwitterFrontend(
 
   val user_stream = UserStream.open(consumer, token, None, FollowMutual, Seq("@" + app.accessUser)) {
       message : JValue =>
-    logger.info("[US RECV] " + message)
 
     for {
       JString(line) <- message \ "text"
