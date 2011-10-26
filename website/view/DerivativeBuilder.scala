@@ -116,9 +116,9 @@ class DerivativeBuilder extends Page with Loggable
         ,
         (
             toField,
-            priceField,
-            expirationField,
-            strikePriceField,
+            priceField: Field[Dollars],
+            expirationField: Field[DateTime],
+            strikePriceField: Field[Dollars],
             cashDirField,
             stocksField,
             conditionField,
@@ -177,22 +177,21 @@ class DerivativeBuilder extends Page with Loggable
             </ul>
     )
 
-    // TODO: This should allow a public auction.
-    lazy val recipientField = UserField("")
+    lazy val recipientField = new UserField("") with FieldErrorRender
     lazy val toUserField = AggregateField(
         SpecificUser,
-        recipientField,
+        recipientField: UserField,
         recipientField.main ++ recipientField.errors
     )
 
     // Default to a week in the future.
     val tomorrow = DateTime.now().plusDays(7)
-    lazy val expirationField = DateTimeField(tomorrow, formatter)
+    lazy val expirationField = new DateTimeField(tomorrow, formatter) with FieldErrorRender
 
     // We can't really pick a good default
-    lazy val priceField = DollarsField("0.00")
+    lazy val priceField = new DollarsField("0.00") with FieldErrorRender
     // TODO: Default to current total volume
-    lazy val strikePriceField = DollarsField("")
+    lazy val strikePriceField = new DollarsField("") with FieldErrorRender
     lazy val cashDirField = DirectionField(ToSeller)
 
     lazy val stocksField: Field[Seq[StockInDerivative]] with FieldRender =
@@ -322,7 +321,7 @@ class DerivativeBuilder extends Page with Loggable
             clearAll()
         }
         catch {
-            case NotLoggedIn => throw BadInput("You're not logged in")
+            case NotLoggedIn => throw BadFieldInput(recipientField, "You're not logged in")
         }
     }
     
