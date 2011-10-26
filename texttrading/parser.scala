@@ -5,6 +5,8 @@ import scala.util.parsing.combinator._
 import scala.util.parsing.input._
 import scala.math._
 
+import model.{Shares,Dollars}
+
 object parser extends JavaTokenParsers {
 
   def parseAction(text: String) = action(text)
@@ -30,23 +32,13 @@ object parser extends JavaTokenParsers {
   }
 
   lazy val stockAsset = stockShares | stockVolume
-  lazy val stockShares = (
-    amount ~ "shares" ~ "of" ~ ticker ^^ {
-      case shares ~ _ ~ _ ~ ticker => StockShares(ticker, shares)
+  lazy val stockShares = amount ~ ("shares" ~ opt("of")) ~ ticker ^^ {
+      case shares ~ _ ~ ticker => StockShares(ticker, Shares(shares))
     }
-    | amount ~ "shares" ~ ticker ^^ {
-      case shares ~ _ ~ ticker => StockShares(ticker, shares)
-    }
-  )
 
-  lazy val stockVolume = (
-    dollarAmount ~ "of" ~ ticker ^^ {
-      case volume ~ _ ~ ticker => StockVolume(ticker, volume)
-    }
-    | dollarAmount ~ "dollars" ~ "of" ~ ticker ^^ {
-      case volume ~ _ ~ _ ~ ticker => StockVolume(ticker, volume)
-    }
-  )
+  lazy val stockVolume = dollarAmount ~ (opt("dollars") ~ "of") ~ ticker ^^ {
+      case dollars ~ _ ~ ticker => StockDollars(ticker, Dollars(dollars))
+  }
 
   lazy val amount = decimalNumber ^^ {
     case numText => BigDecimal(numText)

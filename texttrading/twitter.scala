@@ -53,7 +53,7 @@ class TwitterFrontend(
       logger.info("... %s: %s" format(user, line))
       if (user != app.accessUser) {
         follow_user(user)
-        send_to_user(user, TextTrader.runCommand(user, line, backend) mkString (" "))
+        TextTrader.runCommand(user, line, backend) foreach { send_to_user(user, _) }
       }
     }
   }

@@ -92,7 +92,7 @@ object SharesField {
 
 case class Price(price: BigDecimal) extends Ordered[Price] {
     def this(str: String) = this(BigDecimal(str))
-    
+
     def +(other: Price)   = Price(price + other.price)
     def -(other: Price)   = Price(price - other.price)
     def *(shares: Shares) = Dollars(shares.shares * price)
@@ -104,7 +104,7 @@ case class Price(price: BigDecimal) extends Ordered[Price] {
 }
 object Price {
     def apply(str: String): Price = Price(BigDecimal(str))
-    
+
     implicit def toField(p: Price) = PriceField(p.price)
 }
 

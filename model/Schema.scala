@@ -222,25 +222,34 @@ object Schema extends squeryl.Schema with Loggable {
                 case None        => makeTicker(ticker)
             }
         }
-        
+
+        def sellStock(ticker: String, shares: Shares): Unit = trans {
+            val dollars = shares * stockPrice(ticker)
+            sellStock(ticker, shares, dollars)
+        }
+
         def sellStock(ticker: String, dollars: Dollars): Unit = trans {
+            val shares = dollars ~/~ stockPrice(ticker)
+            sellStock(ticker, shares, dollars)
+        }
+
+        def sellStock(ticker: String, shares: Shares, dollars: Dollars): Unit = trans {
             val asset =
                 haveTicker(ticker) match {
                     case Some(asset) => asset
                     case None => throw DontOwnStock(ticker)
                 }
-            val shares = dollars ~/~ stockPrice(ticker)
-            
+
             if (shares > asset.shares)
                 throw NotEnoughShares(asset.shares, shares)
-            
+
             cash = (cash: Dollars) + dollars
             asset.shares -= shares
             if (asset.shares <= Shares(0))
                 asset.delete()
             else
                 asset.update()
-            
+
             newsEvents insert NewsEvent(
                 action  = "sell",
                 subject = owner,
@@ -251,7 +260,8 @@ object Schema extends squeryl.Schema with Loggable {
             )
             this.update()
         }
-        
+
+
         def sellAll(ticker: String): Unit = trans {
             val asset =
                 haveTicker(ticker) match {
