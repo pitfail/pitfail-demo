@@ -35,12 +35,12 @@ class News extends Refreshable
             case "buy" =>
                 <span>
                     {UserLink(ev.subject.username)} bought
-                    {ev.price.$} of {ev.ticker}
+                    {ev.dollars.$} of {ev.ticker}
                 </span>
             case "sell" =>
                 <span>
                     {UserLink(ev.subject.username)} sold
-                    {ev.price.$} of {ev.ticker}
+                    {ev.dollars.$} of {ev.ticker}
                 </span>
         }
 }

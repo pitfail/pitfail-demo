@@ -4,7 +4,6 @@ package object formats {
 
 import model.derivatives._
 import scala.math.{BigDecimal}
-import java.math.{MathContext,RoundingMode}
 import org.joda.time.{DateTime}
 import net.liftweb.common.Logger
 import java.sql.Timestamp
@@ -47,14 +46,6 @@ case class BigDecimalFormatted(b: BigDecimal) {
     def %(): String = "%.0f%%" format (b.doubleValue * 100)
     def ###(): String = "%.0f" format (b doubleValue)
 
-    def round(decimals: Int, mode: RoundingMode): BigDecimal = {
-        val precision = b.precision - b.scale + decimals
-        val context = new MathContext(precision, mode)
-        b.round(context)
-    }
-
-    def floor: BigDecimal =
-        round(0, RoundingMode.FLOOR)
 }
 implicit def bigDecimalFormatted(b: BigDecimal): BigDecimalFormatted = BigDecimalFormatted(b)
 

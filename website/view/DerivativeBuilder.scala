@@ -2,8 +2,6 @@
 package code
 package snippet
 
-import java.math.{MathContext,RoundingMode}
-
 import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
@@ -21,7 +19,8 @@ import intform._
 
 import stockdata._
 import model.derivatives._
-import model.Schema.{User,Dollars,Price,Shares,Scale}
+import model._
+import model.Schema._
 import scalaz.Scalaz._
 import formats._
 
@@ -204,7 +203,7 @@ class DerivativeBuilder extends Page with Loggable
     def makeStockRowField(init: AddToDerivative): StockRowField = {
         val AddToDerivative(quote, shares) = init
         
-        val sharesField = IntField(shares toString)
+        val sharesField = IntField(shares.###())
         val dirField = DirectionField(ToBuyer)
         
         val remove = Submit.cancel(form, "Remove") {

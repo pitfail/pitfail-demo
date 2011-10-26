@@ -17,6 +17,7 @@ import scalaz.Scalaz._
 import scala.math._
 
 import intform._
+import model._
 import model.Schema._
 
 class DollarsField(initText: String)

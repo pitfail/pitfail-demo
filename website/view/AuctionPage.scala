@@ -9,6 +9,7 @@ import http._
 import scala.xml._
 
 import intform._
+import model._
 import model.Schema._
 import formats._
 
@@ -76,7 +77,7 @@ class AuctionPage extends Page with Loggable {
                 </p>
                 <p>{castSubmit.errors}</p>
             )
-            lazy val bidField = DollarsField(goingPrice.$)
+            lazy val bidField = DollarsField(goingPrice.no$)
             lazy val castSubmit = Submit(bidForm, "Cast") { case Bid(amt) =>
                 import control.LoginManager._
                 
