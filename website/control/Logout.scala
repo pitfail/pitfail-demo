@@ -15,7 +15,15 @@ object Logout {
         }
 
     def userLogout(req: Req)(): Box[LiftResponse] = {
+        import comet._
+        
         LoginManager.logout()
+        
+        Portfolio        ! Refresh
+        News             ! Refresh
+        AuctionThumbnail ! Refresh
+        Offers           ! Refresh
+        
         Full(RedirectResponse(S.referer openOr "/"))
     }
 }
