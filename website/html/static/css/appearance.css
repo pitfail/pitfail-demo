@@ -277,20 +277,6 @@ p.price-input input {
     margin-top: 2em;
 }
 
-#search-derivative p input {
-    width: 8em;
-    text-align: center;
-    border: none;
-    border-bottom: 2px solid #000;
-}
-
-#search-list tr input {
-    width: 8em;
-    text-align: center;
-    border: none;
-    border-bottom: 2px solid #000;
-}
-
 /* List in Derivative Builder */
 table#search-list {
     width: 90%;
