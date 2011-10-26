@@ -35,7 +35,7 @@ object LoginStatus extends Loggable {
             case Some(n) => n
             case _  => "Nobody"
         }
-        <a href="/user">{name}</a>
+        <a href={"/user?name=" + name}>{name}</a>
     }
 }
 

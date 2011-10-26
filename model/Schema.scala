@@ -32,14 +32,14 @@ object Schema extends squeryl.Schema with Loggable {
     implicit val auctionBids           = table[AuctionBid]
     
     // Errors that can occur during model operations
-    case object NegativeVolume extends Exception
-    case class NotEnoughCash(have: Dollars, need: Dollars) extends Exception
-    case class NotEnoughShares(have: Shares, need: Shares) extends Exception
-    case class DontOwnStock(ticker: String) extends Exception
-    case object OfferExpired extends Exception
-    case object NotExecutable extends Exception
-    case object NoSuchAuction extends Exception
-    case class BidTooSmall(going: Dollars) extends Exception
+    case object NegativeVolume extends RuntimeException
+    case class NotEnoughCash(have: Dollars, need: Dollars) extends RuntimeException
+    case class NotEnoughShares(have: Shares, need: Shares) extends RuntimeException
+    case class DontOwnStock(ticker: String) extends RuntimeException
+    case object OfferExpired extends RuntimeException
+    case object NotExecutable extends RuntimeException
+    case object NoSuchAuction extends RuntimeException
+    case class BidTooSmall(going: Dollars) extends RuntimeException
     
     def trans[A](x: =>A) = inTransaction(x)
     
@@ -61,7 +61,7 @@ object Schema extends squeryl.Schema with Loggable {
                     // TODO: Starting cash should be moved to a properties file.
                     val port = Portfolio(
                         owner = user,
-                        cash  = Dollars("2000.0")
+                        cash  = Dollars("20000.0")
                     )
                     portfolios insert port
                     
@@ -131,6 +131,16 @@ object Schema extends squeryl.Schema with Loggable {
         )
         .page(0, n)
         .toList
+    }
+    
+    def checkForAuctionClosings(): Unit = trans {
+        val expired = from(auctionOffers)(o =>
+            where(o.expires <= now)
+            select(o)
+            orderBy(o.expires asc)
+        ) toList
+        
+        expired foreach (_.close)
     }
     
     case class User(
@@ -222,25 +232,34 @@ object Schema extends squeryl.Schema with Loggable {
                 case None        => makeTicker(ticker)
             }
         }
-        
+
+        def sellStock(ticker: String, shares: Shares): Unit = trans {
+            val dollars = shares * stockPrice(ticker)
+            sellStock(ticker, shares, dollars)
+        }
+
         def sellStock(ticker: String, dollars: Dollars): Unit = trans {
+            val shares = dollars ~/~ stockPrice(ticker)
+            sellStock(ticker, shares, dollars)
+        }
+
+        def sellStock(ticker: String, shares: Shares, dollars: Dollars): Unit = trans {
             val asset =
                 haveTicker(ticker) match {
                     case Some(asset) => asset
                     case None => throw DontOwnStock(ticker)
                 }
-            val shares = dollars ~/~ stockPrice(ticker)
-            
+
             if (shares > asset.shares)
                 throw NotEnoughShares(asset.shares, shares)
-            
+
             cash = (cash: Dollars) + dollars
             asset.shares -= shares
             if (asset.shares <= Shares(0))
                 asset.delete()
             else
                 asset.update()
-            
+
             newsEvents insert NewsEvent(
                 action  = "sell",
                 subject = owner,
@@ -251,7 +270,8 @@ object Schema extends squeryl.Schema with Loggable {
             )
             this.update()
         }
-        
+
+
         def sellAll(ticker: String): Unit = trans {
             val asset =
                 haveTicker(ticker) match {

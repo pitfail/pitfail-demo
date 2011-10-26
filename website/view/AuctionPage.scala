@@ -26,7 +26,13 @@ class AuctionPage extends Page with Loggable {
         for {
             idText  <- param
             id       = java.lang.Long parseLong idText
-            auction  = AuctionOffer.byID(id)
+            auction  <-
+                try {
+                    Full(AuctionOffer.byID(id))
+                }
+                catch { case NoSuchAuction =>
+                    Empty
+                }
             
             goingPrice = auction.goingPrice
             seller     = auction.offerer.owner

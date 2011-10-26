@@ -101,12 +101,13 @@ class StockOrderer extends Page with Loggable
     private def buyStock(quote: Quote, dollars: Dollars): JsCmd = {
         import control.LoginManager._
         import model.Schema._
+        
+        this.logger.info("Buying %s of %s" format(dollars, quote))
 
         // TODO: Throw an exception if actualVolume is 0.
         val shares = dollars /-/ quote.price
-        val actualVolume = shares * quote.price
 
-        currentUser.mainPortfolio.buyStock(quote.stock.symbol, actualVolume)
+        currentUser.mainPortfolio.buyStock(quote.stock.symbol, shares)
         currentQuote = None
 
         comet.Portfolio ! comet.Refresh

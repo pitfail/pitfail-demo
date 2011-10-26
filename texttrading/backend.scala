@@ -25,12 +25,9 @@ class PitFailBackend extends Backend {
     }
     
     def welcomeGreeting(name: String) = Seq(
-        """| Welcome to PitFail!
-           |
-           | PitFail lets you experiment trading stocks with made-up money.
-           |
-           | Try out these commands:
-           | %s
+        """|Welcome to PitFail, a made-up money trader.
+           |Try it out:
+           |%s
            |"""
         .stripMargin
         .format(commandIntro)
@@ -42,24 +39,27 @@ case class WithUser(user: User) {
     def failed: PartialFunction[Any,Failed] = {
         case e => Failed(standardMessage(e))
     }
-    
+
+    /* TODO: buy & sell look very similar, condense. */
     def buy(asset: StockAsset) =
         try (
                asset
-            |> toVolume _
-            |> { case StockVolume(ticker, volume) =>
-                    user.mainPortfolio.buyStock(ticker, Dollars(volume))
+            |> { case StockShares(ticker, shares) =>
+                    user.mainPortfolio.buyStock(ticker, shares)
+                 case StockDollars(ticker, dollars) =>
+                    user.mainPortfolio.buyStock(ticker, dollars)
                }
             |> { _ => OK }
         )
         catch failed
-        
+
     def sell(asset: StockAsset) =
         try (
                asset
-            |> toVolume _
-            |> { case StockVolume(ticker, volume) =>
-                    user.mainPortfolio.sellStock(ticker, Dollars(volume))
+            |> { case StockShares(ticker, shares) =>
+                    user.mainPortfolio.sellStock(ticker, shares)
+                 case StockDollars(ticker, dollars) =>
+                    user.mainPortfolio.sellStock(ticker, dollars)
                }
             |> { _ => OK }
         )
@@ -71,12 +71,5 @@ case class WithUser(user: User) {
             OK
         }
         catch failed
-        
-    def toVolume(asset: StockAsset) = asset match {
-        case v @ StockVolume(_,_)       => v
-        case StockShares(ticker,shares) =>
-            // TODO: You know...
-            StockVolume(ticker, shares / 3.14)
-    }
 }
 

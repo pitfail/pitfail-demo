@@ -82,6 +82,12 @@ table tfoot td {
     top: 1em;
 }
 
+#header a {
+    font-style: normal;
+    color: black;
+    text-decoration: none;
+}
+
 /* Search */
 #search-query {
     position: relative;
@@ -323,6 +329,13 @@ table.assets {
 #offers table form {
     /* Hack to ignore all of the block elements that Lift inserts. */
     display: inline;
+}
+
+/* ------------------------------------------------------------------ */
+/* User Page */
+
+#user-page h2 {
+    font-size: 2em;
 }
 
 /* ------------------------------------------------------------------ */
