@@ -271,7 +271,15 @@ class DerivativeBuilder extends Page with Loggable
         
         def main =
             <p>{useField.main} Provided that
-                {aField.main} &lt; {bField.main}
+                <div class="chain">
+                    <span class="field-annotation">Ticker sym or $</span>
+                    {aField.main}
+                </div>
+                <div class="chain">&lt;</div>
+                <div class="chain">
+                    <span class="field-annotation">Ticker sym or $</span>
+                    {bField.main}
+                </div>
             </p>
     }
     

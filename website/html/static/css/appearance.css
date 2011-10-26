@@ -22,6 +22,20 @@ li.event {
     list-style-type: none;
 }
 
+.field-annotation {
+    font-size: small;
+    color: #999;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+}
+
+.chain {
+    display: inline;
+    position: relative;
+}
+
 /* General Style */
 html {
     font-family: sans-serif;
@@ -241,6 +255,10 @@ p.price-input input {
 
 #search-derivative table {
     margin: 1em;
+}
+
+#search-derivative .buttons {
+    margin-top: 2em;
 }
 
 #search-derivative p input {
