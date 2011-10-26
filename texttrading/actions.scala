@@ -1,6 +1,8 @@
 
 package texttrading
 
+import model.{Dollars, Shares}
+
 // Message in from the frontend:
 
 case class Message(
@@ -27,8 +29,8 @@ case class Sell(asset: StockAsset) extends Action
 case class SellAll(ticker: String) extends Action
 
 sealed abstract class StockAsset
-case class StockShares(ticker: String, volume: BigDecimal) extends StockAsset
-case class StockVolume(ticker: String, volume: BigDecimal) extends StockAsset
+case class StockDollars(ticker: String, dollars: Dollars) extends StockAsset
+case class StockShares (ticker: String, shares:  Shares) extends StockAsset
 
 // Responses that can be sent back:
 

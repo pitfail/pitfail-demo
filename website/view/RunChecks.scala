@@ -20,10 +20,7 @@ class RunChecks extends Page with Loggable
         import comet._
         
         logger.info("Running all background checks...")
-        model.Schema.checkForExercise()
-        
-        Portfolio ! Refresh
-        News ! Refresh
+        control.Checker.runChecks()
     }
 }
 
