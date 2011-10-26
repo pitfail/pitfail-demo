@@ -73,26 +73,25 @@ package object intform {
     
     case class NodePlus(n: Node) {
         def leafMap(f: Elem => Elem): Node = n match {
-            case e: Elem if (e.child isEmpty) => f(e)
             case e: Elem =>
-                Elem(
+                f(Elem(
                     prefix     = e.prefix,
                     label      = e.label,
                     attributes = e.attributes,
                     scope      = e.scope,
                     child      = e.child leafMap f :_*
-                )
+                ))
             case x@_ => x
         }
     }
     
     class MergeAttr(n1: NodeSeq) {
         def &(n2: Node) = {
-            assert (n1.length == 1)
-            assert (n2.length == 1)
-
-            n1 leafMap { el =>
-                el % n2.head.attributes
+            n1 leafMap { e =>
+                if (e.label == n2.label)
+                    e % n2.head.attributes
+                else
+                    e
             }
         }
     }

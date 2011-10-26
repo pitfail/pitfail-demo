@@ -8,6 +8,22 @@ li.event {
 /* ---------------------------------------------- */
 /* Forms */
 
+span.input-error {
+    position: relative;
+}
+
+span.input-error span.error {
+    position: absolute;
+    padding: 0.3em;
+    top: 0;
+    left: 110%;
+    width: 250px;
+    font-size: 10pt;
+    background: #FFEBE8;
+    border: 1px solid #DD3C10;
+    border-radius: 3px;
+}
+
 .inputError {
     font-size: small;
     color: #900;
