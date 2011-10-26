@@ -6,7 +6,7 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
 import scala.xml.{NodeSeq}
-import http.{StringField => _, _}
+import http.{StringField => _,BooleanField => _, _}
 import js._
 import JsCmds._
 import JE._
@@ -60,7 +60,8 @@ case class DerivativeOrder(
     execDate:    DateTime,
     price:       Dollars,
     cash:        Dollars,
-    condition:   Condition
+    condition:   Condition,
+    early:       Boolean
 )
 
 class DerivativeBuilder extends Page with Loggable
@@ -100,7 +101,8 @@ class DerivativeBuilder extends Page with Loggable
             strike: Dollars,
             cashDir: Direction,
             stocks: Seq[StockInDerivative],
-            cond: Condition
+            cond: Condition,
+            early: Boolean
         ) =>
             DerivativeOrder(
                 recipient  = rec,
@@ -108,7 +110,8 @@ class DerivativeBuilder extends Page with Loggable
                 stocks     = stocks,
                 execDate   = exp,
                 cash       = cashDir.sign(strike),
-                condition  = cond
+                condition  = cond,
+                early      = early
             )
         ,
         (
@@ -118,7 +121,8 @@ class DerivativeBuilder extends Page with Loggable
             strikePriceField,
             cashDirField,
             stocksField,
-            conditionField
+            conditionField,
+            earlyField: Field[Boolean]
         ),
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
@@ -151,6 +155,8 @@ class DerivativeBuilder extends Page with Loggable
             </table>
             
             {conditionField.main}
+            <br/>
+            {earlyField.main}
 
             <div class="buttons">
                 {offerSubmit.main & <input/>}
@@ -165,7 +171,7 @@ class DerivativeBuilder extends Page with Loggable
             ConstField(OpenAuction)
         ),
         choices =>
-            <ul>
+            <ul id="recipient">
                 <li>{choices._1} User: {toUserField.main}</li>
                 <li>{choices._2} Public Auction</li>
             </ul>
@@ -281,6 +287,10 @@ class DerivativeBuilder extends Page with Loggable
             </p>
     }
     
+    lazy val earlyField = new BooleanField(true) {
+        override def main = <p>{super.main} May be exercised early?</p>
+    }
+    
     lazy val offerSubmit = Submit(form, "Offer")  { order =>
         import control.LoginManager._
         
@@ -296,7 +306,7 @@ class DerivativeBuilder extends Page with Loggable
                 securities = secs,
                 exec       = order.execDate,
                 condition  = order.condition,
-                early      = true
+                early      = order.early
             )
             
             val user = currentUser
