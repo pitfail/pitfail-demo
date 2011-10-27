@@ -51,9 +51,17 @@ object TextTrader {
                 response.extraMsgs :+
                 {
                     response.status match {
-                        case OK          => "Success in " + action
+                        case OK          => action match {
+                            case a@ SellAll(_) => a.toString()
+                            case a@ Sell(_)    => a.toString()
+                            case a       => "Successfuly " + a
+                        }
                         case StringResponse(str) => str
-                        case TransactionResponse(sa) => "need a bunch of magic."
+
+                        /* This is only returned by a buy event */
+                        case TransactionResponse(sa, dollars) =>
+                            "Bought " + (sa.shares: model.Shares).toString() + " of " + sa.ticker +
+                            " for a total of " + dollars.$
                         case Failed(msg) => msg
                     }
                 }

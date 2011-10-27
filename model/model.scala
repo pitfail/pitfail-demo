@@ -89,6 +89,8 @@ case class Shares(shares: BigDecimal) extends Ordered[Shares] {
     def compare(other: Shares) = shares.compare(other.shares)
 
     def ###(): String = "%.0f" format (shares doubleValue)
+
+    override def toString(): String = ###() + (if (shares != 1) " shares" else " share")
 }
 object Shares {
     def apply(str: String): Shares = Shares(BigDecimal(str))
