@@ -37,7 +37,7 @@ class PitFailBackend extends Backend {
 case class WithUser(user: User) {
 
     def failed: PartialFunction[Any,Failed] = {
-        case e => Failed(standardMessage(e))
+        case e => Failed(e.toString())
     }
 
     /* TODO: buy & sell look very similar, condense. */
@@ -49,7 +49,7 @@ case class WithUser(user: User) {
                  case StockDollars(ticker, dollars) =>
                     user.mainPortfolio.buyStock(ticker, dollars)
             }
-            |> TransactionResponse
+            |> { case ((a, b)) => TransactionResponse(a,b) }
         )
         catch failed
 
