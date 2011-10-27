@@ -21,7 +21,6 @@ includeFilter in Compile in unmanagedSources <<=
 			val path = Path.relativizeFile(baseDir, file).get.getPath
 			(
                    ! path.contains("test" + java.io.File.separator)
-                && ! path.contains("static" + java.io.File.separator)
                 && ! path.startsWith("project")
             )
 		})
@@ -58,6 +57,7 @@ libraryDependencies ++= Seq(
     "org.mortbay.jetty" % "jetty"             % "6.1.22" % "jetty",
     "org.slf4j"      % "slf4j-simple"         % "1.6.1",
     "com.h2database" % "h2"                   % "1.3.159",
+    "org.xerial"     % "sqlite-jdbc"          % "3.7.2",
     "org.squeryl"    %% "squeryl"             % "0.9.4",
     "org.scalaz"     %% "scalaz-core"         % "6.0.3",
     "junit"          % "junit"                % "4.5"    % "test->default",

@@ -20,6 +20,9 @@ implicit def bigDecimalOps(b: BigDecimal) = new {
 
     def floor: BigDecimal =
         round(0, RoundingMode.FLOOR)
+    
+    def evenCents: BigDecimal =
+        round(2, RoundingMode.FLOOR)
 }
 
 //
@@ -60,7 +63,7 @@ case class DollarsField(dollars: BigDecimal)
 {
 }
 object DollarsField {
-    implicit def fromField(d: DollarsField) = Dollars(d.dollars)
+    implicit def fromField(d: DollarsField) = Dollars(d.dollars.evenCents)
 }
 
 case class Shares(shares: BigDecimal) extends Ordered[Shares] {

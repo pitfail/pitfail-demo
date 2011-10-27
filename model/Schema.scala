@@ -61,7 +61,7 @@ object Schema extends squeryl.Schema with Loggable {
                     // TODO: Starting cash should be moved to a properties file.
                     val port = Portfolio(
                         owner = user,
-                        cash  = Dollars("20000.0")
+                        cash  = Dollars("2000.0")
                     )
                     portfolios insert port
                     
