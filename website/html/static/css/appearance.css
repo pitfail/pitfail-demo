@@ -5,7 +5,7 @@ li.event {
     font-size: 70%;
 }
 
-#left-container {
+#right-container {
     color: #D8CBC4;
     background: #7F6152;
 }
@@ -113,25 +113,21 @@ table tfoot td {
 }
 
 /* Header */
-#header {
-    position: relative;
-    margin: 1em;
-    color: #D8CBC4;
+h1 {
+    font-size: 5em;
+    font-family: 'Cuprum', sans-serif;
+    margin-top: 0.5em;
+    margin-bottom: -0.2em;
 }
 
-#header h1 {
-    /* TODO: Shouldn't need !important here. */
-    font-size: 3em !important;
-}
-
-#header h1 a {
+a {
     font-style: normal;
     font-weight: bold;
-    color: inherit;
+    color: #FFF;
     text-decoration: none;
 }
 
-#header #account {
+#account {
     position: absolute;
     right: 0;
     top: 1em;

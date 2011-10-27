@@ -133,7 +133,7 @@ class SearchQuote extends Page with Loggable
         <div id="search-instructions" class="block">
             <ol>
                 <li>Enter a ticker symbol into the search field above.</li>
-                <li>Choose an amount of stock to purchase or add to a derivative.</li>
+                <li>Choose an amount of stock to buy or add to a derivative.</li>
                 <li>Login and manage your portfolio!</li>
             </ol>
         </div>
