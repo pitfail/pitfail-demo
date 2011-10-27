@@ -13,6 +13,7 @@ import squeryl.dsl.ast._
 import links._
 import java.sql.Timestamp
 import java.util.UUID
+import org.joda.time.DateTime
 
 import Stocks.stockPrice
 import derivatives._
@@ -170,11 +171,12 @@ object Schema extends squeryl.Schema with Loggable {
             price: Dollars
         ): Unit = trans {
             val offer = DerivativeOffer(
-                handle = UUID.randomUUID.toString,
-                mode   = deriv.serialize,
-                from   = this.mainPortfolio,
-                to     = recip.mainPortfolio,
-                price  = price
+                handle  = UUID.randomUUID.toString,
+                mode    = deriv.serialize,
+                from    = this.mainPortfolio,
+                to      = recip.mainPortfolio,
+                price   = price,
+                expires = new Timestamp(((new DateTime) plusDays 3).getMillis)
             )
             
             offer.insert()
@@ -182,12 +184,14 @@ object Schema extends squeryl.Schema with Loggable {
         
         def offerDerivativeAtAuction(
             deriv: Derivative,
-            price: Dollars
+            price: Dollars,
+            expires: DateTime
         ): Unit = trans {
             val offer = AuctionOffer(
                 mode     = deriv.serialize,
                 offerer  = this.mainPortfolio,
-                price    = price
+                price    = price,
+                expires  = new Timestamp(expires.getMillis)
             )
             
             offer.insert()
@@ -469,15 +473,15 @@ object Schema extends squeryl.Schema with Loggable {
             sec match {
                 case SecDollar(amt) =>
                     if (amt > Dollars(0)) takeCash(amt, peer)
-                    else peer.takeCash(amt, this)
+                    else peer.takeCash(-amt, this)
                     
                 case SecStock(ticker, shares) =>
                     if (shares > Shares(0)) takeStock(ticker, shares, peer)
-                    else peer.takeStock(ticker, shares, this)
+                    else peer.takeStock(ticker, -shares, this)
                 
                 case SecDerivative(name, scale) =>
                     if (scale > Scale(0)) takeDerivative(name, scale, peer)
-                    else peer.takeDerivative(name, scale, this)
+                    else peer.takeDerivative(name, -scale, this)
             }
         }
         
@@ -714,13 +718,14 @@ object Schema extends squeryl.Schema with Loggable {
     }
     
     case class DerivativeOffer(
-        var id:     Long            = 0,
-        var handle: String          = "",
-        var mode:   Array[Byte]     = Array(),
+        var id:      Long            = 0,
+        var handle:  String          = "",
+        var mode:    Array[Byte]     = Array(),
         @Column("sender")
-        var from:   Link[Portfolio] = 0,
-        var to:     Link[Portfolio] = 0,
-        var price:  DollarsField    = Dollars(0)
+        var from:    Link[Portfolio] = 0,
+        var to:      Link[Portfolio] = 0,
+        var price:   DollarsField    = Dollars("0.0"),
+        var expires: Timestamp       = now
         )
         extends KL
     {

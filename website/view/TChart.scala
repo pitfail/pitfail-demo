@@ -45,25 +45,40 @@ class TChart(
         val myDerivativeAssets      = port.myDerivativeAssets
         val myDerivativeLiabilities = port.myDerivativeLiabilities
         
-        def result =
+        lazy val result =
             <div id="portfolio" class="block container portfolio">
                 <h2>Portfolio</h2>
                 <table class="tchart assets">
                     <thead>
-                        <tr><th colspan="3"><h3>Assets</h3></th></tr>
+                        <tr><th colspan="4"><h3>Assets</h3></th></tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr class="tchart-section">
                             <th>Cash</th>
-                            <td>{myCashAmount.$}</td>
+                            <td/>
+                            <td class="tchart-dollars">{myCashAmount.$}</td>
                             <td/>
                         </tr>
 
-                        <tr><th colspan="3">Stocks</th></tr>
+                        <tr class="tchart-section">
+                            <th colspan="2">Stocks</th>
+                            <th class="tchart-dollars">{stocksTotal.$}</th>
+                            <th colspan="1"/>
+                        </tr>
                         {stocks}
 
-                        <tr><th colspan="3">Derivatives</th></tr>
+                        <tr class="tchart-section">
+                            <th colspan="2">Derivatives</th>
+                            <th class="tchart-dollars">**{derivsTotal.$}</th>
+                            <th/>
+                        </tr>
                         {derivativeAssets}
+                        
+                        <tr class="tchart-section tchart-total">
+                            <th colspan="2">Total</th>
+                            <th class="tchart-dollars">{total.$}</th>
+                            <th colspan="1"/>
+                        </tr>
                     </tbody>
                 </table>
                 
@@ -79,7 +94,16 @@ class TChart(
                 <div style="clear:both;"/>
             </div>
 
-        def stocks = {
+        lazy val stocksTotal = (myStockAssets map stockDollars)
+            .foldLeft(Dollars("0"))(_ + _)
+        
+        lazy val derivsTotal = (myDerivativeAssets
+                map (_.derivative) map (_.spotValue))
+            .foldLeft(Dollars("0"))(_ + _)
+            
+        lazy val total = stocksTotal + myCashAmount + derivsTotal
+            
+        lazy val stocks = {
             if (myStockAssets isEmpty)
                 <tr><td colspan="3">none</td></tr>
             else
@@ -93,19 +117,25 @@ class TChart(
             
                     <tr>
                         <td>{asset.ticker}</td>
-                        <td>{stockVolume(asset).$}</td>
+                        <td class="tchart-price">({stockPrice(asset).$}/sh)</td>
+                        <td class="tchart-dollars">{stockDollars(asset).$}</td>
                         {sellButton}
                     </tr>
                 }
         }
         
-        def derivativeAssets =
+        lazy val derivativeAssets =
             if (myDerivativeAssets isEmpty)
                 <tr><td colspan="3">none</td></tr>
             else
                 myDerivativeAssets map { (asset) =>
-                    <tr>
-                        <td colspan="2">{asset.derivative toHumanString}</td>
+                    val deriv = asset.derivative
+                    val liab = asset.peer
+                    
+                    <tr class="deriv-row deriv-header">
+                        <td>Secs:</td>
+                        <td>{deriv.securities toHumanString}</td>
+                        <td class="tchart-dollars">**{deriv.spotValue.$}</td>
                         <td class="buttons">{
                             if (modifiable && asset.derivative.early)
                                 execDerivative(asset)
@@ -113,9 +143,21 @@ class TChart(
                                 Nil
                         }</td>
                     </tr>
+                    <tr class="deriv-row">
+                        <td>From:</td>
+                        <td>{UserLink(liab.owner.owner.username)}</td>
+                    </tr>
+                    <tr class="deriv-row">
+                        <td>On:</td>
+                        <td>{deriv.exec toNearbyString}</td>
+                    </tr>
+                    <tr class="deriv-row">
+                        <td>If:</td>
+                        <td>{deriv.condition toHumanString}</td>
+                    </tr>
                 }
         
-        def derivativeLiabilities =
+        lazy val derivativeLiabilities =
             if (myDerivativeLiabilities isEmpty)
                 <tr><td colspan="3">none</td></tr>
             else
@@ -134,7 +176,7 @@ class TChart(
         result
     }
     
-    def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Execute") {
+    def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Exercise") {
         da.refetch() map {execute _} match {
             case Some(_) =>
                 comet.Portfolio ! comet.Refresh
@@ -152,11 +194,17 @@ class TChart(
         }
     }
     
-    def stockVolume(asset: StockAsset): Dollars = {
+    def stockDollars(asset: StockAsset): Dollars = {
         val shares = asset.shares
         val stock  = Stock(asset.ticker)
         val quote  = stockDatabase.getQuotes(Seq(stock)).head
         shares * quote.price
+    }
+    
+    def stockPrice(asset: StockAsset): Price = {
+        val stock  = Stock(asset.ticker)
+        val quote  = stockDatabase.getQuotes(Seq(stock)).head
+        quote.price
     }
 }
 

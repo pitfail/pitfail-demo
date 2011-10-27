@@ -56,7 +56,7 @@ class StockOrderer extends Page with Loggable
                 converted to shares and will be added to your portfolio.</p>
 
                 <p class="price-input">
-                    ${volumeField.main & <input id="search-quantity"/>}
+                    ${volumeField.main & <input id="search-quantity" class="blank"/>}
                     <span class="error">{submitBuy.errors}{submitAdd.errors}</span>
                 </p>
 
@@ -68,7 +68,7 @@ class StockOrderer extends Page with Loggable
             </div>
         )
 
-        lazy val volumeField = new DollarsField("1.00") with FieldErrorRender
+        lazy val volumeField = new DollarsField("1000") with FieldErrorRender
     
         lazy val submitBuy = Submit(form, "Buy Shares") { volume =>
             import control.LoginManager._
