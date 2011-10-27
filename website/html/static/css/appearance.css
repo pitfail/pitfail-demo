@@ -98,7 +98,7 @@ table tfoot td {
 /* Header */
 #header {
     position: relative;
-    margin-bottom: 10px;
+    margin: 1em;
 }
 
 #header h1 {
@@ -106,16 +106,16 @@ table tfoot td {
     font-size: 3em !important;
 }
 
+#header h1 a {
+    font-style: normal;
+    color: black;
+    text-decoration: none;
+}
+
 #header #account {
     position: absolute;
     right: 0;
     top: 1em;
-}
-
-#header a {
-    font-style: normal;
-    color: black;
-    text-decoration: none;
 }
 
 /* Search */
@@ -256,12 +256,6 @@ p.price-input {
     font-size: 16pt;
 }
 
-p.price-input input {
-    width: 7em;
-    border: none;
-    border-bottom: 2px solid #000;
-}
-
 /* Derivative Builder */
 #search-derivative {
     padding: 0.5em;
@@ -277,23 +271,10 @@ p.price-input input {
     margin-top: 2em;
 }
 
-#search-derivative p input {
-    width: 8em;
-    text-align: center;
-    border: none;
-    border-bottom: 2px solid #000;
-}
-
 #recipient li {
     margin-left: 1em;
 }
 
-#search-list tr input {
-    width: 8em;
-    text-align: center;
-    border: none;
-    border-bottom: 2px solid #000;
-}
 
 /* List in Derivative Builder */
 table#search-list {
