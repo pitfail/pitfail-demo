@@ -1,11 +1,7 @@
 /* ---------------------------------------------- */
 /* News */
 
-li.event {
-    font-size: 70%;
-}
-
-#left-container {
+#right-container {
     color: #D8CBC4;
     background: #7F6152;
 }
@@ -13,7 +9,6 @@ li.event {
 a {
     color: #FFF;
 }
-
 
 /* ---------------------------------------------- */
 /* Forms */
@@ -113,28 +108,26 @@ table tfoot td {
 }
 
 /* Header */
-#header {
-    position: relative;
-    margin: 1em;
-    color: #D8CBC4;
+h1 {
+    font-size: 5em;
+    font-family: 'Cuprum', sans-serif;
+    margin-top: 0.5em;
+    margin-bottom: -0.2em;
 }
 
-#header h1 {
-    /* TODO: Shouldn't need !important here. */
-    font-size: 3em !important;
-}
-
-#header h1 a {
+h1 a {
     font-style: normal;
     font-weight: bold;
-    color: inherit;
+    color: #FFF;
     text-decoration: none;
 }
 
-#header #account {
+#account {
     position: absolute;
-    right: 0;
-    top: 1em;
+    right: 2em;
+    bottom: 1.5em;
+    color: #D8CBC4;
+    font-size: 11pt;
 }
 
 /* Search */
@@ -295,13 +288,41 @@ p.price-input {
     line-height: 1.5em;
 }
 
-
+input.blank {
+    width: 8em;
+    text-align: center;
+    border: none;
+    border-bottom: 2px solid #000;
+    background: transparent;
+}
+ 
 #search-derivative table {
     margin: 1em;
 }
 
 #search-derivative .buttons {
     margin-top: 2em;
+}
+
+#search-derivative h3 {
+    font-style: normal;
+    font-size: 1em;
+    margin-top: 1em;
+}
+
+.description {
+    font-style: italic;
+    font-size: 0.85em;
+}
+
+.cash-container: {
+    margin-top: 2em;
+    padding-top: 1em;
+}
+
+.cash-header: {
+    font-style: normal;
+    font-size: 1em;
 }
 
 #recipient li {
@@ -441,16 +462,23 @@ tr.deriv-header {
 
 /* ------------------------------------------------------------------ */
 /* Sidebar */
-
-#left-bar h3 {
-    text-align: left;
-    font-size: normal;
-    font-style: italic;
-    font-weight: normal;
-    
-    margin-top: 2em;
+.sidebar {
+    padding: 10px;
+    color: #D8CBC4;
+    background: #7F6152;
+    border-radius: 6px;
 }
 
-#left-bar li {
+.sidebar h3 {
+    color: #FFF;
+    font-weight: bold;
+    font-size: 14pt;
 }
 
+.news {
+    margin-top: 0.2em;
+    margin-bottom: 1em;
+    font-size: 10pt;
+    height: 9em;
+    overflow: hidden;
+}

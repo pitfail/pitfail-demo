@@ -1,88 +1,22 @@
 
-#body {
-	position:   relative;
-	width:      100%;
-	left:         0%;
-	
-	float:      left;
-}
-
-#center-outer {
-	padding:    0 0 0 0;
-    margin:     0 0 0 0;
-	
-	position:   relative;
-	width:       80%;
-	left:        20%;
-	
-	float:      left;
-}
-
-#left-outer {
-	padding:    0 0 0 0;
-    margin:     0 0 0 0;
-	
-	position:   relative;
-	width:       20%;
-	left:       -80%;
-	
-	float:      left;
-}
-
-#right-outer {
-	padding:    0 0 0 0;
-    margin:     0 0 0 0;
-	
-	position:   relative;
-	width:       0%;
-	left:        0%;
-	
-	float:      left;
-}
-
-#center-container {
-}
-
-#left-container {
-    margin-left: 1em;
-    margin-right: 1em;
-    
-    padding-left: 1em;
-    padding-right: 1em;
-    padding-top: 1em;
-    padding-bottom: 5em;
-    
-    border-radius: 10px;
-}
-
-#right-container {
-    background-color: #ccf;
-    
-    margin-left: 1em;
-    margin-right: 1em;
-    
-    padding-left: 1em;
-    padding-right: 1em;
-    padding-top: 1em;
-    padding-bottom: 5em;
-    
-    border-radius: 10px;
-}
-
-#center {
-}
-
-#left-bar {
-}
-
-#right-bar {
-}
-
-#header-container {
+div#body {
     position: relative;
-    left: 15%;
-	padding: 20px 20px 20px 40px;
-/*	border-bottom: #AAAAAA 1px solid; */
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
+div#center-outer {
+    float: left;
+    width: 100%;
+}
+
+div#center-container {
+    margin-right: 275px;
+}
+
+div#right-outer {
+    float: left;
+    width: 230px;
+    margin-left: -275px;
+}
 

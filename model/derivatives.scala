@@ -25,6 +25,9 @@ case class Derivative(
     def *(scale: Scale): Derivative = this.copy(
         securities = securities map (_ * scale)
     )
+    
+    def spotValue: Dollars = (securities map (_.spotValue))
+        .foldLeft(Dollars(0))(_ + _)
 }
 
 object Derivative extends Loggable {
@@ -36,6 +39,8 @@ object Derivative extends Loggable {
 
 sealed abstract class Security {
     def *(scale: Scale): Security
+    
+    def spotValue: Dollars
 }
 
 case class SecDollar(
@@ -43,6 +48,8 @@ case class SecDollar(
     ) extends Security
 {
     def *(scale: Scale) = SecDollar(amount * scale)
+    
+    def spotValue = amount
 }
 
 case class SecStock(
@@ -51,6 +58,8 @@ case class SecStock(
     ) extends Security
 {
     def *(scale: Scale) = SecStock(ticker, shares*scale)
+    
+    def spotValue = Stocks.stockPrice(ticker) * shares
 }
 
 case class SecDerivative(
@@ -59,6 +68,14 @@ case class SecDerivative(
     ) extends Security
 {
     def *(nextScale: Scale) = SecDerivative(name, scale*nextScale)
+    
+    def spotValue = {
+        val liab = DerivativeLiability byName name
+        liab match {
+            case None       => Dollars(0)
+            case Some(liab) => liab.derivative.spotValue * scale
+        }
+    }
 }
 
 // -------------------------------------------

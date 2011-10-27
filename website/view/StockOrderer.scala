@@ -56,7 +56,7 @@ class StockOrderer extends Page with Loggable
                 converted to shares and will be added to your portfolio.</p>
 
                 <p class="price-input">
-                    ${volumeField.main & <input id="search-quantity"/>}
+                    ${volumeField.main & <input id="search-quantity" class="blank"/>}
                     <span class="error">{submitBuy.errors}{submitAdd.errors}</span>
                 </p>
 
