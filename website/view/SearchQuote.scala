@@ -115,7 +115,10 @@ class SearchQuote extends Page with Loggable
     def quoteBlockPresent(quote: Quote) = 
         <div id="search-quote" class="quote block">
             <h2>{quote.stock.symbol} - {quote.company}</h2>
-            <h3>{quote.price.$} {quote.info.percentChange.%()}</h3>
+            <h3>
+                <span class="quote-price">{quote.price.$}</span> -
+                <span class="quote-change">{quote.info.percentChange.%()}</span>
+            </h3>
             <dl> {
                 import quote.info._
                 (<dt>Open</dt>    <dd class="quote-open">{openPrice.$}</dd>

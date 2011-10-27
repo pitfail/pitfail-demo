@@ -563,7 +563,7 @@ object Schema extends squeryl.Schema with Loggable {
         var portfolio:     Link[Portfolio]  = 0
         )
         extends KL
-    
+ 
     case class DerivativeAsset(
         var id:    Long            = 0,
         var peer:  Link[DerivativeLiability] = 0,

@@ -76,12 +76,16 @@ class StockOrderer extends Page with Loggable
             try {
                 buyStock(quote, volume)
             } catch {
+                case e: BadInput => throw BadFieldInput(volumeField, e.msg)
+
                 case NegativeVolume => throw BadFieldInput(volumeField,
                     "You must buy more than $0.00 of a stock"
                 )
+
                 case NotEnoughCash(have, need) => throw BadFieldInput(volumeField,
                     "You need at least %s you only have %s" format (need.$, have.$)
                 )
+
                 case NotLoggedIn =>
                     throw BadInput("You must be logged in to buy stock")
             }
@@ -104,15 +108,18 @@ class StockOrderer extends Page with Loggable
         
         this.logger.info("Buying %s of %s" format(dollars, quote))
 
-        // TODO: Throw an exception if actualVolume is 0.
         val shares = dollars /-/ quote.price
 
-        currentUser.mainPortfolio.buyStock(quote.stock.symbol, shares)
-        currentQuote = None
+        if (shares > Shares(0)) {
+            currentUser.mainPortfolio.buyStock(quote.stock.symbol, shares)
+            currentQuote = None
 
-        comet.Portfolio ! comet.Refresh
-        comet.News      ! comet.Refresh
-        notifyAndRefresh(BuyShares(quote, dollars))
+            comet.Portfolio ! comet.Refresh
+            comet.News      ! comet.Refresh
+            notifyAndRefresh(BuyShares(quote, dollars))
+        } else {
+            throw BadInput("You must buy a minimum of one share.")
+        }
     }
 
     private def addStockToDerivative(quote: Quote, shares: Shares) = {

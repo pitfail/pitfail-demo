@@ -172,7 +172,7 @@ class DerivativeBuilder extends Page with Loggable
         ),
         choices =>
             <ul id="recipient">
-                <li>{choices._1} User: {toUserField.main}</li>
+                <li>{choices._1 & <input checked="checked"/>} User: {toUserField.main}</li>
                 <li>{choices._2} Public Auction</li>
             </ul>
     )
@@ -181,7 +181,7 @@ class DerivativeBuilder extends Page with Loggable
     lazy val toUserField = AggregateField(
         SpecificUser,
         recipientField: UserField,
-        recipientField.main ++ recipientField.errors
+        recipientField.main
     )
 
     // Default to a week in the future.
@@ -228,12 +228,11 @@ class DerivativeBuilder extends Page with Loggable
             <tr>
                 <td class="search-list-ticker">{quote.stock.symbol}</td>
                 <td class="search-list-company">{quote.company}</td>
-                <td class="search-list-shares">{sharesField.main} {sharesField.errors}</td>
+                <td class="search-list-shares">{sharesField.main}</td>
                 <td class="search-list-dir">{dirField.main}</td>
                 <td class="search-list-price">{quote.price.$}/sh</td>
                 <td class="search-list-buttons">
                     {remove.main & <input class="search-list-remove"/>}
-                    {remove.errors}
                 </td>
             </tr>
         )
