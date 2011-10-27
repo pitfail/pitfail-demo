@@ -1,3 +1,4 @@
+
 package stockdata
 
 import java.io.IOException
@@ -53,28 +54,38 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
           (root\"query"\"results"\"quote").children
 
       // DEVNOTE: Any fields referenced here must also be added to responseFields.
-      (quoteElements map { (quoteElement) => (
-        Stock((quoteElement\"Symbol").extract[String]),
-        Quote(
-          stock      = Stock((quoteElement\"Symbol").extract[String]),
-          company    = (quoteElement\"Name").extract[String],
-          exchange   = (quoteElement\"StockExchange").extract[String],
-          price      = Price((quoteElement\"LastTradePriceOnly").extract[String]),
-          updateTime = dateTimeFormat.parseDateTime(
-              (quoteElement\"LastTradeDate").extract[String]
-            + " "
-            + (quoteElement\"LastTradeTime").extract[String]
-          ),
-          info = QuoteInfo(
-            percentChange = Some(BigDecimal((quoteElement\"ChangeinPercent")
-                                        .extract[String].stripSuffix("%"))),
-            dividendShare = tryExtractNumber(quoteElement\"DividendShare"),
-            openPrice     = tryExtractNumber(quoteElement\"Open"),
-            lowPrice      = tryExtractNumber(quoteElement\"DaysLow"),
-            highPrice     = tryExtractNumber(quoteElement\"DaysHigh")
-          )
+      (quoteElements map { (quoteElement) =>
+        val stock = Stock((quoteElement\"Symbol").extract[String])
+        val updateTime =
+            try {
+                dateTimeFormat.parseDateTime(
+                    (quoteElement\"LastTradeDate").extract[String]
+                    + " "
+                    + (quoteElement\"LastTradeTime").extract[String]
+                )
+            }
+            catch {
+                case _: IllegalArgumentException => throw new NoSuchStockException(stock)
+            }
+        
+        val quote = Quote(
+            stock      = stock,
+            company    = (quoteElement\"Name").extract[String],
+            exchange   = (quoteElement\"StockExchange").extract[String],
+            price      = Price((quoteElement\"LastTradePriceOnly").extract[String]),
+            updateTime = updateTime,
+            info = QuoteInfo(
+                percentChange = Some(BigDecimal((quoteElement\"ChangeinPercent")
+                    .extract[String].stripSuffix("%"))),
+                dividendShare = tryExtractNumber(quoteElement\"DividendShare"),
+                openPrice     = tryExtractNumber(quoteElement\"Open"),
+                lowPrice      = tryExtractNumber(quoteElement\"DaysLow"),
+                highPrice     = tryExtractNumber(quoteElement\"DaysHigh")
+            )
         )
-      )}).toMap
+        
+        (stock, quote)
+      }).toMap
     } catch {
       case ex: MappingException =>
         throw new DatabaseException("Yahoo Finance returned JSON with unexpected structure.", ex)

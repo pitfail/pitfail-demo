@@ -9,7 +9,7 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
 import scala.xml.{NodeSeq}
-import http._
+import http.{StringField => _, _}
 import js._
 import JsCmds._
 import JE._
@@ -75,27 +75,31 @@ class SearchQuote extends Page with Loggable
     lazy val queryForm: Form[Stock] = Form(
         (sym: String) => Stock(sym toUpperCase),
         (
-            tickerField
+            tickerField: Field[String]
         ),
         <div id="search-query">
             <div id="search-query-field-hack">
                 {tickerField.main & <input id="search-query-field"/>}
             </div>
-            {tickerField.errors}
             {submitStock.main & <input id="search-query-button"/>}
             {submitStock.errors}
-        </div>
+        </div> ++
+        <p>{tickerField.errors}</p>
     )
     
-    lazy val tickerField = StringField("")
+    lazy val tickerField = new StringField("")
 
     lazy val submitStock = Submit(queryForm, "Search") { stock =>
         try {
             changeQuote(stock)
         } catch {
-            case _: NoSuchStockException => throw BadInput(
-                "There is no stock with symbol " + stock.symbol + "."
-            )
+            case _: NoSuchStockException =>
+                logger.info("Failed to find " + stock)
+                
+                throw BadFieldInput(
+                    tickerField,
+                    "There is no stock with symbol " + stock.symbol + "."
+                )
         }
     }
 
