@@ -51,7 +51,9 @@ object TextTrader {
                 response.extraMsgs :+
                 {
                     response.status match {
-                        case OK          => "Success!"
+                        case OK          => "Success in " + action
+                        case StringResponse(str) => str
+                        case TransactionResponse(sa) => "need a bunch of magic."
                         case Failed(msg) => msg
                     }
                 }

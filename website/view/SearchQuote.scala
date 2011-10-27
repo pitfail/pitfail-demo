@@ -9,7 +9,7 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
 import scala.xml.{NodeSeq}
-import http._
+import http.{StringField => _, _}
 import js._
 import JsCmds._
 import JE._
@@ -21,8 +21,9 @@ import scala.math.{BigDecimal}
 import intform._
 
 import stockdata._
-import model.derivatives._
+import model.StockPriceSource
 import model.Schema.User
+import model.derivatives._
 import scalaz.Scalaz._
 
 import org.joda.time.Duration
@@ -31,13 +32,6 @@ import formats._
 
 class SearchQuote extends Page with Loggable
 {
-    // TODO: This should be a singleton object to take full advantage of
-    //       caching.
-    private val stockDatabase: StockDatabase = new CachedStockDatabase(
-        new YahooStockDatabase(new HttpQueryService("GET")),
-        // TODO: This timeout should be moved to a configuration file.
-        new Duration(1000 * 60 * 5)
-    )
     private var currentQuote: Option[Quote] = None;
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
 
@@ -64,7 +58,7 @@ class SearchQuote extends Page with Loggable
     }
 
     def changeQuote(stock: Stock): JsCmd = {
-        currentQuote = Some(stockDatabase.getQuotes(Iterable(stock)).head)
+        currentQuote = Some(StockPriceSource.getQuotes(Iterable(stock)).head)
         notifyAndRefresh(currentQuote, Focus("search-quantity"))
     }
 
@@ -81,27 +75,31 @@ class SearchQuote extends Page with Loggable
     lazy val queryForm: Form[Stock] = Form(
         (sym: String) => Stock(sym toUpperCase),
         (
-            tickerField
+            tickerField: Field[String]
         ),
         <div id="search-query">
             <div id="search-query-field-hack">
                 {tickerField.main & <input id="search-query-field"/>}
             </div>
-            {tickerField.errors}
             {submitStock.main & <input id="search-query-button"/>}
             {submitStock.errors}
-        </div>
+        </div> ++
+        <p>{tickerField.errors}</p>
     )
     
-    lazy val tickerField = StringField("")
+    lazy val tickerField = new StringField("")
 
     lazy val submitStock = Submit(queryForm, "Search") { stock =>
         try {
             changeQuote(stock)
         } catch {
-            case _: NoSuchStockException => throw BadInput(
-                "There is no stock with symbol " + stock.symbol + "."
-            )
+            case _: NoSuchStockException =>
+                logger.info("Failed to find " + stock)
+                
+                throw BadFieldInput(
+                    tickerField,
+                    "There is no stock with symbol " + stock.symbol + "."
+                )
         }
     }
 
@@ -117,7 +115,10 @@ class SearchQuote extends Page with Loggable
     def quoteBlockPresent(quote: Quote) = 
         <div id="search-quote" class="quote block">
             <h2>{quote.stock.symbol} - {quote.company}</h2>
-            <h3>{quote.price.$} {quote.info.percentChange.%()}</h3>
+            <h3>
+                <span class="quote-price">{quote.price.$}</span> -
+                <span class="quote-change">{quote.info.percentChange.%()}</span>
+            </h3>
             <dl> {
                 import quote.info._
                 (<dt>Open</dt>    <dd class="quote-open">{openPrice.$}</dd>

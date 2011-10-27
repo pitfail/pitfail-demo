@@ -11,7 +11,7 @@ object parser extends JavaTokenParsers {
 
   def parseAction(text: String) = action(text)
 
-  lazy val action = opt(tags) ~ ( buy | sell | sellAll ) ~ opt(tail) ^^ {
+  lazy val action = opt(tags) ~ ( buy | sell | sellAll | showPortfolio ) ~ opt(tail) ^^ {
     case _ ~ action ~ _ => action
   }
 
@@ -38,6 +38,12 @@ object parser extends JavaTokenParsers {
 
   lazy val stockVolume = dollarAmount ~ (opt("dollars") ~ "of") ~ ticker ^^ {
       case dollars ~ _ ~ ticker => StockDollars(ticker, Dollars(dollars))
+  }
+
+  lazy val showPortfolio = (
+      opt( ( "show" ~ "me" ~ "my" ) )
+      ~ ("""portfolio\S*"""r) ) ^^ {
+    case _ ~ _ => Portfolio
   }
 
   lazy val amount = decimalNumber ^^ {

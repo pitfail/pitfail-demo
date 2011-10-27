@@ -3,7 +3,8 @@ import scala.math.{BigDecimal}
 import java.math.{MathContext,RoundingMode}
 
 import org.squeryl
-import squeryl.customtypes.{BigDecimalField}
+import squeryl.customtypes.{BigDecimalField,IntField}
+import net.liftweb.common.Logger
 
 package object model {
 //
@@ -13,13 +14,22 @@ implicit def bigDecimalOps(b: BigDecimal) = new {
         val precision = b.precision - b.scale + decimals
         if (precision > 0) {
             val context = new MathContext(precision, mode)
-            b.round(context)
+            val out = b.round(context)
+            new Logger {
+                info("Rounding!!!!")
+                info(out)
+                info("%s" format out.precision)
+            }
+            out
         }
         else BigDecimal("0")
     }
 
     def floor: BigDecimal =
         round(0, RoundingMode.FLOOR)
+    
+    def evenCents: BigDecimal =
+        round(2, RoundingMode.FLOOR)
 }
 
 //
@@ -56,8 +66,9 @@ object Dollars {
 }
 
 case class DollarsField(dollars: BigDecimal)
-    extends BigDecimalField(dollars)
+    extends IntField((dollars*100).intValue)
 {
+    def this(cents: Int) = this(BigDecimal(cents)/100)
 }
 object DollarsField {
     implicit def fromField(d: DollarsField) = Dollars(d.dollars)

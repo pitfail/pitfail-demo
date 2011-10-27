@@ -6,7 +6,7 @@ import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util.{Helpers}
 import scala.xml.{NodeSeq}
-import http.{StringField => _, _}
+import http.{StringField => _,BooleanField => _, _}
 import js._
 import JsCmds._
 import JE._
@@ -60,7 +60,8 @@ case class DerivativeOrder(
     execDate:    DateTime,
     price:       Dollars,
     cash:        Dollars,
-    condition:   Condition
+    condition:   Condition,
+    early:       Boolean
 )
 
 class DerivativeBuilder extends Page with Loggable
@@ -100,7 +101,8 @@ class DerivativeBuilder extends Page with Loggable
             strike: Dollars,
             cashDir: Direction,
             stocks: Seq[StockInDerivative],
-            cond: Condition
+            cond: Condition,
+            early: Boolean
         ) =>
             DerivativeOrder(
                 recipient  = rec,
@@ -108,31 +110,31 @@ class DerivativeBuilder extends Page with Loggable
                 stocks     = stocks,
                 execDate   = exp,
                 cash       = cashDir.sign(strike),
-                condition  = cond
+                condition  = cond,
+                early      = early
             )
         ,
         (
             toField,
-            priceField,
-            expirationField,
-            strikePriceField,
+            priceField: Field[Dollars],
+            expirationField: Field[DateTime],
+            strikePriceField: Field[Dollars],
             cashDirField,
             stocksField,
-            conditionField
+            conditionField,
+            earlyField: Field[Boolean]
         ),
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
             
-            <p>Offer to enter a contract with {toField.main}</p>
-            
-            <p>for the price of ${priceField.main & <input
-            class="price"/>}.</p>
-            
-            <p>On the date {expirationField.main & <input class="date"/>} the
+            <p>Offer to enter a contract with </p>
+            <p>{toField.main}</p>
+            <p>for the price of ${priceField.main & <input class="price"/>}.On
+            the date {expirationField.main & <input class="date"/>} the
             following will be traded:</p> 
             
             <h3>Cash</h3>
-            <p>${strikePriceField.main & <input class="price"/>}) {cashDirField.main}</p>
+            <p>${strikePriceField.main & <input class="price"/>} {cashDirField.main}</p>
     
             <h3>Stocks</h3>
             
@@ -153,6 +155,8 @@ class DerivativeBuilder extends Page with Loggable
             </table>
             
             {conditionField.main}
+            <br/>
+            {earlyField.main}
 
             <div class="buttons">
                 {offerSubmit.main & <input/>}
@@ -167,28 +171,27 @@ class DerivativeBuilder extends Page with Loggable
             ConstField(OpenAuction)
         ),
         choices =>
-            <ul>
-                <li>{choices._1} User: {toUserField.main}</li>
+            <ul id="recipient">
+                <li>{choices._1 & <input checked="checked"/>} User: {toUserField.main}</li>
                 <li>{choices._2} Public Auction</li>
             </ul>
     )
 
-    // TODO: This should allow a public auction.
-    lazy val recipientField = UserField("")
+    lazy val recipientField = new UserField("") with FieldErrorRender
     lazy val toUserField = AggregateField(
         SpecificUser,
-        recipientField,
-        recipientField.main ++ recipientField.errors
+        recipientField: UserField,
+        recipientField.main
     )
 
     // Default to a week in the future.
     val tomorrow = DateTime.now().plusDays(7)
-    lazy val expirationField = DateTimeField(tomorrow, formatter)
+    lazy val expirationField = new DateTimeField(tomorrow, formatter) with FieldErrorRender
 
     // We can't really pick a good default
-    lazy val priceField = DollarsField("0.00")
+    lazy val priceField = new DollarsField("0.00") with FieldErrorRender
     // TODO: Default to current total volume
-    lazy val strikePriceField = DollarsField("")
+    lazy val strikePriceField = new DollarsField("") with FieldErrorRender
     lazy val cashDirField = DirectionField(ToSeller)
 
     lazy val stocksField: Field[Seq[StockInDerivative]] with FieldRender =
@@ -225,12 +228,11 @@ class DerivativeBuilder extends Page with Loggable
             <tr>
                 <td class="search-list-ticker">{quote.stock.symbol}</td>
                 <td class="search-list-company">{quote.company}</td>
-                <td class="search-list-shares">{sharesField.main} {sharesField.errors}</td>
+                <td class="search-list-shares">{sharesField.main}</td>
                 <td class="search-list-dir">{dirField.main}</td>
                 <td class="search-list-price">{quote.price.$}/sh</td>
                 <td class="search-list-buttons">
                     {remove.main & <input class="search-list-remove"/>}
-                    {remove.errors}
                 </td>
             </tr>
         )
@@ -271,8 +273,20 @@ class DerivativeBuilder extends Page with Loggable
         
         def main =
             <p>{useField.main} Provided that
-                {aField.main} &lt; {bField.main}
+                <div class="chain">
+                    <span class="field-annotation">Ticker sym or $</span>
+                    {aField.main}
+                </div>
+                <div class="chain">&lt;</div>
+                <div class="chain">
+                    <span class="field-annotation">Ticker sym or $</span>
+                    {bField.main}
+                </div>
             </p>
+    }
+    
+    lazy val earlyField = new BooleanField(true) {
+        override def main = <p>{super.main} May be exercised early?</p>
     }
     
     lazy val offerSubmit = Submit(form, "Offer")  { order =>
@@ -290,7 +304,7 @@ class DerivativeBuilder extends Page with Loggable
                 securities = secs,
                 exec       = order.execDate,
                 condition  = order.condition,
-                early      = true
+                early      = order.early
             )
             
             val user = currentUser
@@ -306,7 +320,7 @@ class DerivativeBuilder extends Page with Loggable
             clearAll()
         }
         catch {
-            case NotLoggedIn => throw BadInput("You're not logged in")
+            case NotLoggedIn => throw BadFieldInput(recipientField, "You're not logged in")
         }
     }
     

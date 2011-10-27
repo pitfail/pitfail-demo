@@ -8,6 +8,22 @@ li.event {
 /* ---------------------------------------------- */
 /* Forms */
 
+span.input-error {
+    position: relative;
+}
+
+span.input-error span.error {
+    position: absolute;
+    padding: 0.3em;
+    top: 0;
+    left: 110%;
+    width: 250px;
+    font-size: 10pt;
+    background: #FFEBE8;
+    border: 1px solid #DD3C10;
+    border-radius: 3px;
+}
+
 .inputError {
     font-size: small;
     color: #900;
@@ -20,6 +36,20 @@ li.event {
 
 .choices {
     list-style-type: none;
+}
+
+.field-annotation {
+    font-size: small;
+    color: #999;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+}
+
+.chain {
+    display: inline;
+    position: relative;
 }
 
 /* General Style */
@@ -68,12 +98,18 @@ table tfoot td {
 /* Header */
 #header {
     position: relative;
-    margin-bottom: 10px;
+    margin: 1em;
 }
 
 #header h1 {
     /* TODO: Shouldn't need !important here. */
     font-size: 3em !important;
+}
+
+#header h1 a {
+    font-style: normal;
+    color: black;
+    text-decoration: none;
 }
 
 #header #account {
@@ -220,12 +256,6 @@ p.price-input {
     font-size: 16pt;
 }
 
-p.price-input input {
-    width: 7em;
-    border: none;
-    border-bottom: 2px solid #000;
-}
-
 /* Derivative Builder */
 #search-derivative {
     padding: 0.5em;
@@ -237,19 +267,14 @@ p.price-input input {
     margin: 1em;
 }
 
-#search-derivative p input {
-    width: 8em;
-    text-align: center;
-    border: none;
-    border-bottom: 2px solid #000;
+#search-derivative .buttons {
+    margin-top: 2em;
 }
 
-#search-list tr input {
-    width: 8em;
-    text-align: center;
-    border: none;
-    border-bottom: 2px solid #000;
+#recipient li {
+    margin-left: 1em;
 }
+
 
 /* List in Derivative Builder */
 table#search-list {
@@ -337,6 +362,13 @@ table.assets {
 #offers table form {
     /* Hack to ignore all of the block elements that Lift inserts. */
     display: inline;
+}
+
+/* ------------------------------------------------------------------ */
+/* User Page */
+
+#user-page h2 {
+    font-size: 2em;
 }
 
 /* ------------------------------------------------------------------ */

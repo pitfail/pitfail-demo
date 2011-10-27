@@ -13,7 +13,15 @@
     </head>
     <body>
         <div id="header" class="container">
-            <h1 class="container">PitFail</h1>
+            <h1 class="container"><a href="/">PitFail</a></h1>
+            <div id="account">
+                <lift:LoginStatus.ifLoggedOut>
+                <a href="/twitter/login">Login</a>
+                </lift:LoginStatus.ifLoggedOut>
+                <lift:LoginStatus.ifLoggedIn>
+                Logged in as <lift:LoginStatus.username/> - <a href="/logout">Logout</a>
+                </lift:LoginStatus.ifLoggedIn>
+            </div>
         </div>
 
         <div id="body">

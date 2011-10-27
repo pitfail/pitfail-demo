@@ -48,7 +48,7 @@ class StockOrderer extends Page with Loggable
         lazy val form: Form[Dollars] = Form(
             identity[Dollars],
             (
-                volumeField
+                volumeField: Field[Dollars]
             ),
             <div class="block" id="search-buy">
                 <h2>Choose Volume</h2>
@@ -56,7 +56,7 @@ class StockOrderer extends Page with Loggable
                 converted to shares and will be added to your portfolio.</p>
 
                 <p class="price-input">
-                    ${volumeField.main & <input id="search-quantity"/>} {volumeField.errors}
+                    ${volumeField.main & <input id="search-quantity"/>}
                     <span class="error">{submitBuy.errors}{submitAdd.errors}</span>
                 </p>
 
@@ -68,10 +68,27 @@ class StockOrderer extends Page with Loggable
             </div>
         )
 
-        lazy val volumeField = DollarsField("1.00")
+        lazy val volumeField = new DollarsField("1.00") with FieldErrorRender
     
         lazy val submitBuy = Submit(form, "Buy Shares") { volume =>
-            buyStock(quote, volume)
+            import control.LoginManager._
+
+            try {
+                buyStock(quote, volume)
+            } catch {
+                case e: BadInput => throw BadFieldInput(volumeField, e.msg)
+
+                case NegativeVolume => throw BadFieldInput(volumeField,
+                    "You must buy more than $0.00 of a stock"
+                )
+
+                case NotEnoughCash(have, need) => throw BadFieldInput(volumeField,
+                    "You need at least %s you only have %s" format (need.$, have.$)
+                )
+
+                case NotLoggedIn =>
+                    throw BadInput("You must be logged in to buy stock")
+            }
         }
         
         lazy val submitAdd = Submit(form, "Add to Derivative") { v =>
@@ -91,25 +108,17 @@ class StockOrderer extends Page with Loggable
         
         this.logger.info("Buying %s of %s" format(dollars, quote))
 
-        try {
-            // TODO: Throw an exception if actualVolume is 0.
-            val shares = dollars /-/ quote.price
+        val shares = dollars /-/ quote.price
 
+        if (shares > Shares(0)) {
             currentUser.mainPortfolio.buyStock(quote.stock.symbol, shares)
             currentQuote = None
 
             comet.Portfolio ! comet.Refresh
             comet.News      ! comet.Refresh
             notifyAndRefresh(BuyShares(quote, dollars))
-        } catch {
-            case NegativeVolume => throw BadInput(
-                "You must buy more than $0.00 of a stock"
-            )
-            case NotEnoughCash(have, need) => throw BadInput(
-                "You need at least %s you only have %s" format (need.$, have.$)
-            )
-            case NotLoggedIn =>
-                throw BadInput("You must be logged in to buy stock")
+        } else {
+            throw BadInput("You must buy a minimum of one share.")
         }
     }
 

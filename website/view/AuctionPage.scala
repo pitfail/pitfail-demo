@@ -35,6 +35,7 @@ class AuctionPage extends Page with Loggable {
                 }
             
             goingPrice = auction.goingPrice
+            highBidder = auction.highBid map (_.by.owner)
             seller     = auction.offerer.owner
             deriv      = auction.derivative
         } yield  {
@@ -47,7 +48,12 @@ class AuctionPage extends Page with Loggable {
                             <td>Seller:</td>     <td>{UserLink(seller.username)}</td>
                         </tr>
                         <tr>
-                            <td>GoingPrice:</td> <td>{goingPrice.$}</td>
+                            <td>Going Price:</td> <td>{goingPrice.$}</td>
+                        </tr>
+                        <tr>
+                            <td>High Bidder:</td> <td>{
+                                highBidder map (b => UserLink(b.username)) getOrElse "-"
+                            }</td>
                         </tr>
                         <tr>
                             <td>Derivative:</td>

@@ -7,7 +7,7 @@ import squeryl.annotations.Column
 import squeryl.{KeyedEntity,
     SessionFactory, Session, Table}
 import squeryl.customtypes.{BigDecimalField,LongField}
-import squeryl.adapters.H2Adapter
+import squeryl.adapters.{H2Adapter,DerbyAdapter}
 import squeryl.dsl._
 import squeryl.dsl.ast._
 import links._
@@ -21,6 +21,16 @@ import net.liftweb.common.Loggable
 import scala.collection.JavaConversions._
 
 object Schema extends squeryl.Schema with Loggable {
+    val dbDriver = "org.h2.Driver"
+    val adapter  = new squeryl.adapters.H2Adapter
+    val dbUrl = "jdbc:h2:data;AUTO_SERVER=TRUE"
+    val dbFile   = "data.h2.db"
+    
+    // val dbDriver = "org.apache.derby.jdbc.EmbeddedDriver"
+    // val adapter  = new squeryl.adapters.DerbyAdapter
+    // val dbUrl    = "jdbc:derby:dataderby.db"
+    // val dbFile   = "dataderby.db"
+    
     implicit val users                 = table[User]
     implicit val portfolios            = table[Portfolio]
     implicit val stockAssets           = table[StockAsset]
@@ -61,9 +71,9 @@ object Schema extends squeryl.Schema with Loggable {
                     // TODO: Starting cash should be moved to a properties file.
                     val port = Portfolio(
                         owner = user,
-                        cash  = Dollars("20000.0")
+                        cash  = Dollars("200000.0")
                     )
-                    portfolios insert port
+                    port.insert()
                     
                     user.mainPortfolio = port
                     user.update()
@@ -233,17 +243,13 @@ object Schema extends squeryl.Schema with Loggable {
             }
         }
 
-        def sellStock(ticker: String, shares: Shares): Unit = trans {
-            val dollars = shares * stockPrice(ticker)
-            sellStock(ticker, shares, dollars)
-        }
-
         def sellStock(ticker: String, dollars: Dollars): Unit = trans {
             val shares = dollars ~/~ stockPrice(ticker)
-            sellStock(ticker, shares, dollars)
+            sellStock(ticker, shares)
         }
 
-        def sellStock(ticker: String, shares: Shares, dollars: Dollars): Unit = trans {
+        def sellStock(ticker: String, shares: Shares): Unit = trans {
+            val dollars = shares * stockPrice(ticker)
             val asset =
                 haveTicker(ticker) match {
                     case Some(asset) => asset
@@ -290,7 +296,8 @@ object Schema extends squeryl.Schema with Loggable {
                 subject = owner,
                 ticker  = ticker,
                 shares  = shares,
-                price   = price
+                price   = price,
+                dollars = dollars
             )
             asset.delete()
             this.update()
@@ -563,7 +570,7 @@ object Schema extends squeryl.Schema with Loggable {
         var portfolio:     Link[Portfolio]  = 0
         )
         extends KL
-    
+ 
     case class DerivativeAsset(
         var id:    Long            = 0,
         var peer:  Link[DerivativeLiability] = 0,
@@ -770,11 +777,11 @@ object Schema extends squeryl.Schema with Loggable {
     def now: Timestamp = new Timestamp(System.currentTimeMillis)
         
     def init() {
-        Class.forName("org.h2.Driver")
+        Class.forName(dbDriver)
         SessionFactory.concreteFactory = Some(() =>
             Session.create(
-                java.sql.DriverManager.getConnection("jdbc:h2:data;AUTO_SERVER=TRUE"),
-                new H2Adapter
+                java.sql.DriverManager.getConnection(dbUrl),
+                adapter
             )
         )
     }
@@ -788,7 +795,7 @@ object Schema extends squeryl.Schema with Loggable {
     }
     
     def clearDatabase() {
-        new java.io.File("data.h2.db").delete()
+        new java.io.File(dbFile).delete()
         createSchema()
         ensureUser("ellbur_k_a")
     }
