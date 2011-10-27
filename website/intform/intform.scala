@@ -85,8 +85,9 @@ trait BasicErrors {
                 Noop
             }
 
-            case e: Any => {
+            case e: Throwable => {
                 error = Some("An unknown error occurred (see log messages)")
+                new Logger { error("Error in form submission", e) }
                 throw e
             }
         }
