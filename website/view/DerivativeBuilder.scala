@@ -166,7 +166,7 @@ class DerivativeBuilder extends Page with Loggable
         ),
         choices =>
             <ul>
-                <li>{choices._1} User: {toUserField.main}</li>
+                <li>{choices._1 & <input checked="checked"/>} User: {toUserField.main}</li>
                 <li>{choices._2} Public Auction</li>
             </ul>
     )

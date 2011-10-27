@@ -126,7 +126,6 @@ class DateField(
             val now = new DateTime
             date = date.withYear(now.year.get)
             if (date isBefore now) date = date.plusYears(1)
-                
             OK(date)
         }
         catch {
@@ -151,9 +150,7 @@ class DateTimeField(initial: DateTime, formatter: DateTimeFormatter)
             OK(formatter.parseDateTime(text))
         }
         catch {
-            // TODO: Handle DateTime exceptions.
-            case _: NumberFormatException =>
-                Error("Should be a number")
+            case _ => Error("Date is in the incorrect format.")
         }
 }
 object DateTimeField {
