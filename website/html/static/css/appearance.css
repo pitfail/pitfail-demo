@@ -1,10 +1,6 @@
 /* ---------------------------------------------- */
 /* News */
 
-li.event {
-    font-size: 70%;
-}
-
 #right-container {
     color: #D8CBC4;
     background: #7F6152;
@@ -13,7 +9,6 @@ li.event {
 a {
     color: #FFF;
 }
-
 
 /* ---------------------------------------------- */
 /* Forms */
@@ -120,7 +115,7 @@ h1 {
     margin-bottom: -0.2em;
 }
 
-a {
+h1 a {
     font-style: normal;
     font-weight: bold;
     color: #FFF;
@@ -129,8 +124,10 @@ a {
 
 #account {
     position: absolute;
-    right: 0;
-    top: 1em;
+    right: 2em;
+    bottom: 1.5em;
+    color: #D8CBC4;
+    font-size: 11pt;
 }
 
 /* Search */
@@ -402,16 +399,23 @@ table.assets {
 
 /* ------------------------------------------------------------------ */
 /* Sidebar */
-
-#left-bar h3 {
-    text-align: left;
-    font-size: normal;
-    font-style: italic;
-    font-weight: normal;
-    
-    margin-top: 2em;
+.sidebar {
+    padding: 10px;
+    color: #D8CBC4;
+    background: #7F6152;
+    border-radius: 6px;
 }
 
-#left-bar li {
+.sidebar h3 {
+    color: #FFF;
+    font-weight: bold;
+    font-size: 14pt;
 }
 
+.news {
+    margin-top: 0.2em;
+    margin-bottom: 1em;
+    font-size: 10pt;
+    height: 9em;
+    overflow: hidden;
+}

@@ -25,18 +25,12 @@
             </div>
 
             <div id="center-outer">
-                <div id="center">
-                    <div id="center-container">
-                        <lift:bind name="content"/>
-                    </div>
+                <div id="center-container">
+                    <lift:bind name="content"/>
                 </div>
             </div>
-            <div id="right-outer">
-                <div id="right-bar">
-                    <div id="right-container">
-                        <lift:embed what="sidebar"/>
-                    </div>
-                </div>
+            <div id="right-outer" class="sidebar">
+                <lift:embed what="sidebar"/>
             </div>
             <span style="clear:both;"/>
         </div>
