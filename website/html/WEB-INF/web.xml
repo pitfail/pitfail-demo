@@ -6,16 +6,36 @@ PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
 
 <web-app>
     <servlet>
-        <servlet-name>TestServlet</servlet-name>
-        <servlet-class>servlets.TestServlet</servlet-class>
+        <servlet-name>BuyServlet</servlet-name>
+        <servlet-class>servlets.BuyServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>TestServlet</servlet-name>
-        <url-pattern>/servlet/testservlet</url-pattern>
+        <servlet-name>BuyServlet</servlet-name>
+        <url-pattern>/servlet/buyservlet</url-pattern>
     </servlet-mapping>
     
-    <filter>
+	<servlet>
+        <servlet-name>SellServlet</servlet-name>
+        <servlet-class>servlets.SellServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>SellServlet</servlet-name>
+        <url-pattern>/servlet/sellservlet</url-pattern>
+    </servlet-mapping>
+
+	<servlet>
+        <servlet-name>GetPortfolio</servlet-name>
+        <servlet-class>servlets.GetPortfolio</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>GetPortfolio</servlet-name>
+        <url-pattern>/servlet/getportfolio</url-pattern>
+    </servlet-mapping>
+
+	<filter>
         <filter-name>LiftFilter</filter-name>
         <display-name>Lift Filter</display-name>
         <description>The Filter that intercepts lift calls</description>
