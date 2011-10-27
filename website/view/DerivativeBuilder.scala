@@ -293,6 +293,7 @@ class DerivativeBuilder extends Page with Loggable
         import control.LoginManager._
         
         try {
+            val expires = (new DateTime).plusDays(3)
             val stocks = order.stocks map {
                 case StockInDerivative(quote, shares, dir) =>
                     SecStock(quote.stock.symbol, dir.sign(Shares(shares)))
@@ -309,13 +310,22 @@ class DerivativeBuilder extends Page with Loggable
             
             val user = currentUser
             order.recipient match {
-                case SpecificUser(recip) => user.offerDerivativeTo(recip, deriv, order.price)
-                case OpenAuction         => user.offerDerivativeAtAuction(deriv, order.price)
+                case SpecificUser(recip) =>
+                    user.offerDerivativeTo(recip, deriv, order.price)
+                    
+                case OpenAuction =>
+                    user.offerDerivativeAtAuction(
+                        deriv,
+                        order.price,
+                        expires
+                    )
             }
             
-            comet.Portfolio ! comet.Refresh
-            comet.News      ! comet.Refresh
-            comet.Offers    ! comet.Refresh
+            comet.Portfolio        ! comet.Refresh
+            comet.News             ! comet.Refresh
+            comet.Offers           ! comet.Refresh
+            comet.OutgoingOffers   ! comet.Refresh
+            comet.AuctionThumbnail ! comet.Refresh
             
             clearAll()
         }

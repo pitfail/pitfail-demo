@@ -33,6 +33,7 @@ object LoginManager {
         News             ! Refresh
         AuctionThumbnail ! Refresh
         Offers           ! Refresh
+        OutgoingOffers   ! Refresh
     }
     
     def logout() {

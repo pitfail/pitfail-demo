@@ -330,6 +330,7 @@ table.tchart {
     padding: 0;
     border: none;
     border-radius: 0;
+    border-collapse: collapse;
     background: transparent;
 }
 
@@ -350,6 +351,40 @@ table.assets {
     font-weight: bold;
 }
 
+.tchart-price {
+    color: #336;
+    font-size: 1.2em;
+    font-family: monospace;
+    text-align: right;
+}
+
+.tchart-dollars {
+    color: #090;
+    font-size: 1.5em;
+    font-family: monospace;
+    text-align: right;
+}
+
+.tchart-section {
+    background-color: #eee;
+}
+
+tr.tchart-total,
+tr.tchart-total td {
+    border-top: 2px solid #555;
+}
+
+tr.deriv-row,
+tr.deriv-row td {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+tr.deriv-header {
+    padding-top: 0.5em;
+}
 
 /* ------------------------------------------------------------------ */
 /* Pending Offers */

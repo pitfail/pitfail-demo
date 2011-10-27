@@ -56,7 +56,10 @@ case class Dollars(dollars: BigDecimal)
 
     def compare(other: Dollars) = dollars.compare(other.dollars)
 
-    def $:   String = "$%.2f" format (dollars doubleValue)
+    def $:   String = 
+        if (dollars < 0) "-$%.2f" format (-(dollars doubleValue))
+        else "$%.2f" format (dollars doubleValue)
+        
     def no$: String = "%.2f" format (dollars doubleValue)
 }
 object Dollars {
@@ -111,7 +114,9 @@ case class Price(price: BigDecimal) extends Ordered[Price] {
 
     def compare(other: Price) = price.compare(other.price)
 
-    def $: String = "$%.2f" format (price doubleValue)
+    def $:   String = 
+        if (price < 0) "-$%.2f" format (-(price doubleValue))
+        else "$%.2f" format (price doubleValue)
 }
 object Price {
     def apply(str: String): Price = Price(BigDecimal(str))
@@ -132,6 +137,7 @@ case class Scale(scale: BigDecimal) extends Ordered[Scale] {
     def *(price: Price): Price       = Price(scale * price.price)
     def *(shares: Shares): Shares    = Shares(scale * shares.shares)
     def *(other: Scale): Scale       = Scale(scale * other.scale)
+    def unary_- = copy(scale = -scale)
 
     def compare(other: Scale) = scale.compare(other.scale)
 

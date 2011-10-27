@@ -81,7 +81,7 @@ class Offers extends Refreshable with Loggable
                     <td>{deriv.securities toHumanString}</td>
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>
-                    <td>{"todo"}</td>
+                    <td>{o.price.$}</td>
                     <td>{acceptOffer(o.handle)} {declineOffer(o.handle)}</td>
                 </tr>
             }

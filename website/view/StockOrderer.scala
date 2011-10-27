@@ -68,7 +68,7 @@ class StockOrderer extends Page with Loggable
             </div>
         )
 
-        lazy val volumeField = new DollarsField("1.00") with FieldErrorRender
+        lazy val volumeField = new DollarsField("1000") with FieldErrorRender
     
         lazy val submitBuy = Submit(form, "Buy Shares") { volume =>
             import control.LoginManager._
