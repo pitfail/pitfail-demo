@@ -178,8 +178,15 @@ class DerivativeBuilder extends Page with Loggable
         ),
         choices =>
             <ul id="recipient">
-                <li>{choices._1 & <input checked="checked"/>} User: {toUserField.main}</li>
-                <li>{choices._2} Public Auction</li>
+                <li>
+                    {choices._1 & <input id="to-user" checked="checked"/>}
+                    <label for="to-user">User:</label>
+                    {toUserField.main & <input id="to-user-name"/>}
+                </li>
+                <li>
+                    {choices._2 & <input id="to-auction"/>}
+                    <label for="to-auction">Public Auction</label>
+                </li>
             </ul>
     )
 
@@ -195,8 +202,7 @@ class DerivativeBuilder extends Page with Loggable
     lazy val expirationField = new DateTimeField(tomorrow, formatter) with FieldErrorRender
 
     // We can't really pick a good default
-    lazy val priceField = new DollarsField("0.00") with FieldErrorRender
-    // TODO: Default to current total volume
+    lazy val priceField = new DollarsField("") with FieldErrorRender
     lazy val strikePriceField = new DollarsField("") with FieldErrorRender
     lazy val cashDirField = DirectionField(ToSeller)
 

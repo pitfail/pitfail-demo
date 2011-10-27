@@ -59,8 +59,8 @@ span.input-error span.error {
 
 /* General Style */
 html {
-    color: #413129;
-    font-family: sans-serif;
+    color: #000;
+    font-family: 'Helvetica', 'Arial', sans-serif;
     background: url('/static/images/woven.png') repeat;
 }
 
@@ -175,6 +175,7 @@ h1 a {
 }
 
 .block h2 {
+    color: #413129;
     font-size: 16pt;
     font-weight: bold;
     margin-bottom: 0.5em;
@@ -421,9 +422,7 @@ table.assets {
 }
 
 .tchart-price {
-    color: #336;
-    font-size: 1.2em;
-    font-family: monospace;
+    font-size: 10pt;
     text-align: right;
 }
 
