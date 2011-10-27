@@ -206,18 +206,25 @@ object Schema extends squeryl.Schema with Loggable {
         )
         extends KL with Loggable
     {
-        def buyStock(ticker: String, dollars: Dollars): StockAsset =
-            buyStock(ticker, dollars /-/ stockPrice(ticker))
-        
-        def buyStock(ticker: String, shares: Shares): StockAsset = trans {
+        def buyStock(ticker: String, dollars: Dollars): (StockAsset, Dollars) = {
+            val price = stockPrice(ticker)
+            val shares = dollars /-/ price
+            val actual_dollars = shares * price
+            buyStock(ticker, shares, actual_dollars, price)
+        }
+
+        def buyStock(ticker: String, shares: Shares): (StockAsset, Dollars) = {
             val price = stockPrice(ticker)
             val dollars = shares * price
-            
+            buyStock(ticker, shares, dollars, price)
+        }
+
+        def buyStock(ticker: String, shares: Shares, dollars: Dollars, price: Price): (StockAsset, Dollars) = trans {
             if (cash < dollars) throw NotEnoughCash(cash, dollars)
             if (shares < Shares(0)) throw NegativeVolume
-            
+
             val asset = stockAsset(ticker)
-            
+
             asset.shares = (asset.shares: Shares) + shares
             cash -= dollars
 
@@ -231,7 +238,7 @@ object Schema extends squeryl.Schema with Loggable {
             )
             this.update()
             asset.update()
-            asset
+            (asset, dollars)
         }
 
         /* TODO: finish all liquidation */
@@ -286,13 +293,20 @@ object Schema extends squeryl.Schema with Loggable {
             }
         }
 
-        def sellStock(ticker: String, dollars: Dollars): Unit = trans {
-            val shares = dollars ~/~ stockPrice(ticker)
-            sellStock(ticker, shares)
+        def sellStock(ticker: String, dollars: Dollars): Unit = {
+            val price  = stockPrice(ticker)
+            val shares = dollars ~/~ price
+            sellStock(ticker, shares, dollars, price)
         }
 
-        def sellStock(ticker: String, shares: Shares): Unit = trans {
-            val dollars = shares * stockPrice(ticker)
+
+        def sellStock(ticker: String, shares: Shares): Unit = {
+            val price  = stockPrice(ticker)
+            val dollars = shares * price
+            sellStock(ticker, shares, dollars, price)
+        }
+
+        def sellStock(ticker: String, shares: Shares, dollars: Dollars, price :Price): Unit = trans {
             val asset =
                 haveTicker(ticker) match {
                     case Some(asset) => asset
@@ -314,7 +328,7 @@ object Schema extends squeryl.Schema with Loggable {
                 subject = owner,
                 ticker  = ticker,
                 shares  = shares,
-                price   = stockPrice(ticker),
+                price   = price,
                 dollars = dollars
             )
             this.update()

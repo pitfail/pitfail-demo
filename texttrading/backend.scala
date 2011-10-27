@@ -27,8 +27,7 @@ class PitFailBackend extends Backend {
 
     def welcomeGreeting(name: String) = Seq(
         """|Welcome to PitFail, a made-up money trader.
-           |Try it out:
-           |%s
+           |Try it out: %s
            |"""
         .stripMargin
         .format(commandIntro)
