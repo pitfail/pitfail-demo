@@ -7,7 +7,7 @@ import squeryl.annotations.Column
 import squeryl.{KeyedEntity,
     SessionFactory, Session, Table}
 import squeryl.customtypes.{BigDecimalField,LongField}
-import squeryl.adapters.H2Adapter
+import squeryl.adapters.{H2Adapter,DerbyAdapter}
 import squeryl.dsl._
 import squeryl.dsl.ast._
 import links._
@@ -21,6 +21,16 @@ import net.liftweb.common.Loggable
 import scala.collection.JavaConversions._
 
 object Schema extends squeryl.Schema with Loggable {
+    val dbDriver = "org.h2.Driver"
+    val adapter  = new squeryl.adapters.H2Adapter
+    val dbUrl = "jdbc:h2:data;AUTO_SERVER=TRUE"
+    val dbFile   = "data.h2.db"
+    
+    // val dbDriver = "org.apache.derby.jdbc.EmbeddedDriver"
+    // val adapter  = new squeryl.adapters.DerbyAdapter
+    // val dbUrl    = "jdbc:derby:dataderby.db"
+    // val dbFile   = "dataderby.db"
+    
     implicit val users                 = table[User]
     implicit val portfolios            = table[Portfolio]
     implicit val stockAssets           = table[StockAsset]
@@ -61,9 +71,9 @@ object Schema extends squeryl.Schema with Loggable {
                     // TODO: Starting cash should be moved to a properties file.
                     val port = Portfolio(
                         owner = user,
-                        cash  = Dollars("2000.0")
+                        cash  = Dollars("200000.0")
                     )
-                    portfolios insert port
+                    port.insert()
                     
                     user.mainPortfolio = port
                     user.update()
@@ -191,22 +201,30 @@ object Schema extends squeryl.Schema with Loggable {
     case class Portfolio(
         var id:            Long             = 0,
         var cash:          DollarsField     = Dollars(0),
-        var owner:         Link[User]       = 0
+        var owner:         Link[User]       = 0,
+        var loan:          DollarsField     = Dollars(0)
         )
         extends KL with Loggable
     {
-        def buyStock(ticker: String, dollars: Dollars): StockAsset =
-            buyStock(ticker, dollars /-/ stockPrice(ticker))
-        
-        def buyStock(ticker: String, shares: Shares): StockAsset = trans {
+        def buyStock(ticker: String, dollars: Dollars): (StockAsset, Dollars) = {
+            val price = stockPrice(ticker)
+            val shares = dollars /-/ price
+            val actual_dollars = shares * price
+            buyStock(ticker, shares, actual_dollars, price)
+        }
+
+        def buyStock(ticker: String, shares: Shares): (StockAsset, Dollars) = {
             val price = stockPrice(ticker)
             val dollars = shares * price
-            
+            buyStock(ticker, shares, dollars, price)
+        }
+
+        def buyStock(ticker: String, shares: Shares, dollars: Dollars, price: Price): (StockAsset, Dollars) = trans {
             if (cash < dollars) throw NotEnoughCash(cash, dollars)
             if (shares < Shares(0)) throw NegativeVolume
-            
+
             val asset = stockAsset(ticker)
-            
+
             asset.shares = (asset.shares: Shares) + shares
             cash -= dollars
 
@@ -220,10 +238,52 @@ object Schema extends squeryl.Schema with Loggable {
             )
             this.update()
             asset.update()
-            
-            asset
+            (asset, dollars)
         }
-        
+
+        /* TODO: finish all liquidation */
+        /* Removes all assets and liabilities from a portfolio.
+         * returns the final total.
+         */
+        def liquidate() : Dollars = trans {
+            val sa_dollars = (myStockAssets foldLeft Dollars(0)) { (accum, asset) =>
+                val a = asset.shares * stockPrice(asset.ticker) + accum
+                asset.delete()
+                a
+            }
+
+            val da_dollars = (myDerivativeAssets foldLeft Dollars(0)) { (accum, deriv) =>
+                /* FIXME: */
+                Dollars(3.14)
+            }
+
+            val dl_dollars = (myDerivativeLiabilities foldLeft Dollars(0)) { (accum, deriv) =>
+                /* FIXME: */
+                Dollars(2.11)
+            }
+
+            val cash_dollars = cash
+            cash = Dollars(0)
+            val loan_dollars = loan
+            loan = Dollars(0)
+
+            val value = sa_dollars + cash_dollars + da_dollars - loan_dollars - dl_dollars
+
+            value
+        }
+
+        def changeLoan(amount: Dollars) = trans {
+            if (amount < Dollars(0)) {
+                if (cash < amount)
+                    throw NotEnoughCash(cash, amount)
+            }
+
+            /* This does not work as +=, scalac tells me that
+             * in "loan += amount" amount must be a String. */
+            loan = amount + loan
+            cash = amount + cash
+        }
+
         def stockAsset(ticker: String): StockAsset = trans {
             // Look to see if we can lump this in with an
             // existing asset
@@ -233,17 +293,20 @@ object Schema extends squeryl.Schema with Loggable {
             }
         }
 
-        def sellStock(ticker: String, shares: Shares): Unit = trans {
-            val dollars = shares * stockPrice(ticker)
-            sellStock(ticker, shares, dollars)
+        def sellStock(ticker: String, dollars: Dollars): Unit = {
+            val price  = stockPrice(ticker)
+            val shares = dollars ~/~ price
+            sellStock(ticker, shares, dollars, price)
         }
 
-        def sellStock(ticker: String, dollars: Dollars): Unit = trans {
-            val shares = dollars ~/~ stockPrice(ticker)
-            sellStock(ticker, shares, dollars)
+
+        def sellStock(ticker: String, shares: Shares): Unit = {
+            val price  = stockPrice(ticker)
+            val dollars = shares * price
+            sellStock(ticker, shares, dollars, price)
         }
 
-        def sellStock(ticker: String, shares: Shares, dollars: Dollars): Unit = trans {
+        def sellStock(ticker: String, shares: Shares, dollars: Dollars, price :Price): Unit = trans {
             val asset =
                 haveTicker(ticker) match {
                     case Some(asset) => asset
@@ -265,7 +328,7 @@ object Schema extends squeryl.Schema with Loggable {
                 subject = owner,
                 ticker  = ticker,
                 shares  = shares,
-                price   = stockPrice(ticker),
+                price   = price,
                 dollars = dollars
             )
             this.update()
@@ -290,7 +353,8 @@ object Schema extends squeryl.Schema with Loggable {
                 subject = owner,
                 ticker  = ticker,
                 shares  = shares,
-                price   = price
+                price   = price,
+                dollars = dollars
             )
             asset.delete()
             this.update()
@@ -373,7 +437,7 @@ object Schema extends squeryl.Schema with Loggable {
             val asset =
                 DerivativeAsset(
                     peer  = liab,
-                    scale = Scale("1.0"),
+                    scale = Scale(1.0),
                     owner = this
                 )
             asset.insert()
@@ -428,12 +492,11 @@ object Schema extends squeryl.Schema with Loggable {
         
         def loseCash(amt: Dollars): Dollars = trans {
             val (actual, nextCash) =
-                if (amt > cash) (cash:Dollars, Dollars("0"))
+                if (amt > cash) (cash:Dollars, Dollars(0))
                 else (amt, (cash:Dollars) - amt)
-            
+
             cash = nextCash
             this.update()
-            
             actual
         }
         
@@ -506,7 +569,7 @@ object Schema extends squeryl.Schema with Loggable {
             myAsset match {
                 case None =>
                     val newLiab = replicateLiability(origLiab, scale)
-                    (newLiab, Scale("1.0")) :: Nil
+                    (newLiab, Scale(1.0)) :: Nil
                     
                 case Some(myAsset) =>
                     if (myAsset.scale >= scale) {
@@ -517,7 +580,7 @@ object Schema extends squeryl.Schema with Loggable {
                     else {
                         val newLiab = replicateLiability(origLiab, scale - myAsset.scale)
                         myAsset.delete()
-                        (origLiab, myAsset.scale: Scale) :: (newLiab, Scale("1.0")) :: Nil
+                        (origLiab, myAsset.scale: Scale) :: (newLiab, Scale(1.0)) :: Nil
                     }
             }
         }
@@ -622,7 +685,7 @@ object Schema extends squeryl.Schema with Loggable {
         var id:         Long            = 0,
         var name:       String          = UUID.randomUUID.toString.substring(0, 5),
         var mode:       Array[Byte]     = Array(),
-        var remaining:  ScaleField      = Scale("1.0"),
+        var remaining:  ScaleField      = Scale(1.0),
         var exec:       Timestamp       = now,
         var owner:      Link[Portfolio] = 0
         )
@@ -657,7 +720,7 @@ object Schema extends squeryl.Schema with Loggable {
         @Column("sender")
         var from:   Link[Portfolio] = 0,
         var to:     Link[Portfolio] = 0,
-        var price:  DollarsField    = Dollars("0.0")
+        var price:  DollarsField    = Dollars(0)
         )
         extends KL
     {
@@ -668,7 +731,7 @@ object Schema extends squeryl.Schema with Loggable {
         var id:       Long             = 0,
         var mode:     Array[Byte]      = Array(),
         var offerer:  Link[Portfolio]  = 0,
-        var price:    DollarsField     = Dollars("0.0"),
+        var price:    DollarsField     = Dollars(0),
         var when:     Timestamp        = now,
         var expires:  Timestamp        = now
         )
@@ -726,7 +789,7 @@ object Schema extends squeryl.Schema with Loggable {
             val asset =
                 DerivativeAsset(
                     peer  = liab,
-                    scale = Scale("1.0"),
+                    scale = Scale(1.0),
                     owner = bid.by
                 )
             asset.insert()
@@ -748,7 +811,7 @@ object Schema extends squeryl.Schema with Loggable {
         var id:    Long                = 0,
         var offer: Link[AuctionOffer]  = 0,
         var by:    Link[Portfolio]     = 0,
-        var price: DollarsField        = Dollars("0")
+        var price: DollarsField        = Dollars(0)
         )
         extends KL
     {
@@ -770,11 +833,11 @@ object Schema extends squeryl.Schema with Loggable {
     def now: Timestamp = new Timestamp(System.currentTimeMillis)
         
     def init() {
-        Class.forName("org.h2.Driver")
+        Class.forName(dbDriver)
         SessionFactory.concreteFactory = Some(() =>
             Session.create(
-                java.sql.DriverManager.getConnection("jdbc:h2:data;AUTO_SERVER=TRUE"),
-                new H2Adapter
+                java.sql.DriverManager.getConnection(dbUrl),
+                adapter
             )
         )
     }
@@ -788,7 +851,7 @@ object Schema extends squeryl.Schema with Loggable {
     }
     
     def clearDatabase() {
-        new java.io.File("data.h2.db").delete()
+        new java.io.File(dbFile).delete()
         createSchema()
         ensureUser("ellbur_k_a")
     }

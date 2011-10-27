@@ -3,7 +3,8 @@ import scala.math.{BigDecimal}
 import java.math.{MathContext,RoundingMode}
 
 import org.squeryl
-import squeryl.customtypes.{BigDecimalField}
+import squeryl.customtypes.{BigDecimalField,IntField}
+import net.liftweb.common.Logger
 
 package object model {
 //
@@ -13,7 +14,13 @@ implicit def bigDecimalOps(b: BigDecimal) = new {
         val precision = b.precision - b.scale + decimals
         if (precision > 0) {
             val context = new MathContext(precision, mode)
-            b.round(context)
+            val out = b.round(context)
+            new Logger {
+                info("Rounding!!!!")
+                info(out)
+                info("%s" format out.precision)
+            }
+            out
         }
         else BigDecimal("0")
     }
@@ -52,23 +59,24 @@ case class Dollars(dollars: BigDecimal)
     def $:   String = "$%.2f" format (dollars doubleValue)
     def no$: String = "%.2f" format (dollars doubleValue)
 }
+
 object Dollars {
     def apply(str: String): Dollars = Dollars(BigDecimal(str))
-    
     implicit def toField(d: Dollars) = DollarsField(d.dollars)
 }
 
 case class DollarsField(dollars: BigDecimal)
-    extends BigDecimalField(dollars)
+    extends IntField((dollars*100).intValue)
 {
+    def this(cents: Int) = this(BigDecimal(cents)/100)
 }
 object DollarsField {
-    implicit def fromField(d: DollarsField) = Dollars(d.dollars.evenCents)
+    implicit def fromField(d: DollarsField) : Dollars = Dollars(d.dollars)
 }
 
 case class Shares(shares: BigDecimal) extends Ordered[Shares] {
     def this(str: String) = this(BigDecimal(str))
-    
+
     def +(other: Shares) = Shares(shares + other.shares)
     def -(other: Shares) = Shares(shares - other.shares)
     def *(price: Price)  = Dollars(price.price * shares)
