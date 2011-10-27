@@ -60,8 +60,7 @@ object TextTrader {
 
                         /* This is only returned by a buy event */
                         case TransactionResponse(sa, dollars) =>
-                            "Bought " + (sa.shares: model.Shares).toString() + " of " + sa.ticker +
-                            " for a total of " + dollars.$
+                            "Bought " + sa.###(dollars)
                         case Failed(msg) => msg
                     }
                 }

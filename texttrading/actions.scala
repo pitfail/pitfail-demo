@@ -24,13 +24,14 @@ case class Request(username: String, action: Action)
 
 sealed abstract class Action
 case object Portfolio extends Action
+case class GetInfo(ticker: String) extends Action
 case class Buy(asset: StockAsset) extends Action
 case class Sell(asset: StockAsset) extends Action {
-    override def toString = "Sold " + asset
+    override def toString = "Sold " + asset + "."
 }
 
 case class SellAll(ticker: String) extends Action {
-    override def toString = "Sold all of " + ticker
+    override def toString = "Sold all of " + ticker + "."
 }
 
 sealed abstract class StockAsset

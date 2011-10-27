@@ -20,6 +20,7 @@ class PitFailBackend extends Backend {
             case Sell(asset)     => WithUser(user).sell(asset)
             case SellAll(ticker) => WithUser(user).sellAll(ticker)
             case Portfolio       => WithUser(user).portfolio
+            case GetInfo(a)      => WithUser(user).stockInfo(a)
         }
 
         Response(status, greeting)
@@ -66,7 +67,18 @@ case class WithUser(user: User) {
         )
         catch failed
 
-    def portfolio = StringResponse("This should be your portfolio, sorry.")
+    def portfolio = StringResponse(
+            user.mainPortfolio.cash.$ + " in cash," +
+            (( user.mainPortfolio.myStockAssets map (_.ticker) ) mkString (", "))
+        )
+
+    def stockInfo(ticker: String) = StringResponse(
+        user.mainPortfolio.haveTicker(ticker) match {
+            case Some(a) => "Have " + a
+            case None    => "You don't have any " + ticker + "."
+        }
+    )
+
 
     def sellAll(ticker: String) =
         try {
