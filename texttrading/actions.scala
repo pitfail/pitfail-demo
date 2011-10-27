@@ -37,7 +37,7 @@ case class Response(status: Status, extraMsgs: Seq[String])
 
 sealed abstract class Status
 case object OK extends Status
-case class TransactionResponse(sa :Schema.StockAsset) extends Status
+case class TransactionResponse(sa :(Schema.StockAsset, Dollars)) extends Status
 case class StringResponse(msg: String) extends Status
 case class Failed(msg: String) extends Status
 

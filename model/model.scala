@@ -62,9 +62,9 @@ case class Dollars(dollars: BigDecimal)
         
     def no$: String = "%.2f" format (dollars doubleValue)
 }
+
 object Dollars {
     def apply(str: String): Dollars = Dollars(BigDecimal(str))
-    
     implicit def toField(d: Dollars) = DollarsField(d.dollars)
 }
 
@@ -74,12 +74,12 @@ case class DollarsField(dollars: BigDecimal)
     def this(cents: Int) = this(BigDecimal(cents)/100)
 }
 object DollarsField {
-    implicit def fromField(d: DollarsField) = Dollars(d.dollars)
+    implicit def fromField(d: DollarsField) : Dollars = Dollars(d.dollars)
 }
 
 case class Shares(shares: BigDecimal) extends Ordered[Shares] {
     def this(str: String) = this(BigDecimal(str))
-    
+
     def +(other: Shares) = Shares(shares + other.shares)
     def -(other: Shares) = Shares(shares - other.shares)
     def *(price: Price)  = Dollars(price.price * shares)

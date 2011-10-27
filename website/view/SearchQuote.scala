@@ -109,7 +109,7 @@ class SearchQuote extends Page with Loggable
     def quoteBlock =
         currentQuote match {
             case Some(quote) => quoteBlockPresent(quote)
-            case None        => Nil
+            case None        => quoteBlockAbsent
         }
 
     def quoteBlockPresent(quote: Quote) = 
@@ -127,6 +127,15 @@ class SearchQuote extends Page with Loggable
                 <dt>Dividend</dt> <dd class="quote-dividend">{dividendShare.$}</dd>)
             } </dl>
             {quote |> quoteGraph}
+        </div>
+
+    def quoteBlockAbsent =
+        <div id="search-instructions" class="block">
+            <ol>
+                <li>Enter a ticker symbol into the search field above.</li>
+                <li>Choose an amount of stock to purchase or add to a derivative.</li>
+                <li>Login and manage your portfolio!</li>
+            </ol>
         </div>
 
     def quoteGraph(quote: Quote) =

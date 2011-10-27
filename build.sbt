@@ -37,7 +37,8 @@ includeFilter in Test in unmanagedSources <<=
 
 scalacOptions ++= Seq(
     "-deprecation",
-    "-unchecked"
+    "-unchecked",
+    "-explaintypes"
 )
 
 // For scalaz
@@ -56,7 +57,7 @@ libraryDependencies ++= Seq(
     "net.liftweb"      %% "lift-json-ext"       % "2.4-M4",
     "org.mortbay.jetty" % "jetty"             % "6.1.22" % "jetty",
     "org.slf4j"        % "slf4j-simple"         % "1.6.1",
-    //"com.h2database"   % "h2"                   % "1.3.159",
+    "com.h2database"   % "h2"                   % "1.3.159",
     "org.xerial"       % "sqlite-jdbc"          % "3.7.2",
     "org.apache.derby" % "derby"                % "10.8.1.2",
     "org.squeryl"      %% "squeryl"             % "0.9.4",
@@ -70,3 +71,4 @@ libraryDependencies ++= Seq(
 // For the Jetty server
 seq(com.github.siasia.WebPlugin.webSettings: _*)
 
+// vim:syn=scala

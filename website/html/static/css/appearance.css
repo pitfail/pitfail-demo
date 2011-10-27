@@ -5,6 +5,16 @@ li.event {
     font-size: 70%;
 }
 
+#left-container {
+    color: #D8CBC4;
+    background: #7F6152;
+}
+
+a {
+    color: #FFF;
+}
+
+
 /* ---------------------------------------------- */
 /* Forms */
 
@@ -54,7 +64,14 @@ span.input-error span.error {
 
 /* General Style */
 html {
+    color: #413129;
     font-family: sans-serif;
+    background: url('/static/images/woven.png') repeat;
+}
+
+body {
+    width: 100%;
+    height: 100%;
 }
 
 #center-container {
@@ -87,7 +104,7 @@ table thead td {
 }
 
 table tbody {
-    background: #FFF;
+    background: #D8CBC4;
 }
 
 table tfoot th,
@@ -99,6 +116,7 @@ table tfoot td {
 #header {
     position: relative;
     margin: 1em;
+    color: #D8CBC4;
 }
 
 #header h1 {
@@ -108,7 +126,8 @@ table tfoot td {
 
 #header h1 a {
     font-style: normal;
-    color: black;
+    font-weight: bold;
+    color: inherit;
     text-decoration: none;
 }
 
@@ -153,7 +172,7 @@ table tfoot td {
 
 /* */
 .block {
-    border: 1px solid #333;
+    background: #D8CBC4; 
     border-radius: 6px;
     padding: 0.5em;
     margin-top: 0.5em;
@@ -175,10 +194,24 @@ form.block {
     text-align: center;
 }
 
+/* Instructions */
+#search-instructions {
+    height: 110px;
+    font-size: 18pt;
+    line-height: 1.5em;
+    cursor: default;
+}
+
+#search-instructions ol {
+    padding-top: 0.1em;
+    padding-left: 50px;
+    list-style-type: decimal;
+}
 /* Quote */
 #search-quote {
     position: relative;
     padding: 0.2em;
+    cursor: default;
 }
 
 .quote {
@@ -302,7 +335,7 @@ table#search-list thead td {
 }
 
 table#search-list tbody {
-    background: #FFF;
+    background: #D8CBC4;
 }
 
 table#search-list tfoot th,
