@@ -38,7 +38,8 @@ includeFilter in Test in unmanagedSources <<=
 
 scalacOptions ++= Seq(
     "-deprecation",
-    "-unchecked"
+    "-unchecked",
+    "-explaintypes"
 )
 
 // For scalaz
