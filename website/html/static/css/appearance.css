@@ -78,6 +78,7 @@ table {
     padding: 0;
     margin: 1em  5%;
     background: #EEE;
+    background: #7F6152;
     border: 1px solid #000;
     border-collapse: separate;
     border-radius: 6px;
@@ -88,6 +89,7 @@ table td {
 }
 
 table th {
+    color: #FFF;
     font-weight: bold;
     padding: 0.3em;
 }
@@ -112,7 +114,7 @@ h1 {
     font-size: 5em;
     font-family: 'Cuprum', sans-serif;
     margin-top: 0.5em;
-    margin-bottom: -0.2em;
+    margin-bottom: -0.25em;
 }
 
 h1 a {
@@ -135,6 +137,7 @@ h1 a {
     position: relative;
     width: 100%;
     height: 52px;
+    margin-bottom: -0.15em;
 }
 
 
@@ -177,6 +180,13 @@ h1 a {
     margin-bottom: 0.5em;
 }
 
+.block a,
+.block a:active,
+.block a:hover,
+.block a:visited {
+    color: #000;
+}
+
 form.block {
     border: none;
     padding: 0;
@@ -190,8 +200,9 @@ form.block {
 /* Instructions */
 #search-instructions {
     height: 110px;
-    font-size: 18pt;
+    font-size: 16pt;
     line-height: 1.5em;
+    padding: 0.4em;
     cursor: default;
 }
 
@@ -388,6 +399,10 @@ table.tchart {
     background: transparent;
 }
 
+table.tchart th {
+    color: #000;
+}
+
 table.tchart tbody {
     background: transparent;
 }
@@ -414,7 +429,7 @@ table.assets {
 
 .tchart-dollars {
     color: #090;
-    font-size: 1.5em;
+    font-size: 1.2em;
     font-family: monospace;
     text-align: right;
 }

@@ -63,7 +63,7 @@ class TChart(
                         <tr class="tchart-section">
                             <th colspan="2">Stocks</th>
                             <th class="tchart-dollars">{stocksTotal.$}</th>
-                            <th colspan="1"/>
+                            <th/>
                         </tr>
                         {stocks}
 
@@ -77,17 +77,17 @@ class TChart(
                         <tr class="tchart-section tchart-total">
                             <th colspan="2">Total</th>
                             <th class="tchart-dollars">{total.$}</th>
-                            <th colspan="1"/>
+                            <th/>
                         </tr>
                     </tbody>
                 </table>
                 
                 <table class="tchart liabilities">
                     <thead>
-                        <tr><th colspan="3"><h3>Liabilities</h3></th></tr>
+                        <tr><th colspan="4"><h3>Liabilities</h3></th></tr>
                     </thead>
                     <tbody>
-                        <tr><th colspan="3">Derivatives</th></tr>
+                        <tr><th colspan="4">Derivatives</th></tr>
                         {derivativeLiabilities}
                     </tbody>
                 </table>
@@ -105,7 +105,7 @@ class TChart(
             
         lazy val stocks = {
             if (myStockAssets isEmpty)
-                <tr><td colspan="3">none</td></tr>
+                <tr><td colspan="4">none</td></tr>
             else
                 myStockAssets map { (asset) =>
                     val sellButton =
@@ -126,7 +126,7 @@ class TChart(
         
         lazy val derivativeAssets =
             if (myDerivativeAssets isEmpty)
-                <tr><td colspan="3">none</td></tr>
+                <tr><td colspan="4">none</td></tr>
             else
                 myDerivativeAssets map { (asset) =>
                     val deriv = asset.derivative
@@ -145,25 +145,25 @@ class TChart(
                     </tr>
                     <tr class="deriv-row">
                         <td>From:</td>
-                        <td>{UserLink(liab.owner.owner.username)}</td>
+                        <td colspan="3">{UserLink(liab.owner.owner.username)}</td>
                     </tr>
                     <tr class="deriv-row">
                         <td>On:</td>
-                        <td>{deriv.exec toNearbyString}</td>
+                        <td colspan="3">{deriv.exec toNearbyString}</td>
                     </tr>
                     <tr class="deriv-row">
                         <td>If:</td>
-                        <td>{deriv.condition toHumanString}</td>
+                        <td colspan="3">{deriv.condition toHumanString}</td>
                     </tr>
                 }
         
         lazy val derivativeLiabilities =
             if (myDerivativeLiabilities isEmpty)
-                <tr><td colspan="3">none</td></tr>
+                <tr><td colspan="4">none</td></tr>
             else
                 myDerivativeLiabilities map { (liability) =>
                     <tr>
-                        <td colspan="2">{liability.derivative toHumanString}</td>
+                        <td colspan="3">{liability.derivative toHumanString}</td>
                         <td>{
                             if (liability.remaining < Scale("1"))
                                 liability.remaining.%()
