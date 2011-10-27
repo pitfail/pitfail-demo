@@ -19,6 +19,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
+
 
 
 /**
@@ -39,21 +43,27 @@ public class GetPortfolio extends HttpServlet {
 		PrintWriter out = response.getWriter();			
 		
 		String userId = request.getParameter("userid");
+        List<String> assetList = new ArrayList<String>();
 
-		int count = 0;
        
 		try {
 			
-				User user = ensureUser(userId);
+				User user = ensureUser("ellbur_k_a");
 				Portfolio port = user.mainPortfolio().fetch(portfolios());
 				BigDecimal cash = port.cash().dollars();
 				out.printf("Cash = %s", cash);
 				
 				for (StockAsset asset : port.getMyStockAssets()) {
-						count ++;
-						out.printf("Asset: %s\n", asset);
+//						assetList.add(asset.shares());
+						out.printf("Asset: %s\n", asset.ticker());
 				}
-				out.printf("\n %d",count);
+				
+//				Iterator Count = Count.iterator();
+//			while(i != size){
+//		        	String value=(String)Count.next();
+//					out.printf("Asset : %s\n",assetList.get(i));
+//			    }
+
 
 
 
