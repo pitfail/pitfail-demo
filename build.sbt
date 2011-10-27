@@ -19,11 +19,13 @@ includeFilter in Compile in unmanagedSources <<=
 	(includeFilter in unmanagedSources, baseDirectory) { (ff, baseDir) =>
 		ff && new SimpleFileFilter({ file =>
 			val path = Path.relativizeFile(baseDir, file).get.getPath
-			val test = "test" + java.io.File.separator
-			! path.contains(test) && ! path.startsWith("project")
+			(
+                   ! path.contains("test" + java.io.File.separator)
+                && ! path.contains("static" + java.io.File.separator)
+                && ! path.startsWith("project")
+            )
 		})
 	}
-
 
 includeFilter in Test in unmanagedSources <<=
 	(includeFilter in unmanagedSources, baseDirectory) { (ff, baseDir) =>

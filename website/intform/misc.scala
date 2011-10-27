@@ -3,7 +3,7 @@ import up._
 import HList._
 import KList._
 import ~>._
-import scala.xml.NodeSeq
+import scala.xml._
 
 package object intform {
     
@@ -37,6 +37,12 @@ package object intform {
         case t1:+:t2:+:t3:+:t4:+:t5:+:t6:+:t7:+:HNil => m(t1, t2, t3, t4, t5, t6, t7)
     }
     
+    implicit def hlistify8[T1,T2,T3,T4,T5,T6,T7,T8,A](m: (T1,T2,T3,T4,T5,T6,T7,T8) => A):
+        (T1:+:T2:+:T3:+:T4:+:T5:+:T6:+:T7:+:T8:+:HNil) => A =
+    {
+        case t1:+:t2:+:t3:+:t4:+:t5:+:t6:+:t7:+:t8:+:HNil => m(t1, t2, t3, t4, t5, t6, t7, t8)
+    }
+    
     // -----------------------------------------------------------------
     
     implicit def tuplist1[A](a: A) = Seq[A](a)
@@ -60,19 +66,41 @@ package object intform {
     implicit def klist7[K[+_],A,B,C,D,E,F,G](t: (K[A],K[B],K[C],K[D],K[E],K[F],K[G])):
         KList[K,A:+:B:+:C:+:D:+:E:+:F:+:G:+:HNil] =
         t._1:^:t._2:^:t._3:^:t._4:^:t._5:^:t._6:^:t._7:^:KNil
+    implicit def klist8[K[+_],A,B,C,D,E,F,G,H](t: (K[A],K[B],K[C],K[D],K[E],K[F],K[G],K[H])):
+        KList[K,A:+:B:+:C:+:D:+:E:+:F:+:G:+:H:+:HNil] =
+        t._1:^:t._2:^:t._3:^:t._4:^:t._5:^:t._6:^:t._7:^:t._8:^:KNil
     
     // -----------------------------------------------------------------
     
+    implicit def nodeSeqPlus(n: Seq[Node]): NodeSeqPlus = NodeSeqPlus(n)
+    implicit def nodeSeqPlus(n: NodeSeq): NodeSeqPlus = NodeSeqPlus(n)
+    implicit def nodePlus(n: Node): NodePlus = NodePlus(n)
+    
+    case class NodeSeqPlus(n: NodeSeq) {
+        def leafMap(f: Elem => Elem): NodeSeq = n map (_ leafMap f)
+    }
+    
+    case class NodePlus(n: Node) {
+        def leafMap(f: Elem => Elem): Node = n match {
+            case e: Elem =>
+                f(Elem(
+                    prefix     = e.prefix,
+                    label      = e.label,
+                    attributes = e.attributes,
+                    scope      = e.scope,
+                    child      = e.child leafMap f :_*
+                ))
+            case x@_ => x
+        }
+    }
+    
     class MergeAttr(n1: NodeSeq) {
-        def &(n2: NodeSeq) = {
-            import scala.xml.{Attribute,Elem,Node,NodeSeq,Null,Text}
-
-            assert (n1.length == 1)
-            assert (n2.length == 1)
-
-            n1.head match {
-                case e1: Elem =>
-                    e1 % n2.head.attributes
+        def &(n2: Node) = {
+            n1 leafMap { e =>
+                if (e.label == n2.label)
+                    e % n2.head.attributes
+                else
+                    e
             }
         }
     }

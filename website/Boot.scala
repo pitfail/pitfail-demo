@@ -30,6 +30,7 @@ class Boot extends Loggable {
         
         // Look at this example:
         // https://gist.github.com/166669
+        LiftRules.passNotFoundToChain = true
         LiftRules.liftRequest.append {
             case req
                 if (req.path.partPath match {
@@ -46,7 +47,8 @@ class Boot extends Loggable {
             Menu.i("Home") / "index",
             Menu.i("Test") / "testform",
             Menu.i("Schema") / "schema",
-            Menu.i("...") / "auction"
+            Menu.i("1") / "auction",
+            Menu.i("2") / "user"
         )
         setSiteMap(SiteMap(entries:_*))
 
@@ -60,7 +62,7 @@ class Boot extends Loggable {
         DBSetup()
 
         // Runs every 30 minutes
-        control.DerivativeChecker.run()
+        control.Checker.run()
     }
 }
 

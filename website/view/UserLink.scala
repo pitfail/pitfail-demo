@@ -14,6 +14,6 @@ import Helpers._
 
 object UserLink {
     def apply(username: String) =
-        <a href={"/user/%s" format username}>{username}</a>
+        <a href={"/user?name=%s" format username}>{username}</a>
 }
 
