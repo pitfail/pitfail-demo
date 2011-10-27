@@ -295,13 +295,41 @@ p.price-input {
     line-height: 1.5em;
 }
 
-
+input.blank {
+    width: 8em;
+    text-align: center;
+    border: none;
+    border-bottom: 2px solid #000;
+    background: transparent;
+}
+ 
 #search-derivative table {
     margin: 1em;
 }
 
 #search-derivative .buttons {
     margin-top: 2em;
+}
+
+#search-derivative h3 {
+    font-style: normal;
+    font-size: 1em;
+    margin-top: 1em;
+}
+
+.description {
+    font-style: italic;
+    font-size: 0.85em;
+}
+
+.cash-container: {
+    margin-top: 2em;
+    padding-top: 1em;
+}
+
+.cash-header: {
+    font-style: normal;
+    font-size: 1em;
 }
 
 #recipient li {

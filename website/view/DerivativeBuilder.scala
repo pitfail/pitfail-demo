@@ -127,18 +127,24 @@ class DerivativeBuilder extends Page with Loggable
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
             
-            <p>Offer to enter a contract with </p>
+            <p><span class="description">Offer to enter a contract with </span></p>
             <p>{toField.main}</p>
-            <p>for the price of ${priceField.main & <input class="price"/>}.On
-            the date {expirationField.main & <input class="date"/>} the
-            following will be traded:</p> 
             
-            <h3>Cash</h3>
-            <p>${strikePriceField.main & <input class="price"/>} {cashDirField.main}</p>
+            <p><span class="description">For the price of</span> ${priceField.main &
+            <input class="price blank"/>}.</p>
+            
+            <p><span class="description">On the date</span>
+            {expirationField.main & <input class="date blank"/>} <span
+            class="description">the following will be traded:</span></p>
+            
+            <p class="cash-container">
+            <span class="cash-header">Cash: </span>
+            <span>${strikePriceField.main & <input class="price blank"/>} {cashDirField.main}</span>
+            </p>
     
             <h3>Stocks</h3>
             
-            <table class="block" id="search-list">
+            <table class="derivative-stock-list">
                 <thead>
                     <tr>
                         <th class="search-list-ticker">Ticker</th>
@@ -181,7 +187,7 @@ class DerivativeBuilder extends Page with Loggable
     lazy val toUserField = AggregateField(
         SpecificUser,
         recipientField: UserField,
-        recipientField.main
+        <span>{recipientField.main & <input class="blank"/>}</span>
     )
 
     // Default to a week in the future.
@@ -228,7 +234,7 @@ class DerivativeBuilder extends Page with Loggable
             <tr>
                 <td class="search-list-ticker">{quote.stock.symbol}</td>
                 <td class="search-list-company">{quote.company}</td>
-                <td class="search-list-shares">{sharesField.main}</td>
+                <td class="search-list-shares">{sharesField.main & <input class="blank"/>}</td>
                 <td class="search-list-dir">{dirField.main}</td>
                 <td class="search-list-price">{quote.price.$}/sh</td>
                 <td class="search-list-buttons">
@@ -272,21 +278,22 @@ class DerivativeBuilder extends Page with Loggable
         }
         
         def main =
-            <p>{useField.main} Provided that
+            <p>{useField.main} <span class="description">Provided that</span>
                 <div class="chain">
                     <span class="field-annotation">Ticker sym or $</span>
-                    {aField.main}
+                    {aField.main & <input class="blank"/>}
                 </div>
                 <div class="chain">&lt;</div>
                 <div class="chain">
                     <span class="field-annotation">Ticker sym or $</span>
-                    {bField.main}
+                    {bField.main & <input class="blank"/>}
                 </div>
             </p>
     }
     
     lazy val earlyField = new BooleanField(true) {
-        override def main = <p>{super.main} May be exercised early?</p>
+        override def main = <p>{super.main} <span class="description">May be
+            exercised early?</span></p>
     }
     
     lazy val offerSubmit = Submit(form, "Offer")  { order =>

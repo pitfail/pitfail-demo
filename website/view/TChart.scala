@@ -68,7 +68,9 @@ class TChart(
                         {stocks}
 
                         <tr class="tchart-section">
-                            <th colspan="4">Derivatives</th>
+                            <th colspan="2">Derivatives</th>
+                            <th class="tchart-dollars">**{derivsTotal.$}</th>
+                            <th/>
                         </tr>
                         {derivativeAssets}
                         
@@ -94,8 +96,12 @@ class TChart(
 
         lazy val stocksTotal = (myStockAssets map stockDollars)
             .foldLeft(Dollars("0"))(_ + _)
+        
+        lazy val derivsTotal = (myDerivativeAssets
+                map (_.derivative) map (_.spotValue))
+            .foldLeft(Dollars("0"))(_ + _)
             
-        lazy val total = stocksTotal + myCashAmount
+        lazy val total = stocksTotal + myCashAmount + derivsTotal
             
         lazy val stocks = {
             if (myStockAssets isEmpty)
@@ -129,7 +135,7 @@ class TChart(
                     <tr class="deriv-row deriv-header">
                         <td>Secs:</td>
                         <td>{deriv.securities toHumanString}</td>
-                        <td/>
+                        <td class="tchart-dollars">**{deriv.spotValue.$}</td>
                         <td class="buttons">{
                             if (modifiable && asset.derivative.early)
                                 execDerivative(asset)
