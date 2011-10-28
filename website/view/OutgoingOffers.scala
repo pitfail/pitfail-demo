@@ -27,17 +27,24 @@ class OutgoingOffers extends Refreshable with Loggable {
             
             lazy val all =
                 <div id="outgoing-offers" class="block">
-                    <h2>You have offers at auction:</h2>
+                    <h2>Offers at Auction</h2>
+                    <p>You have offered one or more derivatives to an open
+                    auction. Monitor their current prices below and use the
+                    "close" button to confirm the sale.</p>
                     
                     <table class="boxy">
-                        <tr>
-                            <th></th>
-                            <th>Going Price</th>
-                            <th>Bid by</th>
-                            <th>Expires on</th>
-                            <th>Offering</th>
-                        </tr>
-                        {offerRows}
+                        <thead>
+                            <tr>
+                                <th/>
+                                <th>Going Price</th>
+                                <th>Bid by</th>
+                                <th>Expires on</th>
+                                <th>Offering</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {offerRows}
+                        </tbody>
                     </table>
                 </div>
             
