@@ -33,8 +33,12 @@ class AuctionThumbnail extends Refreshable
             
             <li><a href={url}>from {from} for {price}</a></li>
         }
-        
-        <ul>{items}</ul>
+
+        if (items nonEmpty) {
+            <ul>{items}</ul>
+        } else {
+            <ul class="no_items">[none]</ul>
+        }
     }
 }
 

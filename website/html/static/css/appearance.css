@@ -73,6 +73,10 @@ body {
     padding-right: 20px;
 }
 
+.no_items {
+    font-size: 75%;
+}
+
 table {
     width: 90%;
     padding: 0;
