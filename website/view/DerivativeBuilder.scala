@@ -129,20 +129,21 @@ class DerivativeBuilder extends Page with Loggable
             <p>Begin by selecting whether you want to sell this derivative to a
             specific user or to a public auction. If you choose to sell the
             derivative in a public auction you will have the opportunity to
-            withdrawl the auction at any time. If you sell the derivative to a
+            close the auction at any time. If you sell the derivative to a
             specific user they will have one day to accept or decline the
             offer.</p>
 
             <div id="derivative-recipient" class="builder-block">
                 <h3>Buyer</h3>
-                <p>{toField.main}</p>
+                {toField.main}
+                <dl>
+                    <dt><label for="derivative-money-now">Price</label></dt>
+                    <dd>${priceField.main & <input id="derivative-money-now" class="price blank"/>}</dd>
+                </dl>
             </div>
             <div id="derivative-money" class="builder-block">
                 <h3>Cash Transfers</h3>
                 <dl>
-                    <dt><label for="derivative-money-now">Current Price</label></dt>
-                    <dd>${priceField.main & <input id="derivative-money-now" class="price blank"/>}</dd>
-
                     <dt><label for="derivative-money-then">Strike Price</label></dt>
                     <dd>
                         ${strikePriceField.main & <input id="derivative-money-then" class="price blank"/>}
@@ -152,7 +153,7 @@ class DerivativeBuilder extends Page with Loggable
             </div>
             <div style="clear:both;"/>
             <div id="derivative-expiration" class="builder-block">
-                <h3>Expiration</h3>
+                <h3>Exercise Date</h3>
                 <dl>
                     <dt><label for="derivative-expiration">Date:</label></dt>
                     <dd>{expirationField.main & <input id="derivative-expiraiton" class="date blank"/>}</dd>
