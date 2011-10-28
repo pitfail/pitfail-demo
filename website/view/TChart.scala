@@ -119,7 +119,7 @@ class TChart(
                 myStockAssets map { (asset) =>
                     <tr>
                         <td class="tchart-ticker">{asset.ticker}</td>
-                        <td class="tchart-price">({mehPrice(asset)}/sh)</td>
+                        <td class="tchart-price">({asset.shares.###() + " @ " + mehPrice(asset)})</td>
                         <td class="buttons">
                         {
                         if (modifiable)

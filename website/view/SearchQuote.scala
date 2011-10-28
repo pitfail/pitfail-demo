@@ -26,6 +26,8 @@ import model.Schema.User
 import model.derivatives._
 import scalaz.Scalaz._
 
+import control.LoginManager.loggedIn_?
+
 import org.joda.time.Duration
 
 import formats._
@@ -133,7 +135,10 @@ class SearchQuote extends Page with Loggable
     def quoteBlockInstructions =
         <div id="search-instructions" class="block">
             <ol>
-                <li>Click "Login" on the top right to login via Twitter</li>
+                {
+                    if (!loggedIn_?)
+                        <li>Click "Login" on the top right to login via Twitter</li>
+                }
                 <li>Enter a ticker symbol into the search field above (Example: "MSFT")</li>
                 <li>Choose an amount of stock to buy (simple) or add to a derivative (more advanced).</li>
                 <li>Manage your portfolio!</li>
