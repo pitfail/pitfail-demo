@@ -150,6 +150,7 @@ class DerivativeBuilder extends Page with Loggable
                     </dd>
                 </dl>
             </div>
+            <div style="clear:both;"/>
             <div id="derivative-expiration" class="builder-block">
                 <h3>Expiration</h3>
                 <dl>
@@ -163,17 +164,8 @@ class DerivativeBuilder extends Page with Loggable
                 <h3>Conditions</h3>
                 {conditionField.main}
             </div>
+            <div style="clear:both;"/>
 
-            <p style="clear:both;">Once a user has purchased your derivative or
-            accepted your offer you will receive the price of the derivative in
-            cash. By default the derivative will be an <em>American option</em>
-            that allows the user to exercise the derivative at any point up to
-            its expiration. In either case, the derivative will be automatically
-            executed on the expiration date.</p>
-
-            <p>If the conditions are met the strike price and following stocks
-            will be traded in the directions specified:</p>
-            
             <h3>Stocks</h3>
             <table class="derivative-stock-list">
                 <thead>
@@ -190,7 +182,7 @@ class DerivativeBuilder extends Page with Loggable
                     {stocksField.main}
                 </tbody>
             </table>
-            
+
             <div class="buttons">
                 {offerSubmit.main & <input/>}
                 {cancelSubmit.main & <input/>}
@@ -267,7 +259,7 @@ class DerivativeBuilder extends Page with Loggable
             <tr>
                 <td class="search-list-ticker">{quote.stock.symbol}</td>
                 <td class="search-list-company">{quote.company}</td>
-                <td class="search-list-shares">{sharesField.main & <input class="blank"/>}</td>
+                <td class="search-list-shares">{sharesField.main & <input class="blank shares"/>}</td>
                 <td class="search-list-dir">{dirField.main}</td>
                 <td class="search-list-price">{quote.price.$}/sh</td>
                 <td class="search-list-buttons">
@@ -311,15 +303,19 @@ class DerivativeBuilder extends Page with Loggable
         }
         
         def main =
-            <p>{useField.main} <span class="description">Provided that</span>
+            <p>
+                {useField.main & <input id="condition-en"/>}
                 <div class="chain">
-                    <span class="field-annotation">Ticker sym or $</span>
-                    {aField.main & <input class="blank condition"/>}
+                    <label for="condition-en" class="description">Provided that</label>
+                </div>
+                <div class="chain">
+                    <label for="condition1" class="field-annotation">ticker or $</label>
+                    {aField.main & <input id="condition1" class="blank condition"/>}
                 </div>
                 <div class="chain">&lt;</div>
                 <div class="chain">
-                    <span class="field-annotation">Ticker sym or $</span>
-                    {bField.main & <input class="blank condition"/>}
+                    <label for="condition2" class="field-annotation">ticker or $</label>
+                    {bField.main & <input id="condition2" class="blank condition"/>}
                 </div>
             </p>
     }
@@ -354,11 +350,8 @@ class DerivativeBuilder extends Page with Loggable
                 case SpecificUser(recip) =>
                     user.offerDerivativeTo(recip, deriv, order.price)
                     
-                case OpenAuction =>
-                    user.offerDerivativeAtAuction(
-                        deriv,
-                        order.price,
-                        expires
+                case OpenAuction => user.offerDerivativeAtAuction( deriv,
+                order.price, expires
                     )
             }
             

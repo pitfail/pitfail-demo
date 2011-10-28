@@ -332,10 +332,17 @@ input.blank {
 
 .builder-block dl dd {
     float: right;
+    width: 210px;
 }
 
-input#derivative-money-then {
-    width: 6em;
+#derivative-money input {
+    width: 100px;
+    text-align: left;
+}
+
+input#derivative-money-then,
+input#derivative-money-now {
+    width: 70px;
 }
 
 input#derivative-early {
@@ -348,47 +355,19 @@ input#derivative-early {
 
 
 /* List in Derivative Builder */
-table#search-list {
-    width: 90%;
-    padding: 0;
-    margin: 1em  5%;
-    background: #EEE;
-    border: 1px solid #000;
-    border-collapse: separate;
-}
-
-table#search-list td {
-    padding: 0.3em;
-}
-
-table#search-list th {
-    font-weight: bold;
-    padding: 0.3em;
-}
-
-table#search-list thead th,
-table#search-list thead td {
-    text-align: center;
-    border-bottom: 1px solid #000;
-}
-
-table#search-list tbody {
-    background: #EEE;
-}
-
-table#search-list tfoot th,
-table#search-list tfoot td {
-    border-top: 1px solid #000;
-}
-
-table#search-list .search-list-ticker,
-table#search-list .search-list-company,
-table#search-list .search-list-price,
-table#search-list .search-list-shares,
-table#search-list .search-list-dir,
-
 table tfoot th {
     border-right: 1px solid #000;
+}
+
+table.derivative-stock-list {
+}
+
+td.search-list-shares {
+    text-align: center;
+}
+
+td.search-list-shares input {
+    width: 4em;
 }
 
 
