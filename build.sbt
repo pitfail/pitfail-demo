@@ -65,7 +65,8 @@ libraryDependencies ++= Seq(
     "junit"            % "junit"                % "4.5"    % "test->default",
     "org.scala-tools.testing" %% "specs"      % "1.6.9"  % "test->default",
     "org.scalatest"    %% "scalatest"           % "1.6.1"  % "test",
-    "javax.servlet"    %  "servlet-api"        % "2.4"
+    "javax.servlet"    %  "servlet-api"        % "2.4",
+    "com.google.code.gson" % "gson"             % "1.7.1"
 )
 
 // For the Jetty server

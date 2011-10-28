@@ -32,19 +32,22 @@ class SearchPipeline extends Page with Loggable
     val derivativeForm = new DerivativeBuilder()
 
     searchForm.listen(_ match {
-        case Some(quote) => actionForm.changeQuote(quote) 
-        case None        => actionForm.clearQuote
+        case Some(quote) =>
+            actionForm.changeQuote(quote) 
+
+        case None =>
+            actionForm.clearQuote & Focus("search-query-field")
     })
 
     actionForm.listen(_ match {
         case _: NoOrder =>
-            searchForm.clearQuote
+            searchForm.clearQuote & Focus("search-query-field")
 
         case _: BuyShares =>
-            searchForm.clearQuote
+            searchForm.clearQuote & Focus("search-query-field")
 
         case order: AddToDerivative => {
-            searchForm.clearQuote & derivativeForm.addOrder(order)
+            searchForm.clearQuote & derivativeForm.addOrder(order) & Focus("to-user-name")
         }
     })
 

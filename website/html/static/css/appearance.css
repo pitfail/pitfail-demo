@@ -59,8 +59,8 @@ span.input-error span.error {
 
 /* General Style */
 html {
-    color: #413129;
-    font-family: sans-serif;
+    color: #000;
+    font-family: 'Helvetica', 'Arial', sans-serif;
     background: url('/static/images/woven.png') repeat;
 }
 
@@ -73,37 +73,46 @@ body {
     padding-right: 20px;
 }
 
-table {
+.no_items {
+    font-size: 9pt;
+}
+
+table.boxy {
     width: 90%;
     padding: 0;
     margin: 1em  5%;
     background: #EEE;
+    background: #7F6152;
     border: 1px solid #000;
     border-collapse: separate;
     border-radius: 6px;
 }
 
-table td {
+table.boxy td {
     padding: 0.3em;
 }
 
-table th {
+table.boxy th {
     font-weight: bold;
     padding: 0.3em;
 }
 
-table thead th,
-table thead td {
+table.boxy thead th,
+table.boxy thead td {
     text-align: center;
     border-bottom: 1px solid #000;
 }
 
-table tbody {
+table.boxy thead {
+    color: #FFF;
+}
+
+table.boxy tbody {
     background: #D8CBC4;
 }
 
-table tfoot th,
-table tfoot td {
+table.boxy tfoot th,
+table.boxy tfoot td {
     border-top: 1px solid #000;
 }
 
@@ -112,7 +121,7 @@ h1 {
     font-size: 5em;
     font-family: 'Cuprum', sans-serif;
     margin-top: 0.5em;
-    margin-bottom: -0.2em;
+    margin-bottom: -0.25em;
 }
 
 h1 a {
@@ -135,6 +144,7 @@ h1 a {
     position: relative;
     width: 100%;
     height: 52px;
+    margin-bottom: -0.15em;
 }
 
 
@@ -172,9 +182,17 @@ h1 a {
 }
 
 .block h2 {
+    color: #413129;
     font-size: 16pt;
     font-weight: bold;
     margin-bottom: 0.5em;
+}
+
+.block a,
+.block a:active,
+.block a:hover,
+.block a:visited {
+    color: #000;
 }
 
 form.block {
@@ -190,8 +208,9 @@ form.block {
 /* Instructions */
 #search-instructions {
     height: 110px;
-    font-size: 18pt;
+    font-size: 16pt;
     line-height: 1.5em;
+    padding: 0.4em;
     cursor: default;
 }
 
@@ -296,131 +315,183 @@ input.blank {
     background: transparent;
 }
  
-#search-derivative table {
-    margin: 1em;
-}
-
-#search-derivative .buttons {
-    margin-top: 2em;
-}
-
 #search-derivative h3 {
-    font-style: normal;
-    font-size: 1em;
+    color: #413129;
+    font-weight: bold;
+    font-size: 1.1em;
     margin-top: 1em;
 }
 
-.description {
-    font-style: italic;
-    font-size: 0.85em;
+#search-derivative p {
+    margin-top: 1em;
 }
 
-.cash-container: {
-    margin-top: 2em;
-    padding-top: 1em;
+.builder-block {
+    width: 50%;
+    float: left;
 }
 
-.cash-header: {
-    font-style: normal;
-    font-size: 1em;
+.builder-block dl dt {
+    width: 120px;
+    float: left;
+    clear: both;
 }
 
-#recipient li {
-    margin-left: 1em;
+.builder-block dl dd {
+    float: right;
+    width: 210px;
+}
+
+#derivative-money input {
+    width: 100px;
+    text-align: left;
+}
+
+input#derivative-money-then,
+input#derivative-money-now {
+    width: 70px;
+}
+
+input#derivative-early {
+    margin-right: 2em;
+}
+
+#derivative-conditions input.condition {
+    width: 6em;
 }
 
 
 /* List in Derivative Builder */
-table#search-list {
-    width: 90%;
-    padding: 0;
-    margin: 1em  5%;
-    background: #EEE;
-    border: 1px solid #000;
-    border-collapse: separate;
-}
-
-table#search-list td {
-    padding: 0.3em;
-}
-
-table#search-list th {
-    font-weight: bold;
-    padding: 0.3em;
-}
-
-table#search-list thead th,
-table#search-list thead td {
-    text-align: center;
-    border-bottom: 1px solid #000;
-}
-
-table#search-list tbody {
-    background: #D8CBC4;
-}
-
-table#search-list tfoot th,
-table#search-list tfoot td {
-    border-top: 1px solid #000;
-}
-
-table#search-list .search-list-ticker,
-table#search-list .search-list-company,
-table#search-list .search-list-price,
-table#search-list .search-list-shares,
-table#search-list .search-list-dir,
-
 table tfoot th {
     border-right: 1px solid #000;
+}
+
+table.derivative-stock-list {
+}
+
+td.search-list-shares {
+    text-align: center;
+}
+
+td.search-list-shares input {
+    width: 4em;
 }
 
 
 /* ------------------------------------------------------------------ */
 /* Portfolio */
-table.tchart {
-    width: 50%;
-    float: left;
-    margin: 0;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    border-collapse: collapse;
-    background: transparent;
+
+.portfolio-block {
+    background: #fff;
+    padding-left: 0;
+    padding-right: 0;
 }
 
-table.tchart tbody {
+.portfolio-block h2 {
+    margin-left: 0.5em;
+}
+
+table.tchart {
+    background:
+}
+
+table#portfolio,
+table#portfolio tr,
+table#portfolio td {
+    vertical-align: top;
+}
+
+table#portfolio {
+    position: relative;
+    left: 0%;
+    width: 100%;
+}
+
+#portfolio a {
+    color: #99a;
+}
+
+.tchart-half {
+    position: relative;
+}
+
+table.tchart th {
+    color: #000;
+}
+
+table.tchart {
+    position: relative;
+    left: 0%;
+    width: 100%;
+}
+
+table#portfolio,
+table.tchart {
     background: transparent;
 }
 
 table.tchart .buttons {
     text-align: right;
+    padding-left: 0.5em;
 }
 
-table.assets {
+tr.tchart-top,
+tr.tchart-top td {
+    border-bottom: 1px solid #000;
+}
+
+col.tchart-left1  { width: 25%; }
+col.tchart-left2  { width: 25%; }
+col.tchart-right1 { width: 25%; }
+col.tchart-right2 { width: 25%; }
+
+col.tchart-left2 {
     border-right: 1px solid #000;
-    margin-right: -1px;
+}
+
+td.tchart-top {
+    text-align: center;
+}
+
+td.tchart-half {
+    text-align: left;
+    vertical-align: top;
 }
 
 .tchart h3 {
     font-weight: bold;
 }
 
+.tchart td {
+    padding-left:   2px;
+    padding-right:  4px;
+    padding-top:    4px;
+    padding-bottom: 2px;
+}
+
+.tchart-ticker {
+    font-size: 0.95em;
+    font-color: #333;
+}
+
 .tchart-price {
-    color: #336;
-    font-size: 1.2em;
-    font-family: monospace;
+    font-size: 10pt;
     text-align: right;
 }
 
 .tchart-dollars {
     color: #090;
-    font-size: 1.5em;
+    font-size: 1.2em;
     font-family: monospace;
     text-align: right;
 }
 
 .tchart-section {
     background-color: #eee;
+}
+
+.tchart-section {
+    font-weight: bold;
 }
 
 tr.tchart-total,

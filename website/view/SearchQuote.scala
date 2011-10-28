@@ -89,7 +89,7 @@ class SearchQuote extends Page with Loggable
     
     lazy val tickerField = new StringField("")
 
-    lazy val submitStock = Submit(queryForm, "Search") { stock =>
+    lazy val submitStock = Submit(queryForm, "Go") { stock =>
         try {
             changeQuote(stock)
         } catch {
@@ -129,6 +129,7 @@ class SearchQuote extends Page with Loggable
             {quote |> quoteGraph}
         </div>
 
+    /* TODO: if we are on a user page, put the username here. */
     def quoteBlockAbsent =
         <div id="search-instructions" class="block">
             <ol>

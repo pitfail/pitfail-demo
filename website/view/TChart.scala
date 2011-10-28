@@ -46,55 +46,64 @@ class TChart(
         val myDerivativeLiabilities = port.myDerivativeLiabilities
         
         lazy val result =
-            <div id="portfolio" class="block container portfolio">
-                <h2>Portfolio</h2>
-                <table class="tchart assets">
-                    <thead>
-                        <tr><th colspan="4"><h3>Assets</h3></th></tr>
-                    </thead>
-                    <tbody>
-                        <tr class="tchart-section">
-                            <th>Cash</th>
-                            <td/>
-                            <td class="tchart-dollars">{myCashAmount.$}</td>
-                            <td/>
-                        </tr>
+            <table id="portfolio" class="block container portfolio">
+                <col class="tchart-left1"/>
+                <col class="tchart-left2"/>
+                <col class="tchart-right1"/>
+                <col class="tchart-right2"/>
+                <tr class="tchart-top">
+                    <td colspan="2" class="tchart-top">Assets</td>
+                    <td colspan="2" class="tchart-top">Liabilities</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="tchart-half">{assetsTable}</td>
+                    <td colspan="2" class="tchart-half">{liabilitiesTable}</td>
+                </tr>
+                <tr class="tchart-section tchart-total tchart">
+                    <td>Total:</td>
+                    <td class="tchart-dollars">{total.$}</td>
+                    <td>Total:</td>
+                    <td class="tchart-dollars">{liabilitiesTotal.$}</td>
+                </tr>
+                <tr class="tchart">
+                    <td class="tchart-section tchart-total">
+                        Equity:
+                    </td>
+                    <td class="tchart-section tchart-total tchart-dollars">
+                    {(total - liabilitiesTotal).$}
+                    </td>
+                </tr>
+            </table>
 
-                        <tr class="tchart-section">
-                            <th colspan="2">Stocks</th>
-                            <th class="tchart-dollars">{stocksTotal.$}</th>
-                            <th colspan="1"/>
-                        </tr>
-                        {stocks}
+        lazy val assetsTable =
+            <table class="tchart assets">
+                <tr class="tchart-section">
+                    <td>Cash</td>
+                    <td/>
+                    <td/>
+                    <td class="tchart-dollars">{myCashAmount.$}</td>
+                </tr>
 
-                        <tr class="tchart-section">
-                            <th colspan="2">Derivatives</th>
-                            <th class="tchart-dollars">**{derivsTotal.$}</th>
-                            <th/>
-                        </tr>
-                        {derivativeAssets}
-                        
-                        <tr class="tchart-section tchart-total">
-                            <th colspan="2">Total</th>
-                            <th class="tchart-dollars">{total.$}</th>
-                            <th colspan="1"/>
-                        </tr>
-                    </tbody>
-                </table>
+                <tr class="tchart-section">
+                    <td colspan="2">Stocks</td>
+                    <td colspan="1"/>
+                    <td class="tchart-dollars">{stocksTotal.$}</td>
+                </tr>
+                {stocks}
+
+                <tr class="tchart-section">
+                    <td colspan="2">Derivatives</td>
+                    <td/>
+                    <td class="tchart-dollars">**{derivsTotal.$}</td>
+                </tr>
+                {derivativeAssets}
+            </table>
                 
-                <table class="tchart liabilities">
-                    <thead>
-                        <tr><th colspan="3"><h3>Liabilities</h3></th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><th colspan="3">Derivatives</th></tr>
-                        {derivativeLiabilities}
-                    </tbody>
-                </table>
-                <div style="clear:both;"/>
-            </div>
-
-        lazy val stocksTotal = (myStockAssets map stockDollars)
+        lazy val stocksTotal = (
+                     myStockAssets
+                 map stockDollars _
+                 map (_ getOrElse Dollars(0))
+             )
             .foldLeft(Dollars("0"))(_ + _)
         
         lazy val derivsTotal = (myDerivativeAssets
@@ -105,28 +114,28 @@ class TChart(
             
         lazy val stocks = {
             if (myStockAssets isEmpty)
-                <tr><td colspan="3">none</td></tr>
+                <tr><td colspan="4">none</td></tr>
             else
                 myStockAssets map { (asset) =>
-                    val sellButton =
-                        if (modifiable)
-                            <td class="buttons">
-                                {snippet.SellThisStock(asset.ticker)}
-                            </td>
-                        else Nil
-            
                     <tr>
-                        <td>{asset.ticker}</td>
-                        <td class="tchart-price">({stockPrice(asset).$}/sh)</td>
-                        <td class="tchart-dollars">{stockDollars(asset).$}</td>
-                        {sellButton}
+                        <td class="tchart-ticker">{asset.ticker}</td>
+                        <td class="tchart-price">({mehPrice(asset)}/sh)</td>
+                        <td class="buttons">
+                        {
+                        if (modifiable)
+                            snippet.SellThisStock(asset.ticker)
+                        else
+                            Nil
+                        }
+                        </td>
+                        <td class="tchart-dollars">{mehDollars(asset)}</td>
                     </tr>
                 }
         }
         
         lazy val derivativeAssets =
             if (myDerivativeAssets isEmpty)
-                <tr><td colspan="3">none</td></tr>
+                <tr class="deriv-row deriv-header"><td colspan="3">none</td></tr>
             else
                 myDerivativeAssets map { (asset) =>
                     val deriv = asset.derivative
@@ -135,17 +144,54 @@ class TChart(
                     <tr class="deriv-row deriv-header">
                         <td>Secs:</td>
                         <td>{deriv.securities toHumanString}</td>
-                        <td class="tchart-dollars">**{deriv.spotValue.$}</td>
                         <td class="buttons">{
                             if (modifiable && asset.derivative.early)
                                 execDerivative(asset)
                             else
                                 Nil
                         }</td>
+                        <td class="tchart-dollars">**{deriv.spotValue.$}</td>
                     </tr>
                     <tr class="deriv-row">
                         <td>From:</td>
-                        <td>{UserLink(liab.owner.owner.username)}</td>
+                        <td colspan="3">{UserLink(liab.owner.owner.username)}</td>
+                    </tr>
+                    <tr class="deriv-row">
+                        <td>On:</td>
+                        <td colspan="3">{deriv.exec toNearbyString}</td>
+                    </tr>
+                    <tr class="deriv-row">
+                        <td>If:</td>
+                        <td colspan="3">{deriv.condition toHumanString}</td>
+                    </tr>
+                }
+        
+        lazy val liabilitiesTable =
+            <table class="tchart liabilities">
+                <tr class="tchart-section">
+                    <td colspan="2">Derivatives</td>
+                    <td/>
+                    <td class="tchart-dollars">**{derivativeLiabilitiesTotal.$}</td>
+                </tr>
+                {derivativeLiabilities}
+            </table>
+
+        lazy val valuedDerivativeLiabilities = myDerivativeLiabilities map { lia =>
+            (lia, lia.derivative.spotValue * lia.remaining)
+        }
+        
+        lazy val derivativeLiabilities =
+            if (myDerivativeLiabilities isEmpty)
+                <tr><td colspan="4">none</td></tr>
+            else
+                valuedDerivativeLiabilities map { case (liability, dollars) =>
+                    val deriv = liability.derivative
+                    
+                    <tr class="deriv-row deriv-header">
+                        <td>Secs:</td>
+                        <td>{deriv.securities toHumanString}</td>
+                        <td> </td>
+                        <td class="tchart-dollars">**{dollars.$}</td>
                     </tr>
                     <tr class="deriv-row">
                         <td>On:</td>
@@ -157,21 +203,10 @@ class TChart(
                     </tr>
                 }
         
-        lazy val derivativeLiabilities =
-            if (myDerivativeLiabilities isEmpty)
-                <tr><td colspan="3">none</td></tr>
-            else
-                myDerivativeLiabilities map { (liability) =>
-                    <tr>
-                        <td colspan="2">{liability.derivative toHumanString}</td>
-                        <td>{
-                            if (liability.remaining < Scale("1"))
-                                liability.remaining.%()
-                            else
-                                Nil
-                        }</td>
-                    </tr>
-                }
+        lazy val derivativeLiabilitiesTotal = (valuedDerivativeLiabilities
+            map (_._2)).foldLeft(Dollars(0))(_ + _)
+        
+        lazy val liabilitiesTotal = derivativeLiabilitiesTotal
         
         result
     }
@@ -194,17 +229,25 @@ class TChart(
         }
     }
     
-    def stockDollars(asset: StockAsset): Dollars = {
-        val shares = asset.shares
-        val stock  = Stock(asset.ticker)
-        val quote  = stockDatabase.getQuotes(Seq(stock)).head
-        shares * quote.price
-    }
+    def mehDollars(asset: StockAsset): String =
+        stockDollars(asset) map (_.$) getOrElse "???"
     
-    def stockPrice(asset: StockAsset): Price = {
-        val stock  = Stock(asset.ticker)
-        val quote  = stockDatabase.getQuotes(Seq(stock)).head
-        quote.price
+    def stockDollars(asset: StockAsset): Option[Dollars] =
+        stockPrice(asset) map (_ * asset.shares)
+    
+    def mehPrice(asset: StockAsset): String =
+        stockPrice(asset) map (_.$) getOrElse "???"
+    
+    def stockPrice(asset: StockAsset): Option[Price] = {
+        try {
+            val stock  = Stock(asset.ticker)
+            val quote  = stockDatabase.getQuotes(Seq(stock)).head
+            Some(quote.price)
+        }
+        catch {
+            case _: NoSuchStockException => None
+            case _: DatabaseException    => None
+        }
     }
 }
 

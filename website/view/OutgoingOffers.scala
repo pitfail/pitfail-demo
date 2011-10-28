@@ -26,10 +26,10 @@ class OutgoingOffers extends Refreshable with Loggable {
             val offers = port.myAuctionOffers
             
             lazy val all =
-                <div id="outgoing-offers">
+                <div id="outgoing-offers" class="block">
                     <h2>You have offers at auction:</h2>
                     
-                    <table>
+                    <table class="boxy">
                         <tr>
                             <th></th>
                             <th>Going Price</th>

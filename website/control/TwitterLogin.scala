@@ -59,7 +59,8 @@ object TwitterLogin extends Loggable
     
     // Called when the user clicks on "Login with Twitter"
     protected def twitterLogin(req: Req)(): Box[LiftResponse] = {
-        logger info "Beginnig login with Twitter"
+        val oauth = makeOauthService(req.request.url)
+        serviceInProgress := Some(oauth)
         
         // Get a token for this login
         // TODO: I suppose in theory this can fail and we should handle that?
@@ -86,12 +87,19 @@ object TwitterLogin extends Loggable
         // TODO: What happens if the URL doesn't have the right query params?
         req.params get "oauth_verifier" match {
             case Some(v::Nil)  => doVerifier(v)
-            case _             => throw new IllegalStateException("Figure out later")
+
+            /* User decided not to autorize, tell them something?
+             * http://localhost:8080/twitter/callback?denied=<long string> */
+            case _             => Full(RedirectResponse(returnTo))
         }
     
     protected def doVerifier(verifierText: String): Box[LiftResponse] = {
         val verifier = new Verifier(verifierText)
         logger info ("Got verifier " ++ (verifier toString))
+        
+        val oauth = serviceInProgress.is getOrElse {
+            throw new IllegalStateException("Lost the service ;(")
+        }
         
         val accessToken_ = (requestToken: Option[Token]) match {
             case Some(token) => oauth.getAccessToken(token, verifier)
@@ -138,11 +146,20 @@ object TwitterLogin extends Loggable
     // Access token for API calls
     protected object accessToken extends SessionVar[Option[Token]](None)
     
-    protected val oauth: OAuthService = new ServiceBuilder()
-        .provider(classOf[TwitterApi])
-        .apiKey(TwitterKeys.consumerKey)
-        .apiSecret(TwitterKeys.consumerSecret)
-        .callback("http://localhost:8080/twitter/callback")
-        .build()
+    protected object serviceInProgress extends SessionVar[Option[OAuthService]](None)
+    
+    protected def makeOauthService(urlText: String): OAuthService = {
+        // TODO: This could be a lot cleverer
+        val url = new java.net.URL(urlText)
+        val host = url.getHost
+        val port = url.getPort
+        
+        new ServiceBuilder()
+            .provider(classOf[TwitterApi])
+            .apiKey(TwitterKeys.consumerKey)
+            .apiSecret(TwitterKeys.consumerSecret)
+            .callback("http://"+host+":"+port+"/twitter/callback")
+            .build()
+    }
 }
 
