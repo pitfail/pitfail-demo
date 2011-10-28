@@ -24,10 +24,16 @@ class FailoverStockDatabase(databases: List[StockDatabase]) extends StockDatabas
     
     for (database <- databases) {
       tryQueryDatabase(database, stocks) match {
-        case ResponseValid(quotes) => return quotes
-        case ResponseError(ex)     => error = ex
+        case ResponseValid(quotes) =>
+          return quotes
+
+        case ResponseError(ex) => {
+          logger.error("Database Query failed with error.")
+          error = ex
+        }
       }
     }
+    logger.error("All database queries failed.")
     throw error
   }
 
