@@ -126,31 +126,54 @@ class DerivativeBuilder extends Page with Loggable
         ),
         <div id="search-derivative" class="block">
             <h2>Offer Derivative</h2>
-            
-            <p><span class="description">Offer to enter a contract with </span></p>
-            <p>{toField.main}</p>
-            
-            <p><span class="description">For the price of</span> ${priceField.main &
-            <input class="price blank"/>}.</p>
-            
-            <p><span class="description">On the date</span>
-            {expirationField.main & <input class="date blank"/>} <span
-            class="description">the following will be traded:</span></p>
-            
-            <p class="cash-container">
-            <span class="cash-header">Cash: </span>
-            <span>${strikePriceField.main & <input class="price blank"/>} {cashDirField.main}</span>
-            </p>
-    
+            <p>Begin by selecting whether you want to sell this derivative to a
+            specific user or to a public auction. If you choose to sell the
+            derivative in a public auction you will have the opportunity to
+            withdrawl the auction at any time. If you sell the derivative to a
+            specific user they will have one day to accept or decline the
+            offer.</p>
+
+            <div id="derivative-recipient" class="builder-block">
+                <h3>Buyer</h3>
+                <p>{toField.main}</p>
+            </div>
+            <div id="derivative-money" class="builder-block">
+                <h3>Cash Transfers</h3>
+                <dl>
+                    <dt><label for="derivative-money-now">Current Price</label></dt>
+                    <dd>${priceField.main & <input id="derivative-money-now" class="price blank"/>}</dd>
+
+                    <dt><label for="derivative-money-then">Strike Price</label></dt>
+                    <dd>
+                        ${strikePriceField.main & <input id="derivative-money-then" class="price blank"/>}
+                        {cashDirField.main}
+                    </dd>
+                </dl>
+            </div>
+            <div style="clear:both;"/>
+            <div id="derivative-expiration" class="builder-block">
+                <h3>Expiration</h3>
+                <dl>
+                    <dt><label for="derivative-expiration">Date:</label></dt>
+                    <dd>{expirationField.main & <input id="derivative-expiraiton" class="date blank"/>}</dd>
+
+                    {earlyField.main}
+                </dl>
+            </div>
+            <div id="derivative-conditions" class="builder-block">
+                <h3>Conditions</h3>
+                {conditionField.main}
+            </div>
+            <div style="clear:both;"/>
+
             <h3>Stocks</h3>
-            
-            <table class="derivative-stock-list">
+            <table class="derivative-stock-list boxy">
                 <thead>
                     <tr>
                         <th class="search-list-ticker">Ticker</th>
                         <th class="search-list-company">Company</th>
                         <th class="search-list-shares">Shares</th>
-                        <th class="search-list-dir"> </th>
+                        <th class="search-list-dir"/>
                         <th class="search-list-price">Current Price</th>
                         <th class="search-list-buttons"/>
                     </tr>
@@ -159,10 +182,6 @@ class DerivativeBuilder extends Page with Loggable
                     {stocksField.main}
                 </tbody>
             </table>
-            
-            {conditionField.main}
-            <br/>
-            {earlyField.main}
 
             <div class="buttons">
                 {offerSubmit.main & <input/>}
@@ -177,9 +196,16 @@ class DerivativeBuilder extends Page with Loggable
             ConstField(OpenAuction)
         ),
         choices =>
-            <ul id="recipient">
-                <li>{choices._1 & <input checked="checked"/>} User: {toUserField.main}</li>
-                <li>{choices._2} Public Auction</li>
+            <ul>
+                <li>
+                    {choices._1 & <input id="to-user" checked="checked"/>}
+                    <label for="to-user">User:</label>
+                    {toUserField.main & <input id="to-user-name"/>}
+                </li>
+                <li>
+                    {choices._2 & <input id="to-auction"/>}
+                    <label for="to-auction">Public Auction</label>
+                </li>
             </ul>
     )
 
@@ -195,8 +221,7 @@ class DerivativeBuilder extends Page with Loggable
     lazy val expirationField = new DateTimeField(tomorrow, formatter) with FieldErrorRender
 
     // We can't really pick a good default
-    lazy val priceField = new DollarsField("0.00") with FieldErrorRender
-    // TODO: Default to current total volume
+    lazy val priceField = new DollarsField("") with FieldErrorRender
     lazy val strikePriceField = new DollarsField("") with FieldErrorRender
     lazy val cashDirField = DirectionField(ToSeller)
 
@@ -234,7 +259,7 @@ class DerivativeBuilder extends Page with Loggable
             <tr>
                 <td class="search-list-ticker">{quote.stock.symbol}</td>
                 <td class="search-list-company">{quote.company}</td>
-                <td class="search-list-shares">{sharesField.main & <input class="blank"/>}</td>
+                <td class="search-list-shares">{sharesField.main & <input class="blank shares"/>}</td>
                 <td class="search-list-dir">{dirField.main}</td>
                 <td class="search-list-price">{quote.price.$}/sh</td>
                 <td class="search-list-buttons">
@@ -278,22 +303,27 @@ class DerivativeBuilder extends Page with Loggable
         }
         
         def main =
-            <p>{useField.main} <span class="description">Provided that</span>
+            <p>
+                {useField.main & <input id="condition-en"/>}
                 <div class="chain">
-                    <span class="field-annotation">Ticker sym or $</span>
-                    {aField.main & <input class="blank"/>}
+                    <label for="condition-en" class="description">Provided that</label>
+                </div>
+                <div class="chain">
+                    <label for="condition1" class="field-annotation">ticker or $</label>
+                    {aField.main & <input id="condition1" class="blank condition"/>}
                 </div>
                 <div class="chain">&lt;</div>
                 <div class="chain">
-                    <span class="field-annotation">Ticker sym or $</span>
-                    {bField.main & <input class="blank"/>}
+                    <label for="condition2" class="field-annotation">ticker or $</label>
+                    {bField.main & <input id="condition2" class="blank condition"/>}
                 </div>
             </p>
     }
     
     lazy val earlyField = new BooleanField(true) {
-        override def main = <p>{super.main} <span class="description">May be
-            exercised early?</span></p>
+        override def main =
+            <dt><label for="derivative-early">Exercise Early?</label></dt> ++
+            <dd>{super.main & <input id="derivative-early"/>}</dd>
     }
     
     lazy val offerSubmit = Submit(form, "Offer")  { order =>
@@ -320,11 +350,8 @@ class DerivativeBuilder extends Page with Loggable
                 case SpecificUser(recip) =>
                     user.offerDerivativeTo(recip, deriv, order.price)
                     
-                case OpenAuction =>
-                    user.offerDerivativeAtAuction(
-                        deriv,
-                        order.price,
-                        expires
+                case OpenAuction => user.offerDerivativeAtAuction( deriv,
+                order.price, expires
                     )
             }
             
