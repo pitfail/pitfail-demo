@@ -35,12 +35,12 @@ public class BuyServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-			
+		
+System.out.println("buy called  ************************************************************ AAAAAAAAAAAAAAAAAHHHHHHHHHHHHHH");
+
 		String userId = request.getParameter("userid");
 		String stockSymbol = request.getParameter("ticker");
 		String volume = request.getParameter("volume");
-		String quote = request.getParameter("value");
-        
 
 
 		try {
@@ -51,7 +51,7 @@ public class BuyServlet extends HttpServlet {
 
 
 				PrintWriter out = response.getWriter();
-				out.printf("Successful Buy");
+				out.printf("success");
 				
 				response.setContentType("text/html");
 		    	ObjectOutputStream oos = new ObjectOutputStream(response.getOutputStream());

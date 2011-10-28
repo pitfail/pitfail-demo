@@ -11,7 +11,10 @@ import net.liftweb.json.JsonAST.JValue
 import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
 import model.{Dollars, Shares, Price}
 
-class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
+// Sorry, Mike, you can take this out later.
+import net.liftweb.common.Loggable
+
+class YahooStockDatabase(queryService: QueryService) extends StockDatabase with Loggable {
   private implicit val formats = DefaultFormats
   private val dateTimeFormat = DateTimeFormat.forPattern("M/d/yyyy h:mma")
   private val responseFields = List("Symbol", "StockExchange", "LastTradePriceOnly",
@@ -64,7 +67,9 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
                     + (quoteElement\"LastTradeTime").extract[String]
                 )
             } catch {
-                case _: IllegalArgumentException => throw new NoSuchStockException(stock)
+                case e: IllegalArgumentException =>
+                    logger.error("Failed to parse date", e);
+                    throw new NoSuchStockException(stock)
             }
         
         val quote = Quote(
@@ -96,10 +101,25 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
     stocks map { (stock) => {
       (quoteMap get (stock)) match {
         case Some(quote: Quote) => quote
-        case None => throw new NoSuchStockException(stock)
+        case None =>
+            logger.error("Failed to find " + stock)
+            logger.error(response)
+            logger.error(queryString)
+            // FOR TESTING PURPOSES ONLY
+            makeUpQuote(stock)
+            //throw new NoSuchStockException(stock)
     }}}
   }
 
+  private def makeUpQuote(stock: Stock) = Quote(
+      stock      ,
+      exchange   = "PITFAIL",
+      company    = "Enterprise Solutions Inc",
+      price      = Price(Math.random * 100),
+      updateTime = new DateTime,
+      info       = QuoteInfo(None, None, None, None, None)
+  )
+  
   private def tryExtractNumber(field: JValue): Option[BigDecimal] = {
     try {
       Some(BigDecimal(field.extract[String]))

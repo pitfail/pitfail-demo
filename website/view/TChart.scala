@@ -29,14 +29,6 @@ class TChart(
     extends Renderable
     with Loggable
 {
-    // TODO: This should be a singleton object to take full advantage of
-    //       caching.
-    private val stockDatabase: StockDatabase = new CachedStockDatabase(
-        new YahooStockDatabase(new HttpQueryService("GET")),
-        // TODO: This timeout should be moved to a configuration file.
-        new Duration(1000 * 60 * 5)
-    )
-
     def render = trans {
         val port = user.mainPortfolio
         
@@ -240,13 +232,16 @@ class TChart(
     
     def stockPrice(asset: StockAsset): Option[Price] = {
         try {
-            val stock  = Stock(asset.ticker)
-            val quote  = stockDatabase.getQuotes(Seq(stock)).head
-            Some(quote.price)
+            Some(model.Stocks stockPrice asset.ticker)
         }
         catch {
-            case _: NoSuchStockException => None
-            case _: DatabaseException    => None
+            case e: NoSuchStockException =>
+                logger.error("Ugh", e)
+                None
+                
+            case e: DatabaseException    => None
+                logger.error("Ugh", e)
+                None
         }
     }
 }

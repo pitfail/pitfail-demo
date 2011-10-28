@@ -38,7 +38,6 @@ public class SellServlet extends HttpServlet {
 			throws ServletException, IOException {
 
 		PrintWriter out = response.getWriter();			
-   		out.printf("userID %s",request.getParameter("userid"));			
 		String userId = request.getParameter("userid");
 		String stockSymbol = request.getParameter("ticker");
         
@@ -50,7 +49,7 @@ public class SellServlet extends HttpServlet {
 				Portfolio port = user.mainPortfolio().fetch(portfolios());
 				port.sellAll(stockSymbol);
 
-				out.println("Sell Successful");
+				out.printf("success");
 
 				response.setContentType("text/html");
 		    	ObjectOutputStream oos = new ObjectOutputStream(response.getOutputStream());
