@@ -175,7 +175,7 @@ h1 a {
 
 /* */
 .block {
-    background: #D8CBC4; 
+    background: #D8CBC4;
     border-radius: 6px;
     padding: 0.5em;
     margin-top: 0.5em;
@@ -208,6 +208,9 @@ form.block {
 /* Instructions */
 #search-instructions {
     height: 110px;
+    height: auto !important;
+    height: 110px;
+
     font-size: 16pt;
     line-height: 1.5em;
     padding: 0.4em;
@@ -227,6 +230,8 @@ form.block {
 }
 
 .quote {
+    min-height: 110px;
+    height: auto !important;
     height: 110px;
 }
 
