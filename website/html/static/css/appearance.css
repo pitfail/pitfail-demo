@@ -74,7 +74,7 @@ body {
 }
 
 .no_items {
-    font-size: 75%;
+    font-size: 9pt;
 }
 
 table.boxy {
@@ -381,19 +381,19 @@ table tfoot th {
 
 /* ------------------------------------------------------------------ */
 /* Portfolio */
-/*table.tchart {
-    width: 50%;
-    float: left;
-    margin: 0;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    border-collapse: collapse;
-    background: transparent;
-}*/
 
-table#portfolio {
-    border-collapse: collapse;
+.portfolio-block {
+    background: #fff;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.portfolio-block h2 {
+    margin-left: 0.5em;
+}
+
+table.tchart {
+    background:
 }
 
 table#portfolio,
@@ -402,6 +402,27 @@ table#portfolio td {
     vertical-align: top;
 }
 
+table#portfolio {
+    position: relative;
+    left: 0%;
+    width: 100%;
+}
+
+#portfolio a {
+    color: #99a;
+}
+
+.tchart-half {
+    position: relative;
+}
+
+table.tchart {
+    position: relative;
+    left: 0%;
+    width: 100%;
+}
+
+table#portfolio,
 table.tchart {
     background: transparent;
 }
@@ -416,11 +437,16 @@ tr.tchart-top td {
     border-bottom: 1px solid #000;
 }
 
-col.tchart-left {
+col.tchart-left1  { width: 25%; }
+col.tchart-left2  { width: 25%; }
+col.tchart-right1 { width: 25%; }
+col.tchart-right2 { width: 25%; }
+
+col.tchart-left2 {
     border-right: 1px solid #000;
 }
 
-th.tchart-top {
+td.tchart-top {
     text-align: center;
 }
 
@@ -429,13 +455,20 @@ td.tchart-half {
     vertical-align: top;
 }
 
-table.assets {
-    border-right: 1px solid #000;
-    margin-right: -1px;
-}
-
 .tchart h3 {
     font-weight: bold;
+}
+
+.tchart td {
+    padding-left:   2px;
+    padding-right:  4px;
+    padding-top:    4px;
+    padding-bottom: 2px;
+}
+
+.tchart-ticker {
+    font-size: 0.95em;
+    font-color: #333;
 }
 
 .tchart-price {
@@ -456,8 +489,8 @@ table.assets {
     background-color: #eee;
 }
 
-.tchart-section td {
-    font-style: bold;
+.tchart-section {
+    font-weight: bold;
 }
 
 tr.tchart-total,

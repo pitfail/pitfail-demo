@@ -21,12 +21,22 @@ class News extends Refreshable
     import model.Schema._
     
     def registerWith = News
-    
+
+    def newsContents = {
+        val nc = ( recentEvents(10) map {event(_)} ) map ( e =>
+            <li class="event">{e}</li>
+        )
+
+        if (nc nonEmpty) {
+            nc
+        } else {
+            <li class="event no_items">[none]</li>
+        }
+    }
+
     def render = (in: NodeSeq) => trans {
         <ul class="news"> {
-            recentEvents(10) map ( ev =>
-                <li class="event">{event(ev)}</li>
-            )
+            newsContents
         } </ul>
     }
     

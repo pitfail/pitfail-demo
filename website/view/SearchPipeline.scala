@@ -32,7 +32,7 @@ class SearchPipeline extends Page with Loggable
     val derivativeForm = new DerivativeBuilder()
 
     searchForm.listen(_ match {
-        case Some(quote) => actionForm.changeQuote(quote) 
+        case Some(quote) => actionForm.changeQuote(quote)
         case None        => actionForm.clearQuote
     })
 
