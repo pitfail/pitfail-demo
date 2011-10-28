@@ -63,8 +63,7 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
                     + " "
                     + (quoteElement\"LastTradeTime").extract[String]
                 )
-            }
-            catch {
+            } catch {
                 case _: IllegalArgumentException => throw new NoSuchStockException(stock)
             }
         
@@ -73,7 +72,7 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase {
             company    = (quoteElement\"Name").extract[String],
             exchange   = (quoteElement\"StockExchange").extract[String],
             price      = Price((quoteElement\"LastTradePriceOnly").extract[String]),
-            updateTime = updateTime,
+            updateTime = new DateTime(),
             info = QuoteInfo(
                 percentChange = Some(BigDecimal((quoteElement\"ChangeinPercent")
                     .extract[String].stripSuffix("%"))),
