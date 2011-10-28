@@ -29,7 +29,7 @@ class UserPage extends Page with Loggable {
         }
         yield {
             lazy val them =
-                <div id="user-page">
+                <div id="user-page" class="block">
                     {header}
                     {chart}
                 </div>

@@ -32,9 +32,9 @@ class TwitterFrontend(
   val token = Token(app.accessToken, app.accessTokenSecret)
 
   def send_to_user(user: String, message: String) = {
-    logger.info("Sending the following to the user %S: %S" format(user, message))
+    logger.debug("Sending the following to the user %s: %s" format(user, message))
     h(twitter.Status.update("@" + user + " " + message, consumer, token) >~ { src =>
-      logger.info("STU: " + src.getLines.mkString)
+      logger.debug("Twitter status update returned: " + src.getLines.mkString)
     })
   }
 
@@ -50,7 +50,7 @@ class TwitterFrontend(
       JString(user) <- message \ "user" \ "screen_name"
     } yield {
 
-      logger.info("... %s: %s" format(user, line))
+      logger.debug("Twitter user stream recived %s: %s" format(user, line))
       if (user != app.accessUser) {
         follow_user(user)
         TextTrader.runCommand(user, line, backend) foreach { send_to_user(user, _) }

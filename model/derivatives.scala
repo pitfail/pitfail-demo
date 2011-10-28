@@ -59,7 +59,13 @@ case class SecStock(
 {
     def *(scale: Scale) = SecStock(ticker, shares*scale)
     
-    def spotValue = Stocks.stockPrice(ticker) * shares
+    def spotValue = 
+        try Stocks.stockPrice(ticker) * shares
+        catch {
+            // TODO: This is clearly not right
+            case _: stockdata.DatabaseException => Dollars(0)
+            case _: stockdata.NoSuchStockException => Dollars(0)
+        }
 }
 
 case class SecDerivative(

@@ -69,11 +69,13 @@ object Schema extends squeryl.Schema with Loggable {
                     val user = User(username = username)
                     users insert user
                     
-                    // TODO: Starting cash should be moved to a properties file.
                     val port = Portfolio(
-                        owner = user,
-                        cash  = Dollars("200000.0")
+                        owner = user
                     )
+
+                    // TODO: Starting cash should be moved to a properties file.
+                    port.changeLoan(Dollars(200000))
+
                     port.insert()
                     
                     user.mainPortfolio = port
@@ -631,14 +633,14 @@ object Schema extends squeryl.Schema with Loggable {
         )
         extends KL
     {
-
         override def toString = trans {
             (shares: model.Shares).toString() + " of " + ticker
         }
 
         def ###(dollars: Dollars) = toString + " for a total of " + dollars.$
 
-
+        def dollars: Dollars = price * shares
+        def price: Price = stockPrice(ticker)
     }
  
     case class DerivativeAsset(

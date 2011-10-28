@@ -40,10 +40,10 @@ class AuctionPage extends Page with Loggable {
             deriv      = auction.derivative
         } yield  {
             lazy val all =
-                <div id="auction">
+                <div id="auction" class="block">
                     <h2>Auction #{id}</h2>
                     
-                    <table>
+                    <table class="boxy">
                         <tr>
                             <td>Seller:</td>     <td>{UserLink(seller.username)}</td>
                         </tr>
