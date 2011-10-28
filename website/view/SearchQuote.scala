@@ -140,7 +140,7 @@ class SearchQuote extends Page with Loggable
                         <li>Click "Login" on the top right to login via Twitter</li>
                 }
                 <li>Enter a ticker symbol into the search field above (Example: "MSFT")</li>
-                <li>Choose an amount of stock to buy (simple) or add to a derivative (more advanced).</li>
+                <li>Choose an amount to buy (simple) or add to a derivative (more advanced).</li>
                 <li>Manage your portfolio!</li>
             </ol>
         </div>
