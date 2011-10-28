@@ -103,6 +103,10 @@ table.boxy thead td {
     border-bottom: 1px solid #000;
 }
 
+table.boxy thead {
+    color: #FFF;
+}
+
 table.boxy tbody {
     background: #D8CBC4;
 }

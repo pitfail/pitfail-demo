@@ -167,7 +167,7 @@ class DerivativeBuilder extends Page with Loggable
             <div style="clear:both;"/>
 
             <h3>Stocks</h3>
-            <table class="derivative-stock-list">
+            <table class="derivative-stock-list boxy">
                 <thead>
                     <tr>
                         <th class="search-list-ticker">Ticker</th>
