@@ -8,7 +8,6 @@ import util._
 import util.Helpers._
 
 object periodically {
-    
     def apply(delay: TimeSpan)(command: =>Unit) {
         val actor = new LiftActor {
             def messageHandler = {
@@ -17,7 +16,6 @@ object periodically {
                     command
             }
         }
-        
         Schedule.schedule(actor, 'yo, delay)
     }
 }

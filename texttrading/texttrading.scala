@@ -59,8 +59,8 @@ object TextTrader {
                         case StringResponse(str) => str
 
                         /* This is only returned by a buy event */
-                        case TransactionResponse(sa, dollars) =>
-                            "Bought " + sa.###(dollars)
+                        case TransactionResponse(sa, dollars, shares) =>
+                            "Bought %s shares of %s for %s" format (shares.###(), sa.ticker, dollars.$)
                         case Failed(msg) => msg
                     }
                 }
