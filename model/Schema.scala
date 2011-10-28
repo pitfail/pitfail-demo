@@ -15,7 +15,7 @@ import java.sql.Timestamp
 import java.util.UUID
 import org.joda.time.DateTime
 
-import email.Email_bg._
+import email.EmailActor
 import Stocks.stockPrice
 import derivatives._
 import net.liftweb.common.Loggable
@@ -225,10 +225,10 @@ object Schema extends squeryl.Schema with Loggable {
             val dollars = shares * price;
 
 		//inserted by brian
-		var email: String = "sirgiant@gmail.com"
-		var subject: String = shares + "s of " + ticker + " bought for "+ dollars
-		var body: String = " Congratulations on buying " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"
-		send_email(email, subject , body)
+            var email: String = "sirgiant@gmail.com"
+            var subject: String = shares + "s of " + ticker + " bought for "+ dollars
+            var body: String = " Congratulations on buying " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"
+            EmailActor ! (email, subject , body)
 
             buyStock(ticker, shares, dollars, price)
 		
@@ -319,11 +319,12 @@ object Schema extends squeryl.Schema with Loggable {
             val price  = stockPrice(ticker)
             val dollars = shares * price
 
-		//inserted by brian
-		var email: String = "sirgiant@gmail.com"
-		var subject: String = shares + "s of " + ticker + " sold for "+ dollars
-		var body: String = " Congratulations on selling " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"
-		send_email(email, subject , body)
+            //inserted by brian
+            var email: String = "sirgiant@gmail.com"
+            var subject: String = shares + "s of " + ticker + " sold for "+ dollars
+            var body: String = " Congratulations on selling " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"
+            EmailActor ! (email, subject, body)
+            
             sellStock(ticker, shares, dollars, price)
         }
 
@@ -357,6 +358,8 @@ object Schema extends squeryl.Schema with Loggable {
 
 
         def sellAll(ticker: String): Unit = trans {
+            logger.info("Selling all of " + ticker);
+            
             val asset =
                 haveTicker(ticker) match {
                     case Some(asset) => asset
@@ -370,10 +373,13 @@ object Schema extends squeryl.Schema with Loggable {
             cash = (cash: Dollars) + dollars
             
 		//brian
-		var email: String = "sirgiant@gmail.com"
-		var subject: String = shares + "s of " + ticker + " sold for "+ dollars
-		var body: String = " Congratulations on selling " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"
-		send_email(email, subject , body)
+            var email: String = "sirgiant@gmail.com"
+            var subject: String = shares + "s of " + ticker + " sold for "+ dollars
+            var body: String = " Congratulations on selling " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"
+            
+            logger.info("About to send notification")
+            EmailActor ! (email, subject, body)
+            logger.info("Notification sent")
 
             newsEvents insert NewsEvent(
                 action  = "sell",

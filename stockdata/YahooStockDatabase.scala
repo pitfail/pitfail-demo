@@ -104,6 +104,7 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase with 
         case None =>
             logger.error("Failed to find " + stock)
             logger.error(response)
+            logger.error(queryString)
             // FOR TESTING PURPOSES ONLY
             makeUpQuote(stock)
             //throw new NoSuchStockException(stock)
