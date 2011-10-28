@@ -5,6 +5,8 @@ package email;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
 
 public class Email_bg {
 	
@@ -13,6 +15,12 @@ public class Email_bg {
 		String subject = "Pitfail Confirmation";
 		String body = "This email is confirming the following transcation: "; 
 		Email_bg.send_email(to,subject,body);
+	}
+
+	private static String getCurrentTime(){
+		Calendar cal = Calendar.getInstance();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd 'at' hh:mm:ss z");
+		return sdf.format(cal.getTime());
 	}
 	
 	//This function sends emails to user
@@ -49,7 +57,8 @@ public class Email_bg {
 		message.addFrom(from_addresses);
 		message.addRecipient(Message.RecipientType.TO, to_field);
 		message.addRecipient(Message.RecipientType.TO, new InternetAddress("pitfail@gmx.com"));
-		message.setSubject(subject_input);
+		String subject_temp = subject_input + " - " + Email_bg.getCurrentTime();
+		message.setSubject(subject_temp);
 		message.setText(body_input);
 		message.setFrom(from_addresses[1]);
 
@@ -60,6 +69,13 @@ public class Email_bg {
 		transport.close();
 		
 		//Confirmation
-		System.out.println("Successful email sent to " + to_input + ".");
+		System.out.println("Successful email sent.");
+		System.out.println("To: " + to_input);
+		System.out.println("From: " + email_from_real);
+		System.out.println("Subject: " + subject_temp);
+		System.out.println("Body: " + body_input);
+		System.out.println("--End--\n");
+
+
 	}
 }
