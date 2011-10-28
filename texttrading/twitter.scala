@@ -62,7 +62,7 @@ class TwitterFrontend(
             JString(user) <- message \ "user" \ "screen_name"
             /* TODO: match the id and update last id */
         } yield {
-            logger debug("Twitter user stream recived %s: %s" format(user, line))
+            logger info("Twitter user stream recived %s: %s" format(user, line))
             /* TODO: verify the id advanced by 1, backfill otherwise. At the least, don't
              * process tweets more than once */
             if (user != app.accessUser) {
