@@ -14,15 +14,13 @@ import scala.math.BigDecimal;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import scala.math.*;
 
 
 /**
@@ -31,49 +29,36 @@ import scala.math.*;
  * @author Roma, Sonu
  * 
  */
-public class GetPortfolio extends HttpServlet {
+public class FBsellservlet extends HttpServlet {
 
 	private static final long serialVersionUID = -7287781887462285268L;
 	
-
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		PrintWriter out = response.getWriter();			
-		
-		String userId = request.getParameter("userid");
-		System.out.println("###############"+userId+"##################");
-		BigDecimal shares;
-		BigDecimal price;
-		BigDecimal dollars;
-		String myportfolio = "";
-       
+		PrintWriter out = response.getWriter();		
+		System.out.println("(((((((((((((((()))))))))))))))))))))))))(((((((((((((())))))))");
+//		String userId = request.getParameter("userid");
+//		String stockSymbol = request.getParameter("ticker");
+        
+
+
 		try {
 			
-				User user = ensureUser(userId);
+				User user = ensureUser("sonu_pillai");
 				Portfolio port = user.mainPortfolio().fetch(portfolios());
-				BigDecimal cash = port.cash().dollars();
-				myportfolio = myportfolio.concat("Cash:"+cash);
-				
-				for (StockAsset asset : port.getMyStockAssets()){
-						shares = asset.shares().shares();
-						dollars = asset.dollars().dollars();
-						myportfolio = myportfolio.concat(","+asset.ticker()+":"+dollars.doubleValue());
-				}
-				out.printf("%s",myportfolio);
+				port.sellAll("GOOG");
 
-				System.out.println("*********************************************"+myportfolio);
+				out.printf("success");
 
-
-
-/*				response.setContentType("text/html");
+				response.setContentType("text/html");
 		    	ObjectOutputStream oos = new ObjectOutputStream(response.getOutputStream());
-			    String respond = "Portfolio extracted";
+			    String respond = "Successful Sell";
 			    oos.writeObject(respond);
 			    oos.flush();
 			    oos.close();
-*/		} catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			
 		}
