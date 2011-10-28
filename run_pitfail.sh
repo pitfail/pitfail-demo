@@ -1,0 +1,2 @@
+./sbt '~jetty-run'
+
