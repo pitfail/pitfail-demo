@@ -46,7 +46,7 @@ class TChart(
         val myDerivativeLiabilities = port.myDerivativeLiabilities
         
         lazy val result =
-            <div class="block">
+            <div class="block portfolio-block">
                 <h2>Portfolio</h2>
                 <table id="portfolio" class="block container portfolio">
                     <col class="tchart-left1"/>
@@ -54,18 +54,26 @@ class TChart(
                     <col class="tchart-right1"/>
                     <col class="tchart-right2"/>
                     <tr class="tchart-top">
-                        <th colspan="2" class="tchart-top">Assets</th>
-                        <th colspan="2" class="tchart-top">Liabilities</th>
+                        <td colspan="2" class="tchart-top">Assets</td>
+                        <td colspan="2" class="tchart-top">Liabilities</td>
                     </tr>
                     <tr>
                         <td colspan="2" class="tchart-half">{assetsTable}</td>
                         <td colspan="2" class="tchart-half">{liabilitiesTable}</td>
                     </tr>
-                    <tr class="tchart-section tchart-total">
+                    <tr class="tchart-section tchart-total tchart">
                         <td>Total:</td>
                         <td class="tchart-dollars">{total.$}</td>
                         <td>Total:</td>
                         <td class="tchart-dollars">{liabilitiesTotal.$}</td>
+                    </tr>
+                    <tr class="tchart">
+                        <td class="tchart-section tchart-total">
+                            Equity:
+                        </td>
+                        <td class="tchart-section tchart-total tchart-dollars">
+                        {(total - liabilitiesTotal).$}
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -73,23 +81,23 @@ class TChart(
         lazy val assetsTable =
             <table class="tchart assets">
                 <tr class="tchart-section">
-                    <th>Cash</th>
+                    <td>Cash</td>
                     <td/>
                     <td/>
                     <td class="tchart-dollars">{myCashAmount.$}</td>
                 </tr>
 
                 <tr class="tchart-section">
-                    <th colspan="2">Stocks</th>
-                    <th colspan="1"/>
-                    <th class="tchart-dollars">{stocksTotal.$}</th>
+                    <td colspan="2">Stocks</td>
+                    <td colspan="1"/>
+                    <td class="tchart-dollars">{stocksTotal.$}</td>
                 </tr>
                 {stocks}
 
                 <tr class="tchart-section">
-                    <th colspan="2">Derivatives</th>
-                    <th/>
-                    <th class="tchart-dollars">**{derivsTotal.$}</th>
+                    <td colspan="2">Derivatives</td>
+                    <td/>
+                    <td class="tchart-dollars">**{derivsTotal.$}</td>
                 </tr>
                 {derivativeAssets}
             </table>
@@ -120,9 +128,9 @@ class TChart(
                         else Nil
             
                     <tr>
-                        <td>{asset.ticker}</td>
-                        {sellButton}
+                        <td class="tchart-ticker">{asset.ticker}</td>
                         <td class="tchart-price">({mehPrice(asset)}/sh)</td>
+                        {sellButton}
                         <td class="tchart-dollars">{mehDollars(asset)}</td>
                     </tr>
                 }
@@ -164,9 +172,9 @@ class TChart(
         lazy val liabilitiesTable =
             <table class="tchart liabilities">
                 <tr class="tchart-section">
-                    <th colspan="2">Derivatives</th>
-                    <th/>
-                    <th class="tchart-dollars">**{derivativeLiabilitiesTotal.$}</th>
+                    <td colspan="2">Derivatives</td>
+                    <td/>
+                    <td class="tchart-dollars">**{derivativeLiabilitiesTotal.$}</td>
                 </tr>
                 {derivativeLiabilities}
             </table>
