@@ -213,18 +213,22 @@ object Schema extends squeryl.Schema with Loggable {
         )
         extends KL with Loggable
     {
-        def buyStock(ticker: String, dollars: Dollars): (StockAsset, Dollars) = {
+        def buyStock(ticker: String, dollars: Dollars):
+                (StockAsset, Dollars, Shares)
+        = {
             val price = stockPrice(ticker)
             val shares = dollars /-/ price
             val actual_dollars = shares * price
             buyStock(ticker, shares, actual_dollars, price)
         }
 
-        def buyStock(ticker: String, shares: Shares): (StockAsset, Dollars) = {
+        def buyStock(ticker: String, shares: Shares):
+            (StockAsset, Dollars, Shares)
+        = {
             val price = stockPrice(ticker);
             val dollars = shares * price;
 
-		//inserted by brian
+            //inserted by brian
             var email: String = "sirgiant@gmail.com"
             var subject: String = shares + "s of " + ticker + " bought for "+ dollars
             var body: String = " Congratulations on buying " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"
@@ -234,7 +238,9 @@ object Schema extends squeryl.Schema with Loggable {
 		
         }
 
-        def buyStock(ticker: String, shares: Shares, dollars: Dollars, price: Price): (StockAsset, Dollars) = trans {
+        def buyStock(ticker: String, shares: Shares, dollars: Dollars, price: Price):
+                (StockAsset, Dollars, Shares)
+        = trans {
             if (cash < dollars) throw NotEnoughCash(cash, dollars)
             if (shares < Shares(0)) throw NegativeVolume
 
@@ -253,7 +259,7 @@ object Schema extends squeryl.Schema with Loggable {
             )
             this.update()
             asset.update()
-            (asset, dollars)
+            (asset, dollars, shares)
         }
 
         /* TODO: finish all liquidation */
@@ -372,7 +378,7 @@ object Schema extends squeryl.Schema with Loggable {
             
             cash = (cash: Dollars) + dollars
             
-		//brian
+            //brian
             var email: String = "sirgiant@gmail.com"
             var subject: String = shares + "s of " + ticker + " sold for "+ dollars
             var body: String = " Congratulations on selling " + shares + "s of " + ticker + " bought for "+ dollars  + ". Be sure to track your stocks. To be at the top of the leaderboard, you will need to stick around for a while and be very active.\n\n - Pitfail Team"

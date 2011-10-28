@@ -50,7 +50,7 @@ case class WithUser(user: User) {
                  case StockDollars(ticker, dollars) =>
                     user.mainPortfolio.buyStock(ticker, dollars)
             }
-            |> { case ((a, b)) => TransactionResponse(a,b) }
+            |> { case ((a, b, c)) => TransactionResponse(a,b,c) }
         )
         catch failed
 
