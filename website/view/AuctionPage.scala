@@ -43,27 +43,26 @@ class AuctionPage extends Page with Loggable {
                 <div id="auction" class="block">
                     <h2>Auction #{id}</h2>
                     
-                    <table class="boxy">
+                    <table class="boxy auction">
                         <tr>
-                            <td>Seller:</td>     <td>{UserLink(seller.username)}</td>
+                            <th>Seller:</th>
+                            <td>{UserLink(seller.username)}</td>
                         </tr>
                         <tr>
-                            <td>Going Price:</td> <td>{goingPrice.$}</td>
+                            <th>Going Price:</th>
+                            <td>{goingPrice.$}</td>
                         </tr>
                         <tr>
-                            <td>High Bidder:</td> <td>{
-                                highBidder map (b => UserLink(b.username)) getOrElse "-"
-                            }</td>
+                            <th>High Bidder:</th>
+                            <td>{highBidder map (b => UserLink(b.username)) getOrElse "-"}</td>
                         </tr>
                         <tr>
-                            <td>Derivative:</td>
-                            <td>
-                            {derivative}
-                            </td>
+                            <th>Derivative:</th>
+                            <td>{derivative}</td>
                         </tr>
                     </table>
                     
-                    <h3>Cast a bid:</h3>
+                    <h2>Cast a Bid</h2>
                     {bidForm.render}
                 </div>
             

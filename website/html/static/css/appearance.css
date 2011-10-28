@@ -540,6 +540,10 @@ tr.deriv-header {
     border-radius: 6px;
 }
 
+.sidebar ul {
+    margin-bottom: 1em;
+}
+
 .sidebar h3 {
     color: #FFF;
     font-weight: bold;
@@ -552,4 +556,14 @@ tr.deriv-header {
     font-size: 10pt;
     height: 9em;
     overflow: hidden;
+}
+
+/* Auction Table */
+.auction th {
+    color: #FFF;
+    text-align: right;
+}
+.auction td {
+    color: #000;
+    background: #D8CBC4;
 }
