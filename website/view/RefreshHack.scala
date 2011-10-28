@@ -12,7 +12,7 @@ import JsCmds._
 import JE._
 import Helpers._
 
-class RunChecks extends intform.Page with Loggable
+class RefreshHack extends intform.Page with Loggable
 {
     def render = {
         import comet._
