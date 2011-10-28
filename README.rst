@@ -20,7 +20,7 @@ Should
 Now you can go to::
 
     http://localhost:8080/
- 
+
 and see the site.
 
 Navigating
@@ -40,11 +40,15 @@ know how to tell the web-plugin where the HTML files actually are.
 
 Actual source code resides in:
 
-``pitfail-site``
+``website``
     This is the code for the web site.
 
 ``stockdata``
     This fetches data from Yahoo.
+
+``texttrading``
+    Contains the code for any text trading interfaces, currently twitter. An example
+    of using the command line to interact with the model is also present.
 
 ``matteform``
     This is some form (as in web form) code I extracted into a separate project
@@ -53,5 +57,6 @@ Actual source code resides in:
 Keys!
 ~~~~~
 
-You need the API keys which go in ``./pitfail-site/keys/``. Ask me for them.
+You need the API keys which go in ``./keys/`` in a file named
+``Twitter.scala``. These have been sent out in an email, search your emails.
 
