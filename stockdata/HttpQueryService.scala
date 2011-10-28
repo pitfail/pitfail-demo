@@ -1,3 +1,4 @@
+
 package stockdata
 
 import java.io.IOException
@@ -8,14 +9,19 @@ import scala.collection.mutable.{Map => MMap}
 import scala.io.Source
 import scala.math.BigDecimal
 
-class HttpQueryService(method: String) extends QueryService {
+// Sorry, Mike, you can take this out later.
+import net.liftweb.common.Loggable
+
+class HttpQueryService(method: String) extends QueryService with Loggable {
   def query(url: URL): String = {
     val connection = url.openConnection().asInstanceOf[HttpURLConnection]
     connection.setRequestMethod(method)
 
     val responseCode = connection.getResponseCode()
     if (responseCode != HttpURLConnection.HTTP_OK) {
-      throw new IOException("Request returned response code %s.".format(responseCode))
+        logger.error("Querying failed");
+        logger.error(Source fromInputStream (connection.getInputStream) mkString)
+        throw new IOException("Request returned response code %s.".format(responseCode))
     }
 
     val responseStream = connection.getInputStream()

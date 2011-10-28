@@ -17,7 +17,6 @@ import model.Schema._
 class UserPage extends Page with Loggable {
     
     val nameParam = S param "name"
-    logger.info("Name is: " + nameParam)
     
     def render = trans {
         import model.Schema._
@@ -30,12 +29,11 @@ class UserPage extends Page with Loggable {
         yield {
             lazy val them =
                 <div id="user-page" class="block">
-                    {header}
+                    <h2>User: {name}</h2>
                     {chart}
                 </div>
             
             lazy val chart = TChart(user, false).render
-            lazy val header = <h2>User: {name}</h2>
             
             lazy val us =
                 <lift:comet type="Offers"/> ++

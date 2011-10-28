@@ -26,6 +26,8 @@ import model.Schema.User
 import model.derivatives._
 import scalaz.Scalaz._
 
+import control.LoginManager.loggedIn_?
+
 import org.joda.time.Duration
 
 import formats._
@@ -109,7 +111,7 @@ class SearchQuote extends Page with Loggable
     def quoteBlock =
         currentQuote match {
             case Some(quote) => quoteBlockPresent(quote)
-            case None        => quoteBlockAbsent
+            case None        => quoteBlockInstructions
         }
 
     def quoteBlockPresent(quote: Quote) = 
@@ -130,12 +132,16 @@ class SearchQuote extends Page with Loggable
         </div>
 
     /* TODO: if we are on a user page, put the username here. */
-    def quoteBlockAbsent =
+    def quoteBlockInstructions =
         <div id="search-instructions" class="block">
             <ol>
-                <li>Enter a ticker symbol into the search field above.</li>
-                <li>Choose an amount of stock to buy or add to a derivative.</li>
-                <li>Login and manage your portfolio!</li>
+                {
+                    if (!loggedIn_?)
+                        <li>Click "Login" on the top right to login via Twitter</li>
+                }
+                <li>Enter a ticker symbol into the search field above (Example: "MSFT")</li>
+                <li>Choose an amount to buy (simple) or add to a derivative (more advanced).</li>
+                <li>Manage your portfolio!</li>
             </ol>
         </div>
 

@@ -50,7 +50,7 @@ class Offers extends Refreshable with Loggable
                             information about the derivatives and choose
                             whether to accept or decline the offers.</p>
                         }
-                        <table>
+                        <table class="boxy">
                             <col class="from"/>
                             <col class="securities"/>
                             <col class="expiration"/>

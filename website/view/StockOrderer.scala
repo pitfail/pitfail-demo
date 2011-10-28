@@ -86,6 +86,7 @@ class StockOrderer extends Page with Loggable
                     "You need at least %s you only have %s" format (need.$, have.$)
                 )
 
+                /* TODO: change to redirect to the login and then redirect back */
                 case NotLoggedIn =>
                     throw BadInput("You must be logged in to buy stock")
             }
