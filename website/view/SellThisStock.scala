@@ -46,5 +46,6 @@ class SellThisStock(ticker: String)
 }
 object SellThisStock {
     def apply(t: String) = new SellThisStock(t).render
+	
 }
 
