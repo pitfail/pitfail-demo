@@ -1,4 +1,11 @@
 
+// To run this program:
+//
+// ./sbt 'run-main servlets.TestRequest'
+//
+// The website needs to be running also for it to
+// have something to connect to.
+
 package servlets;
 
 import java.net.*;
