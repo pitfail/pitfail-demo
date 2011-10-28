@@ -308,37 +308,42 @@ input.blank {
     background: transparent;
 }
  
-#search-derivative table {
-    margin: 1em;
-}
-
-#search-derivative .buttons {
-    margin-top: 2em;
-}
-
 #search-derivative h3 {
-    font-style: normal;
-    font-size: 1em;
+    color: #413129;
+    font-weight: bold;
+    font-size: 1.1em;
     margin-top: 1em;
 }
 
-.description {
-    font-style: italic;
-    font-size: 0.85em;
+#search-derivative p {
+    margin-top: 1em;
 }
 
-.cash-container: {
-    margin-top: 2em;
-    padding-top: 1em;
+.builder-block {
+    width: 50%;
+    float: left;
 }
 
-.cash-header: {
-    font-style: normal;
-    font-size: 1em;
+.builder-block dl dt {
+    width: 120px;
+    float: left;
+    clear: both;
 }
 
-#recipient li {
-    margin-left: 1em;
+.builder-block dl dd {
+    float: right;
+}
+
+input#derivative-money-then {
+    width: 6em;
+}
+
+input#derivative-early {
+    margin-right: 2em;
+}
+
+#derivative-conditions input.condition {
+    width: 6em;
 }
 
 
@@ -368,7 +373,7 @@ table#search-list thead td {
 }
 
 table#search-list tbody {
-    background: #D8CBC4;
+    background: #EEE;
 }
 
 table#search-list tfoot th,
