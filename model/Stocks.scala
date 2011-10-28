@@ -7,7 +7,10 @@ import stockdata._
 import org.joda.time.Duration
 
 object StockPriceSource extends CachedStockDatabase(
-    new YahooStockDatabase(new HttpQueryService("GET")),
+    new FailoverStockDatabase(List(
+      new YahooCSVStockDatabase(new HttpQueryService("GET")),
+      new YahooStockDatabase(new HttpQueryService("GET"))
+    )),
     // TODO: This timeout should be moved to a configuration file.
     new Duration(1000 * 60 * 5)
 )
