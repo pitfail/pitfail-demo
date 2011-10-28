@@ -73,7 +73,7 @@ body {
     padding-right: 20px;
 }
 
-table {
+table.boxy {
     width: 90%;
     padding: 0;
     margin: 1em  5%;
@@ -83,27 +83,27 @@ table {
     border-radius: 6px;
 }
 
-table td {
+table.boxy td {
     padding: 0.3em;
 }
 
-table th {
+table.boxy th {
     font-weight: bold;
     padding: 0.3em;
 }
 
-table thead th,
-table thead td {
+table.boxy thead th,
+table.boxy thead td {
     text-align: center;
     border-bottom: 1px solid #000;
 }
 
-table tbody {
+table.boxy tbody {
     background: #D8CBC4;
 }
 
-table tfoot th,
-table tfoot td {
+table.boxy tfoot th,
+table.boxy tfoot td {
     border-top: 1px solid #000;
 }
 
@@ -377,7 +377,7 @@ table tfoot th {
 
 /* ------------------------------------------------------------------ */
 /* Portfolio */
-table.tchart {
+/*table.tchart {
     width: 50%;
     float: left;
     margin: 0;
@@ -386,14 +386,43 @@ table.tchart {
     border-radius: 0;
     border-collapse: collapse;
     background: transparent;
+}*/
+
+table#portfolio {
+    border-collapse: collapse;
 }
 
-table.tchart tbody {
+table#portfolio,
+table#portfolio tr,
+table#portfolio td {
+    vertical-align: top;
+}
+
+table.tchart {
     background: transparent;
 }
 
 table.tchart .buttons {
     text-align: right;
+    padding-left: 0.5em;
+}
+
+tr.tchart-top,
+tr.tchart-top td {
+    border-bottom: 1px solid #000;
+}
+
+col.tchart-left {
+    border-right: 1px solid #000;
+}
+
+th.tchart-top {
+    text-align: center;
+}
+
+td.tchart-half {
+    text-align: left;
+    vertical-align: top;
 }
 
 table.assets {
@@ -421,6 +450,10 @@ table.assets {
 
 .tchart-section {
     background-color: #eee;
+}
+
+.tchart-section td {
+    font-style: bold;
 }
 
 tr.tchart-total,

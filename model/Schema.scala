@@ -631,14 +631,14 @@ object Schema extends squeryl.Schema with Loggable {
         )
         extends KL
     {
-
         override def toString = trans {
             (shares: model.Shares).toString() + " of " + ticker
         }
 
         def ###(dollars: Dollars) = toString + " for a total of " + dollars.$
 
-
+        def dollars: Dollars = price * shares
+        def price: Price = stockPrice(ticker)
     }
  
     case class DerivativeAsset(
