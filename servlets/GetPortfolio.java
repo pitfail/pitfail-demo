@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-
+import scala.math.*;
 
 
 /**
@@ -43,21 +43,25 @@ public class GetPortfolio extends HttpServlet {
 		PrintWriter out = response.getWriter();			
 		
 		String userId = request.getParameter("userid");
-        List<String> assetList = new ArrayList<String>();
-
+		BigDecimal shares;
+		BigDecimal price = asset.price().price();
+		BigDecimal dollars = asset.dollars().dollars();
+		String myportfolio = "";
        
 		try {
 			
-				User user = ensureUser("ellbur_k_a");
+				User user = ensureUser(userId);
 				Portfolio port = user.mainPortfolio().fetch(portfolios());
 				BigDecimal cash = port.cash().dollars();
-				out.printf("Cash = %s", cash);
+				myportfolio = myportfolio.concat("Cash:"+cash);
 				
-				for (StockAsset asset : port.getMyStockAssets()) {
-//						assetList.add(asset.shares());
-						out.printf("Asset: %s\n", asset.ticker());
+				for (StockAsset asset : port.getMyStockAssets()){
+						shares = asset.shares().shares();
+						dollars = asset.dollars().dollars();
+						myportfolio = myportfolio.concat(","+asset.ticker()+":"+shares.doubleValue());
 				}
-				
+				out.printf("%s",myportfolio);
+
 //				Iterator Count = Count.iterator();
 //			while(i != size){
 //		        	String value=(String)Count.next();
@@ -67,13 +71,13 @@ public class GetPortfolio extends HttpServlet {
 
 
 
-				response.setContentType("text/html");
+/*				response.setContentType("text/html");
 		    	ObjectOutputStream oos = new ObjectOutputStream(response.getOutputStream());
 			    String respond = "Portfolio extracted";
 			    oos.writeObject(respond);
 			    oos.flush();
 			    oos.close();
-		} catch (Exception e) {
+*/		} catch (Exception e) {
 			e.printStackTrace();
 			
 		}
