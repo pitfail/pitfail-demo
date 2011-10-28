@@ -117,17 +117,17 @@ class TChart(
                 <tr><td colspan="4">none</td></tr>
             else
                 myStockAssets map { (asset) =>
-                    val sellButton =
-                        if (modifiable)
-                            <td class="buttons">
-                                {snippet.SellThisStock(asset.ticker)}
-                            </td>
-                        else Nil
-            
                     <tr>
                         <td class="tchart-ticker">{asset.ticker}</td>
                         <td class="tchart-price">({mehPrice(asset)}/sh)</td>
-                        {sellButton}
+                        <td class="buttons">
+                        {
+                        if (modifiable)
+                            snippet.SellThisStock(asset.ticker)
+                        else
+                            Nil
+                        }
+                        </td>
                         <td class="tchart-dollars">{mehDollars(asset)}</td>
                     </tr>
                 }
