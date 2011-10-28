@@ -69,7 +69,7 @@ class TChart(
                     </tr>
                 </table>
             </div>
-        
+
         lazy val assetsTable =
             <table class="tchart assets">
                 <tr class="tchart-section">
@@ -130,7 +130,7 @@ class TChart(
         
         lazy val derivativeAssets =
             if (myDerivativeAssets isEmpty)
-                <tr><td colspan="3">none</td></tr>
+                <tr class="deriv-row deriv-header"><td colspan="3">none</td></tr>
             else
                 myDerivativeAssets map { (asset) =>
                     val deriv = asset.derivative
