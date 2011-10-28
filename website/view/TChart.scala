@@ -46,37 +46,34 @@ class TChart(
         val myDerivativeLiabilities = port.myDerivativeLiabilities
         
         lazy val result =
-            <div class="block portfolio-block">
-                <h2>Portfolio</h2>
-                <table id="portfolio" class="block container portfolio">
-                    <col class="tchart-left1"/>
-                    <col class="tchart-left2"/>
-                    <col class="tchart-right1"/>
-                    <col class="tchart-right2"/>
-                    <tr class="tchart-top">
-                        <td colspan="2" class="tchart-top">Assets</td>
-                        <td colspan="2" class="tchart-top">Liabilities</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" class="tchart-half">{assetsTable}</td>
-                        <td colspan="2" class="tchart-half">{liabilitiesTable}</td>
-                    </tr>
-                    <tr class="tchart-section tchart-total tchart">
-                        <td>Total:</td>
-                        <td class="tchart-dollars">{total.$}</td>
-                        <td>Total:</td>
-                        <td class="tchart-dollars">{liabilitiesTotal.$}</td>
-                    </tr>
-                    <tr class="tchart">
-                        <td class="tchart-section tchart-total">
-                            Equity:
-                        </td>
-                        <td class="tchart-section tchart-total tchart-dollars">
-                        {(total - liabilitiesTotal).$}
-                        </td>
-                    </tr>
-                </table>
-            </div>
+            <table id="portfolio" class="block container portfolio">
+                <col class="tchart-left1"/>
+                <col class="tchart-left2"/>
+                <col class="tchart-right1"/>
+                <col class="tchart-right2"/>
+                <tr class="tchart-top">
+                    <td colspan="2" class="tchart-top">Assets</td>
+                    <td colspan="2" class="tchart-top">Liabilities</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="tchart-half">{assetsTable}</td>
+                    <td colspan="2" class="tchart-half">{liabilitiesTable}</td>
+                </tr>
+                <tr class="tchart-section tchart-total tchart">
+                    <td>Total:</td>
+                    <td class="tchart-dollars">{total.$}</td>
+                    <td>Total:</td>
+                    <td class="tchart-dollars">{liabilitiesTotal.$}</td>
+                </tr>
+                <tr class="tchart">
+                    <td class="tchart-section tchart-total">
+                        Equity:
+                    </td>
+                    <td class="tchart-section tchart-total tchart-dollars">
+                    {(total - liabilitiesTotal).$}
+                    </td>
+                </tr>
+            </table>
 
         lazy val assetsTable =
             <table class="tchart assets">

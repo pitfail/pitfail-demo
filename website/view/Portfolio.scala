@@ -33,8 +33,11 @@ class Portfolio extends Refreshable with Loggable
                 catch {
                     case NotLoggedIn => None
                 }
-        }
-        yield snippet.TChart(user, true).render
+        } yield
+            <div class="block">
+                <h2>Portfolio</h2>
+                {snippet.TChart(user, true).render}
+            </div>
     }
     .getOrElse(<p>Login to view your portfolio</p>)
 }
