@@ -87,7 +87,10 @@ object TwitterLogin extends Loggable
         // TODO: What happens if the URL doesn't have the right query params?
         req.params get "oauth_verifier" match {
             case Some(v::Nil)  => doVerifier(v)
-            case _             => throw new IllegalStateException("Figure out later")
+
+            /* User decided not to autorize, tell them something?
+             * http://localhost:8080/twitter/callback?denied=<long string> */
+            case _             => Full(RedirectResponse(returnTo))
         }
     
     protected def doVerifier(verifierText: String): Box[LiftResponse] = {
