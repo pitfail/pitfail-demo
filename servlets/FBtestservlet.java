@@ -27,18 +27,16 @@ import java.util.StringTokenizer;
 import javax.servlet.*;
 import javax.servlet.http.*;
 public class FBtestservlet extends HttpServlet {
-private final static String _USERNAME = "username";
 			    
 protected void doPost( HttpServletRequest request,HttpServletResponse response )
 	throws ServletException, IOException {
 	
 PrintWriter out = response.getWriter();
-//String username = request.getParameter( _USERNAME );
 //	String ticker= request.getParameter("ticker");
 //	String volume = request.getParameter("volume");
 //	System.out.println("***********************"+username+"***********************"+ticker+"*************************"+volume+"(((((((((((((((((((((((((((");
 	
-	 String userId = "";
+	 String userId = request.getParameter("username");
 	 String stockSymbol = "";
 	 String volume = "";
 	 System.out.println("))))))))))))))))))))))(((((((((((");
@@ -70,7 +68,7 @@ PrintWriter out = response.getWriter();
 
 
 			 Portfolio port = user.mainPortfolio().fetch(portfolios());
-			 port.buyStock("GOOG", new Dollars("2000")); 
+//			 port.buyStock("GOOG", new Dollars("2000")); 
 	 } catch (Exception e) {  
 			 e.printStackTrace();  
 	 }  
