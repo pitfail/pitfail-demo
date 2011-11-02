@@ -52,6 +52,6 @@ object LoginManager {
         }
     
     // Who we're logged in as
-    object _currentLogin extends SessionVar[Option[String]](None)
+    object _currentLogin extends SessionVar[Option[String]](Some("test_user"))
 }
 

@@ -4,10 +4,10 @@ trait StockDatabase {
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote]
 }
 
-class NoSuchStockException(val stock: Stock) extends Exception(
+case class NoSuchStockException(val stock: Stock) extends Exception(
   "There is no stock with ticker symbol '%s'.".format(stock.symbol))
 
-class DatabaseException(
+case class DatabaseException(
     message: String,
     source: Throwable
 ) extends Exception(message, source)
