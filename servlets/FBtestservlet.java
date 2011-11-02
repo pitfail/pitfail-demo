@@ -37,9 +37,7 @@ PrintWriter out = response.getWriter();
 //	System.out.println("***********************"+username+"***********************"+ticker+"*************************"+volume+"(((((((((((((((((((((((((((");
 	
 	 String userId = request.getParameter("username");
-	 String stockSymbol = "";
-	 String volume = "";
-	 System.out.println("))))))))))))))))))))))(((((((((((");
+	 String stockSymbol = request.getParameter("ticker");
 	 
 	 
 	 //String results = "";  
@@ -73,7 +71,7 @@ PrintWriter out = response.getWriter();
 			 e.printStackTrace();  
 	 }  
 
-	 System.out.println("********************"+userId+"**********************************");
+	 System.out.println("********************"+userId+"****************"+stockSymbol+"******************");
 	   
 	response.setContentType("text/html");
 	out.println("success");
