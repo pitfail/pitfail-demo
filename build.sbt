@@ -35,6 +35,8 @@ includeFilter in Test in unmanagedSources <<=
 		})
 	}
 
+traceLevel in Runtime := 5
+
 scalacOptions ++= Seq(
     "-deprecation",
     "-unchecked",
@@ -56,7 +58,8 @@ libraryDependencies ++= Seq(
     "net.liftweb"      %% "lift-openid"         % "2.4-M4",
     "net.liftweb"      %% "lift-json-ext"       % "2.4-M4",
     "org.mortbay.jetty" % "jetty"             % "6.1.22" % "jetty",
-    "org.slf4j"        % "slf4j-simple"         % "1.6.1",
+    //"org.slf4j"        % "slf4j-simple"         % "1.6.1",
+    "org.slf4j"        % "slf4j-log4j12"         % "1.6.1",
     //"com.h2database"   % "h2"                   % "1.3.159",
     //"org.apache.derby" % "derby"                % "10.8.1.2",
     //"org.xerial"       % "sqlite-jdbc"          % "3.7.2",

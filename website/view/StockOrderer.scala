@@ -76,8 +76,6 @@ class StockOrderer extends Page with Loggable
             try {
                 buyStock(quote, volume)
             } catch {
-                case e: BadInput => throw BadFieldInput(volumeField, e.msg)
-
                 case NegativeVolume => throw BadFieldInput(volumeField,
                     "You must buy more than $0.00 of a stock"
                 )
