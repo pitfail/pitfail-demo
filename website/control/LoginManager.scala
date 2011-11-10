@@ -43,12 +43,8 @@ object LoginManager {
     def currentLogin: Option[String] = _currentLogin.is
     def currentUser: User =
         currentLogin match {
-            case Some(name) =>
-                byUsername(name) match {
-                    case Some(user) => user
-                    case _ => throw new IllegalStateException("Invalid user")
-                }
-            case _ => throw NotLoggedIn
+            case Some(name) => ensureUser(name)
+            case _          => throw NotLoggedIn
         }
     
     // Who we're logged in as
