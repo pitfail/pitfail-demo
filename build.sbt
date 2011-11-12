@@ -3,6 +3,10 @@ name := "pitfail-demo"
 
 scalaVersion := "2.9.1"
 
+autoCompilerPlugins := true
+
+addCompilerPlugin("org.scala-lang.plugins" % "continuations" % "2.9.1")
+
 target <<= baseDirectory(_ / ".target")
 
 // This is where you'd set the log level. Believe it or not this is
@@ -40,7 +44,8 @@ traceLevel in Runtime := 5
 scalacOptions ++= Seq(
     "-deprecation",
     "-unchecked",
-    "-explaintypes"
+    "-P:continuations:enable",
+    "-Xexperimental"
 )
 
 // For scalaz
