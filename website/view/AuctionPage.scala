@@ -9,9 +9,10 @@ import http._
 import scala.xml._
 
 import intform._
-import model._
-import model.Schema._
 import formats._
+
+import model._
+import model.schema._
 
 class AuctionPage extends Page with Loggable {
     
@@ -22,10 +23,9 @@ class AuctionPage extends Page with Loggable {
         normal openOr error
     )
         
-    def normal: Box[NodeSeq] = trans {
+    def normal: Box[NodeSeq] = readDB {
         for {
-            idText  <- param
-            id       = java.lang.Long parseLong idText
+            id  <- param
             auction  <-
                 try {
                     Full(AuctionOffer.byID(id))

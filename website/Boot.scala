@@ -12,8 +12,6 @@ import Loc._
 
 import code.control
 
-
-
 class Boot extends Loggable {
 
     def boot {

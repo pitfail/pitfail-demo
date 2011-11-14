@@ -4,8 +4,8 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 
-import model.Schema;
-import static model.Schema.*;
+import model.schema;
+import static model.schema.*;
 import model.*;
 import scala.collection.*;
 import static scala.collection.JavaConversions.*;
@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class SellServlet extends HttpServlet {
 
+    /*
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 	@Override
@@ -63,4 +64,5 @@ public class SellServlet extends HttpServlet {
 		}
 
 	}
+    */
 }

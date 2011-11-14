@@ -1,145 +1,83 @@
 
 package model
 
-import java.sql.Timestamp
-import derivatives._
+import errors._
+import org.joda.time.DateTime
 
-import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.dsl._
-import org.squeryl.dsl.ast._
+/*
 
-object schema 
-    extends H2Schema // backend driver
-    with DBMagic     // Updates, selects, etc
+Welcome to the Schema
+=====================
+
+The various parts of the schema are in the following files:
+ - users.scala        -- basic aspects of users + portfolios
+ - stocks.scala       -- stocks
+ - derivatives.scala  -- derivatives
+ - auctions.scala     -- auctions
+ - news.scala         -- news events (for the sidebar)
+
+Because of implicits, you should
+
+    import model.schema._
+
+before using the database.
+ 
+Reading the database
+--------------------
+
+You must read the database inside a readDB block:
+
+    readDB {
+        val events = recentEvents(10)
+        val items = events map (ev => <li>{ev}</li>)
+        
+        <ul>{items}</ul>
+    }
+
+Editing the database
+--------------------
+ 
+You must edit the database inside a editDB block:
+
+    editDB {
+        User ensure "joe" // Make user the "joe" account exists
+    }
+
+Database operations are monadic! This means it is often necessary to use a for
+block:
+
+    editDB {
+        for {
+            user <- User ensure "joe"
+            _ <- user.mainPortfolio.buyStock("MSFT", Dollars(500))
+        }
+        yield ()
+    }
+
+*/
+
+object schema
+    extends DummySchema
+    with DBMagic  // Updates, selects, etc
+    with SchemaErrors
     with UserSchema
     with StockSchema
     with DerivativeSchema
     with AuctionSchema
     with NewsSchema
-
-trait UserSchema extends DBMagic {
-    case object NoSuchUser extends Exception
     
-    implicit val users = table[User]
-    implicit val portfolios = table[Portfolio]
-    
-    case class User(
-            id:            Key,
-            username:      String,
-            mainPortfolio: Link[Portfolio]
-        )
-        extends KL
-    
-    case class Portfolio(
-            id:    Key,
-            cash:  Dollars,
-            owner: Link[User],
-            loan:  Dollars
-        )
-        extends KL
-    
-    object User {
-        def ensure(name: String) = byName(name) orCreate {
-            sys.error("This is not implemented")
-        }
-        
-        def byName(name: String) = {
-            val u = from(users)(u =>
-                    where(u.username === name)
-                    select(u)
-                ) headOption
-            
-            u getOrElse (throw NoSuchUser)
-        }
-    }
+trait SchemaErrors {
+    case object NegativeVolume extends BadUser
+    case class NotEnoughCash(have: Dollars, need: Dollars) extends BadUser
+    case class DontOwnStock(ticker: String) extends BadUser
+    case class NotEnoughShares(have: Shares, need: Shares) extends BadUser
+    case object OfferExpired extends BadUser
+    case object NotExecutable extends BadUser
+    case object NoSuchAuction extends BadUser
+    case class BidTooSmall(going: Dollars) extends BadUser
+    case object NoSuchUser extends BadUser
+    case object NoSuchDerivativeAsset extends BadUser
 }
 
-trait StockSchema extends UserSchema {
-    implicit val stockAssets = table[StockAsset]
-    
-    case class StockAsset(
-            id:     Key = nextID,
-            ticker: String,
-            shares: Shares,
-            owner:  Link[Portfolio]
-        )
-        extends KL
-}
-
-trait DerivativeSchema extends UserSchema {
-    implicit val derivativeAssets      = table[DerivativeAsset]
-    implicit val derivativeLiabilities = table[DerivativeLiability]
-    implicit val derivativeOffers      = table[DerivativeOffer]
-    
-    case class DerivativeAsset(
-            id:    Key = nextID,
-            peer:  Link[DerivativeLiability],
-            scale: Scale,
-            owner: Link[Portfolio]
-        )
-        extends KL
-        
-    case class DerivativeLiability(
-            id:         Key = nextID,
-            name:       String,
-            derivative: Derivative,
-            remaining:  Scale,
-            exec:       Timestamp,
-            owner:      Link[Portfolio]
-        )
-        extends KL
-        
-    case class DerivativeOffer(
-            id:         Key = nextID,
-            derivative: Derivative,
-            from:       Link[Portfolio],
-            to:         Link[Portfolio],
-            price:      Dollars,
-            expires:    Timestamp
-        )
-        extends KL
-}
-
-trait AuctionSchema
-    extends UserSchema
-    with DerivativeSchema
-{
-    implicit val auctionOffer = table[AuctionOffer]
-    implicit val auctionBids  = table[AuctionBid]
-    
-    case class AuctionOffer(
-            id:         Key = nextID,
-            derivative: Derivative,
-            offerer:    Link[Portfolio],
-            price:      Dollars,
-            when:       Timestamp,
-            expires:    Timestamp
-        )
-        extends KL
-        
-    case class AuctionBid(
-            id:    Key = nextID,
-            offer: Link[AuctionOffer],
-            by:    Link[Portfolio],
-            price: Dollars
-        )
-        extends KL
-}
-
-trait NewsSchema extends UserSchema {
-    implicit val newsEvents = table[NewsEvent]
-    
-    case class NewsEvent(
-            id:        Key = nextID,
-            when:      Timestamp,
-            action:    String,
-            subject:   Link[User],
-            recipient: Link[User],
-            ticker:    String,
-            shares:    Shares,
-            dollars:   Dollars,
-            price:     Price
-        )
-        extends KL
-}
+case object NotFound extends BadUser
 

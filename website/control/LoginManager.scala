@@ -7,9 +7,10 @@ import common._
 import util._
 import http._
 import sessions._
-import model.Schema._
 
-object LoginManager {
+import model.schema._
+
+object LoginManager extends Loggable {
     
     case object NotLoggedIn extends RuntimeException
     
@@ -23,11 +24,13 @@ object LoginManager {
     }
     
     def loginAsTwitter(name: String) {
-        import model.Schema
         import comet._
         
         _currentLogin := Some(name)
-        Schema.ensureUser(name)
+        logger.info("Ensuring user " + name)
+        editDB {
+            User ensure name
+        }
         
         Portfolio        ! Refresh
         News             ! Refresh
@@ -43,7 +46,7 @@ object LoginManager {
     def currentLogin: Option[String] = _currentLogin.is
     def currentUser: User =
         currentLogin match {
-            case Some(name) => ensureUser(name)
+            case Some(name) => editDB { User ensure name }
             case _          => throw NotLoggedIn
         }
     

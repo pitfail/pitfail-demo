@@ -18,7 +18,6 @@ import scala.math._
 
 import intform._
 import model._
-import model.Schema._
 
 class DollarsField(initText: String)
     extends TextField[Dollars](initText)
@@ -64,3 +63,4 @@ class SharesField(initText: String)
 object SharesField {
     def apply(i: String = "") = new SharesField(i)
 }
+

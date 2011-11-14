@@ -16,11 +16,11 @@ object Checker extends Loggable {
     def runChecks() {
         import comet._
         
-        logger.info("Running the derivative checker...")
-        model.Schema.checkForExercise()
+        // logger.info("Running the derivative checker...")
+        // model.Schema.checkForExercise()
         
-        logger.info("Running the auction checker...")
-        model.Schema.checkForAuctionClosings()
+        // logger.info("Running the auction checker...")
+        // model.Schema.checkForAuctionClosings()
         
         Portfolio        ! Refresh
         News             ! Refresh

@@ -14,15 +14,14 @@ import Helpers._
 
 import formats._
 import snippet._
+import model.schema._
 
 class AuctionThumbnail extends Refreshable
     with Loggable
 {
-    import model.Schema._
-    
     def registerWith = News
-    
-    def render = (in: NodeSeq) => trans {
+
+    def render = (in: NodeSeq) => readDB {
         val auctions = recentAuctions(5)
         
         val items = auctions map { auc =>

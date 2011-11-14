@@ -14,44 +14,44 @@ import Helpers._
 
 import formats._
 import snippet._
+import model.schema._
 
 class News extends Refreshable
     with Loggable
 {
-    import model.Schema._
-    
     def registerWith = News
-
-    def newsContents = {
-        val nc = ( recentEvents(10) map {event(_)} ) map ( e =>
-            <li class="event">{e}</li>
-        )
-
-        if (nc nonEmpty) {
-            nc
-        } else {
-            <li class="event no_items">[none]</li>
-        }
-    }
-
-    def render = (in: NodeSeq) => trans {
+    
+    def render = (in: NodeSeq) => readDB {
         <ul class="news"> {
             newsContents
         } </ul>
     }
-    
-    def event(ev: NewsEvent) =
+
+    def newsContents = {
+        val items = ( recentEvents(10) map {eventDescription(_)} ) map ( e =>
+            <li class="event">{e}</li>
+        )
+
+        if (items nonEmpty) items
+        else <li class="event no_items">[none]</li>
+    }
+
+    def eventDescription(ev: NewsEvent) =
         ev.action match {
-            case "buy" =>
+            case Bought =>
                 <span>
                     {UserLink(ev.subject.username)} bought
                     {ev.dollars.$} of {ev.ticker}
                 </span>
-            case "sell" =>
+            case Sold =>
                 <span>
                     {UserLink(ev.subject.username)} sold
                     {ev.dollars.$} of {ev.ticker}
                 </span>
+            
+            case other =>
+                logger warn ("Don't know the event " + other)
+                Nil
         }
 }
 

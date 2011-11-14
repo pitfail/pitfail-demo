@@ -2,11 +2,10 @@
 package code
 package snippet
 
-import model.Schema.{
-    User
-}
-
 import intform._
+
+import model._
+import model.schema._
 
 class UserField(
         initText: String
@@ -14,9 +13,11 @@ class UserField(
     extends TextField[User](initText)
 {
     def produce() =
-        model.Schema.byUsername(text) match {
-            case None => Error("No user named " + text)
-            case Some(user) => OK(user)
+        try readDB {
+            OK(User byName text)
+        }
+        catch { case NoSuchUser =>
+            Error("No user named " + text)
         }
 }
 object UserField {

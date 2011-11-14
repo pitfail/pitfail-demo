@@ -3,7 +3,6 @@ package stockdata
 
 import org.joda.time.DateTime
 import model._
-import model.Schema._
 
 case class Stock(symbol: String) {
   override val toString = symbol

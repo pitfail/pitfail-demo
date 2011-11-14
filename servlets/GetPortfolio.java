@@ -4,8 +4,8 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 
-import model.Schema;
-import static model.Schema.*;
+import model.schema;
+import static model.schema.*;
 import model.*;
 import scala.collection.*;
 import static scala.collection.JavaConversions.*;
@@ -32,7 +32,8 @@ import scala.math.*;
  * 
  */
 public class GetPortfolio extends HttpServlet {
-
+    /*
+    
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 
@@ -67,16 +68,11 @@ public class GetPortfolio extends HttpServlet {
 
 
 
-/*				response.setContentType("text/html");
-		    	ObjectOutputStream oos = new ObjectOutputStream(response.getOutputStream());
-			    String respond = "Portfolio extracted";
-			    oos.writeObject(respond);
-			    oos.flush();
-			    oos.close();
-*/		} catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			
 		}
 
 	}
+*/
 }

@@ -6,7 +6,7 @@ object ConsoleTest {
     
     def main(args: Array[String]) {
         // Get the database running
-        model.Schema.init()
+        model.schema.init()
         
         val backend  = new PitFailBackend()
         val frontend = new ConsoleFrontend("ellbur_k_a")

@@ -16,7 +16,7 @@ import formats._
 import intform._
 
 import model._
-import model.Schema._
+import model.schema._
 import stockdata._
 import org.joda.time.Duration
 
@@ -24,22 +24,22 @@ class Portfolio extends Refreshable with Loggable
 {
     def registerWith = Portfolio
     
-    def render = (in: NodeSeq) => trans {
+    def render = readDB {
         import control.LoginManager._
         
-        for {
-            user <-
-                try { Some(currentUser) }
-                catch {
-                    case NotLoggedIn => None
-                }
-        } yield
+        this.logger.info("Rendering a portfolio for " + currentUser)
+        
+        try {
             <div class="block">
                 <h2>Portfolio</h2>
-                {snippet.TChart(user, true).render}
+                {snippet.tChart(currentUser, true)}
             </div>
+        }
+        catch {
+            case NotLoggedIn =>
+                <p>Login to view your portfolio</p>
+        }
     }
-    .getOrElse(<p>Login to view your portfolio</p>)
 }
 
 object Portfolio extends RefreshHub

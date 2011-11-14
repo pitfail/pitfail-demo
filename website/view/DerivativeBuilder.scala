@@ -18,14 +18,14 @@ import scala.math._
 import intform._
 
 import stockdata._
-import model.derivatives._
-import model._
-import model.Schema._
 import scalaz.Scalaz._
 import formats._
 
 import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat,DateTimeFormatter}
+
+import model.schema._
+import model._
 
 abstract class Recipient
 case class SpecificUser(user: User) extends Recipient
@@ -193,7 +193,8 @@ class DerivativeBuilder extends Page with Loggable
 
     lazy val toField = CaseField[Recipient](
         Seq(
-            toUserField,
+            //toUserField,
+            ConstField(OpenAuction),
             ConstField(OpenAuction)
         ),
         choices =>
@@ -349,10 +350,11 @@ class DerivativeBuilder extends Page with Loggable
             val user = currentUser
             order.recipient match {
                 case SpecificUser(recip) =>
-                    user.offerDerivativeTo(recip, deriv, order.price)
+                    user.mainPortfolio.offerDerivativeTo(recip, deriv, order.price)
                     
-                case OpenAuction => user.offerDerivativeAtAuction( deriv,
-                order.price, expires
+                case OpenAuction =>
+                    user.mainPortfolio.offerDerivativeAtAuction(deriv,
+                        order.price, expires
                     )
             }
             
@@ -365,7 +367,8 @@ class DerivativeBuilder extends Page with Loggable
             clearAll()
         }
         catch {
-            case NotLoggedIn => throw BadFieldInput(recipientField, "You're not logged in")
+            case NotLoggedIn =>
+                throw BadFieldInput(recipientField, "You're not logged in")
         }
     }
     

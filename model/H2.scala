@@ -36,5 +36,18 @@ trait H2Schema extends squeryl.Schema {
             this.create
         }
     }
+    
+    // Get the Schema as text
+    def schemaDDL: String = {
+        var schema: String = ""
+        
+        this.printDdl {st =>
+            schema += st
+            schema += "\n"
+            schema += "\n"
+        }
+
+        schema
+    }
 }
 
