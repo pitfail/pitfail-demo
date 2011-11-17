@@ -13,6 +13,7 @@ import JE._
 import Helpers._
 
 import intform._
+import model.schema._
 
 class SellThisStock(ticker: String)
     extends Renderable
@@ -29,9 +30,9 @@ class SellThisStock(ticker: String)
     
     def userSellStock() {
         import control.LoginManager._
-        import model.Schema._
-
-        try {
+        import model.schema._
+        
+        try editDB {
             val user = currentUser
             user.mainPortfolio.sellAll(ticker)
         }

@@ -20,8 +20,6 @@ import scala.math.{BigDecimal}
 import intform._
 
 import stockdata._
-import model.derivatives._
-import model.Schema.User
 import scalaz.Scalaz._
 import formats._
 

@@ -20,12 +20,12 @@ import scala.math.{BigDecimal}
 import intform._
 
 import stockdata._
-import model.derivatives._
-import model._
-import model.Schema._
 import scalaz.Scalaz._
 
 import formats._
+
+import model._
+import model.schema._
 
 abstract class StockOrder
 case class NoOrder() extends StockOrder
@@ -76,8 +76,6 @@ class StockOrderer extends Page with Loggable
             try {
                 buyStock(quote, volume)
             } catch {
-                case e: BadInput => throw BadFieldInput(volumeField, e.msg)
-
                 case NegativeVolume => throw BadFieldInput(volumeField,
                     "You must buy more than $0.00 of a stock"
                 )
@@ -105,14 +103,15 @@ class StockOrderer extends Page with Loggable
 
     private def buyStock(quote: Quote, dollars: Dollars): JsCmd = {
         import control.LoginManager._
-        import model.Schema._
         
         this.logger.info("Buying %s of %s" format(dollars, quote))
 
         val shares = dollars /-/ quote.price
 
         if (shares > Shares(0)) {
-            currentUser.mainPortfolio.buyStock(quote.stock.symbol, shares)
+            editDB {
+                currentUser.mainPortfolio.buyStock(quote.stock.symbol, shares)
+            }
             currentQuote = None
 
             comet.Portfolio ! comet.Refresh

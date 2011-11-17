@@ -15,22 +15,22 @@ import Helpers._
 import control.LoginManager
 import LoginManager.{currentLogin}
 
-import model.Schema._
 import formats._
 import intform._
+
+import model.schema._
 
 class Offers extends Refreshable with Loggable
 {
     def registerWith = Offers
     
-    def render = (in: NodeSeq) => trans {
-        for {
-            name <- currentLogin
-            user <- byUsername(name)
+    def render = (in: NodeSeq) => readDB {
+        import control.LoginManager._
+        
+        try {
+            val user = currentUser
+            val myOffers = user.mainPortfolio.myDerivativeOffers
             
-            port = user.mainPortfolio
-            myOffers = port.myOffers
-        } yield {
             import snippet._
             
             def result: NodeSeq =
@@ -82,20 +82,25 @@ class Offers extends Refreshable with Loggable
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>
                     <td>{o.price.$}</td>
-                    <td>{acceptOffer(o.handle)} {declineOffer(o.handle)}</td>
+                    <td>{acceptOffer(o.id)} {declineOffer(o.id)}</td>
                 </tr>
             }
             
             result
+            
         }
-    } getOrElse <span/>
+        catch {
+            case NotLoggedIn => <span/>
+        }
+    }
     
     def acceptOffer(offerID: String) = FormSubmit.rendered("Accept") {
         import control.LoginManager._
         
         try {
             val user = currentUser
-            user.acceptOffer(offerID)
+            user.mainPortfolio acceptOffer offerID
+            
             comet.Offers ! Refresh
             comet.Portfolio ! Refresh
         }
@@ -113,7 +118,7 @@ class Offers extends Refreshable with Loggable
         
         try {
             val user = currentUser
-            user.declineOffer(offerID)
+            user.mainPortfolio.declineOffer(offerID)
             comet.Offers ! Refresh
             comet.Portfolio ! Refresh
         }

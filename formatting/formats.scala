@@ -2,18 +2,18 @@
 package object formats {
 //
 
-import model.derivatives._
 import scala.math.{BigDecimal}
 import org.joda.time.{DateTime}
 import net.liftweb.common.Logger
 import java.sql.Timestamp
 
+import model._
+import model.schema._
+
 // ------------------------------------------------------------------
 // Errors
 
 def standardMessage(error: Any) = {
-    import model.Schema._
-    
     error match {
         case NegativeVolume               => "You must buy more than $0.00"
         case NotEnoughCash(have, need)    => "You need %s you have %s" format (have.$, need.$)

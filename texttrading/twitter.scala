@@ -54,7 +54,7 @@ class TwitterFrontend(
         }
     }
 
-    val user_stream = UserStream.open(consumer, token, None, FollowMutual, Seq("@" + app.accessUser)) {
+    val user_stream = UserStream.open(consumer, token, None, RepliesMutual, Seq("@" + app.accessUser)) {
         message : JValue =>
 
         for {

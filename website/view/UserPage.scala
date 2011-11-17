@@ -12,44 +12,45 @@ import intform._
 import errors._
 import Box._
 
-import model.Schema._
+import formats._
+import model.schema._
 
 class UserPage extends Page with Loggable {
     
     val nameParam = S param "name"
     
-    def render = trans {
-        import model.Schema._
+    def render = try readDB {
         import control.LoginManager._
         
-        for {
-            name <- nameParam ?~ "No user specified"
-            user <- byUsername(name) ?~ ("No user named " + name)
+        val name = nameParam openOr {
+            throw NoSuchUser
         }
-        yield {
-            lazy val them =
-                <div id="user-page" class="block">
-                    <h2>User: {name}</h2>
-                    {chart}
-                </div>
+        val user = User byName name
+        
+        val chart = tChart(user, false)
+        
+        val them =
+            <div id="user-page" class="block">
+                <h2>User: {name}</h2>
+                {chart}
+            </div>
+        
+        val us =
+            <lift:comet type="Offers"/> ++
+            <lift:comet type="Portfolio"/> ++
+            <lift:comet type="OutgoingOffers"/>
             
-            lazy val chart = TChart(user, false).render
-            
-            lazy val us =
-                <lift:comet type="Offers"/> ++
-                <lift:comet type="Portfolio"/> ++
-                <lift:comet type="OutgoingOffers"/>
-            
-            lazy val curUser =
-                try Some(currentUser)
-                catch { case NotLoggedIn => None }
-            
-            if (curUser map (_ == user) getOrElse false)
-                us
-            else them
-        }
+        val curUser =
+            try Some(currentUser)
+            catch { case NotLoggedIn => None }
+        
+        if (curUser map (_ == user) getOrElse false)
+            us
+        else them
+       <p/>
     }
-    .withMessage(m => <p>Sorry,{m}</p>)
-    
+    catch {
+        case e: BadUser => <p>Sorry, {standardMessage(e)}</p>
+    }
 }
 

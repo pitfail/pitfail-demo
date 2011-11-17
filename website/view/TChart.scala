@@ -16,20 +16,22 @@ import control.LoginManager
 import formats._
 import intform._
 
-import model._
-import model.Schema._
 import LoginManager.{currentLogin}
 import stockdata._
 import org.joda.time.Duration
 
-class TChart(
-    user:       User,
-    modifiable: Boolean
-)
-    extends Renderable
-    with Loggable
+import model._
+import model.schema._
+
+object tChart extends Loggable {
+//
+    
+def apply(
+        user: User,
+        modifiable: Boolean
+    ) =
 {
-    def render = trans {
+    def render = readDB {
         val port = user.mainPortfolio
         
         val myStockAssets           = port.myStockAssets
@@ -204,20 +206,11 @@ class TChart(
     }
     
     def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Exercise") {
-        da.refetch() map {execute _} match {
-            case Some(_) =>
-                comet.Portfolio ! comet.Refresh
-                Noop
-            case None => throw BadInput("No longer exists")
-        }
-    }
-    
-    def execute(da: DerivativeAsset) {
         try {
-            da.executeManually()
+            da.userExecuteManually()
         }
-        catch {
-            case NotExecutable => throw BadInput("Not executable")
+        catch { case NoSuchDerivativeAsset =>
+            throw BadInput("No longer exists")
         }
     }
     
@@ -244,9 +237,10 @@ class TChart(
                 None
         }
     }
+    
+    render
 }
 
-object TChart {
-    def apply(u: User, m: Boolean) = new TChart(u, m)
+//
 }
 

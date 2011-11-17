@@ -9,17 +9,15 @@ import net.liftweb.common.Logger
 package object model {
 //
 
+type Key = String
+def nextID: Key = java.util.UUID.randomUUID.toString.substring(0, 5)
+
 implicit def bigDecimalOps(b: BigDecimal) = new {
     def round(decimals: Int, mode: RoundingMode): BigDecimal = {
         val precision = b.precision - b.scale + decimals
         if (precision > 0) {
             val context = new MathContext(precision, mode)
             val out = b.round(context)
-            new Logger {
-                info("Rounding!!!!")
-                info(out)
-                info("%s" format out.precision)
-            }
             out
         }
         else BigDecimal("0")
@@ -65,16 +63,6 @@ case class Dollars(dollars: BigDecimal)
 
 object Dollars {
     def apply(str: String): Dollars = Dollars(BigDecimal(str))
-    implicit def toField(d: Dollars) = DollarsField(d.dollars)
-}
-
-case class DollarsField(dollars: BigDecimal)
-    extends IntField((dollars*100).intValue)
-{
-    def this(cents: Int) = this(BigDecimal(cents)/100)
-}
-object DollarsField {
-    implicit def fromField(d: DollarsField) : Dollars = Dollars(d.dollars)
 }
 
 case class Shares(shares: BigDecimal) extends Ordered[Shares] {
@@ -94,16 +82,6 @@ case class Shares(shares: BigDecimal) extends Ordered[Shares] {
 }
 object Shares {
     def apply(str: String): Shares = Shares(BigDecimal(str))
-    
-    implicit def toField(s: Shares) = SharesField(s.shares)
-}
-
-case class SharesField(shares: BigDecimal)
-    extends BigDecimalField(shares)
-{
-}
-object SharesField {
-    implicit def fromField(s: SharesField) = Shares(s.shares)
 }
 
 case class Price(price: BigDecimal) extends Ordered[Price] {
@@ -122,14 +100,6 @@ case class Price(price: BigDecimal) extends Ordered[Price] {
 }
 object Price {
     def apply(str: String): Price = Price(BigDecimal(str))
-
-    implicit def toField(p: Price) = PriceField(p.price)
-}
-
-case class PriceField(price: BigDecimal) extends BigDecimalField(price) {
-}
-object PriceField {
-    implicit def fromField(p: PriceField) = Price(p.price)
 }
 
 case class Scale(scale: BigDecimal) extends Ordered[Scale] {
@@ -147,14 +117,6 @@ case class Scale(scale: BigDecimal) extends Ordered[Scale] {
 }
 object Scale {
     def apply(str: String): Scale = Scale(BigDecimal(str))
-    
-    implicit def toField(s: Scale) = ScaleField(s.scale)
-}
-
-case class ScaleField(scale: BigDecimal) extends BigDecimalField(scale) {
-}
-object ScaleField {
-    implicit def fromField(s: ScaleField) = Scale(s.scale)
 }
 
 //

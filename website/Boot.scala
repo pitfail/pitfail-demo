@@ -12,12 +12,15 @@ import Loc._
 
 import code.control
 
-
-
 class Boot extends Loggable {
 
     def boot {
-        logger.info("Booting...");
+        org.apache.log4j.PropertyConfigurator.configure("log4j.properties")
+        
+        System.err.println("\033[42m--------------------------------------------------------\033[0m")
+        System.err.println
+        System.err.println("\033[42m--------------------------------------------------------\033[0m")
+        System.err.println
 
         /* Start the twitter server */
         texttrading.twit.run()

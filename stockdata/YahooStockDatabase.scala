@@ -115,7 +115,7 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase with 
       stock      ,
       exchange   = "PITFAIL",
       company    = "Enterprise Solutions Inc",
-      price      = Price(Math.random * 100),
+      price      = Price(scala.math.random * 100),
       updateTime = new DateTime,
       info       = QuoteInfo(None, None, None, None, None)
   )

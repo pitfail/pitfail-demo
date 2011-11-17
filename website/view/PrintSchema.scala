@@ -14,9 +14,10 @@ import Helpers._
 
 object PrintSchema
 {
-    def render =
-        <pre>
-        {model.Schema.schemaDDL}
-        </pre>
+    import model.schema._
+    
+    def render = readDB {
+        <pre>{schemaDDL}</pre>
+    }
 }
 

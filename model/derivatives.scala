@@ -1,15 +1,86 @@
 
 package model
 
-package object derivatives {
-
-import java.sql.Timestamp
 // Joda time
-import org.joda.time.{DateTime}
+import org.joda.time.DateTime
 import formats._
-import Schema._
 
 import net.liftweb.common.Loggable
+
+trait DerivativeSchema {
+    schema: UserSchema with DBMagic =>
+    
+    implicit val derivativeAssets      = table[DerivativeAsset]
+    implicit val derivativeLiabilities = table[DerivativeLiability]
+    implicit val derivativeOffers      = table[DerivativeOffer]
+    
+    // Model tables
+    
+    case class DerivativeAsset(
+            id:    Key = nextID,
+            peer:  Link[DerivativeLiability],
+            scale: Scale,
+            owner: Link[Portfolio]
+        )
+        extends KL
+        with DerivativeAssetOps
+        
+    case class DerivativeLiability(
+            id:         Key = nextID,
+            name:       String,
+            derivative: Derivative,
+            remaining:  Scale,
+            exec:       DateTime,
+            owner:      Link[Portfolio]
+        )
+        extends KL
+        
+    case class DerivativeOffer(
+            id:         Key = nextID,
+            derivative: Derivative,
+            from:       Link[Portfolio],
+            to:         Link[Portfolio],
+            price:      Dollars,
+            expires:    DateTime
+        )
+        extends KL
+    
+    // Operations
+        
+    trait DerivativeAssetOps {
+        self: DerivativeAsset =>
+            
+        def derivative = self.peer.derivative
+        
+        // When a user wants to exercise a derivative early.
+        // Not all derivatives can be exercised early.
+        def userExecuteManually() { sys.error("Not implemented") }
+    }
+    
+    trait PortfolioWithDerivatives {
+        self: Portfolio =>
+        
+        def myDerivativeAssets = schema.derivativeAssets filter (_.owner ~~ this) toList
+        def myDerivativeLiabilities = schema.derivativeLiabilities filter (_.owner ~~ this) toList
+        def myDerivativeOffers = schema.derivativeOffers filter (_.to ~~ this) toList
+        
+        def offerDerivativeTo(recip: User, deriv: Derivative, price: Dollars) {
+            sys.error("Not implemented")
+        }
+        
+        def offerDerivativeAtAuction(deriv: Derivative, price: Dollars, expires: DateTime) {
+            sys.error("Not implemented")
+        }
+        
+        def acceptOffer(id: String) {
+            sys.error("Not implemented")
+        }
+        
+        def declineOffer(id: String) {
+            sys.error("Not implemented")
+        }
+    }
+}
 
 // --------------------------------------------------------------------
 // The data types
@@ -20,19 +91,12 @@ case class Derivative(
     condition:  Condition,
     early:      Boolean
 ) {
-    def serialize: Array[Byte] = serialization.serialize(this)
-    
     def *(scale: Scale): Derivative = this.copy(
         securities = securities map (_ * scale)
     )
     
     def spotValue: Dollars = (securities map (_.spotValue))
         .foldLeft(Dollars(0))(_ + _)
-}
-
-object Derivative extends Loggable {
-    def deserialize(bs: Array[Byte]): Derivative =
-        serialization.deserialize[Derivative](bs)
 }
 
 // -------------------------------------------
@@ -75,13 +139,13 @@ case class SecDerivative(
 {
     def *(nextScale: Scale) = SecDerivative(name, scale*nextScale)
     
-    def spotValue = {
+    def spotValue = {sys.error("no")/*
         val liab = DerivativeLiability byName name
         liab match {
             case None       => Dollars(0)
             case Some(liab) => liab.derivative.spotValue * scale
         }
-    }
+    */}
 }
 
 // -------------------------------------------
@@ -122,6 +186,4 @@ case class CompSecDollar(
 {
     def toPrice = amount
 }
-
-} // package
 

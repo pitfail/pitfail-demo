@@ -7,7 +7,7 @@ import java.io.*;
 
 import java.util.*;
 import model.*;
-import model.Schema.*;
+import model.schema.*;
 import scala.math.*;
 import com.google.gson.*;
 
@@ -27,6 +27,7 @@ public class TestServlet extends HttpServlet {
         public double dollars;
     }
     
+    /*
     @Override
     public void doPost(
         HttpServletRequest request,
@@ -79,5 +80,6 @@ public class TestServlet extends HttpServlet {
         throws ServletException, IOException
     {
     }
+    */
 }
 

@@ -2,19 +2,27 @@
 package texttrading
 
 import formats._
-import model._
-import model.Schema._
 import scalaz.Scalaz._
+
+import model._
+import model.schema._
 
 class PitFailBackend extends Backend {
 
     def perform(request: Request) = {
         val Request(username, action) = request
-        val (user, greeting) = byUsername(username) match {
-            case Some(user) => (user, Nil)
-            case None       => (ensureUser(username), welcomeGreeting(username))
+        
+        // Sorry this is a little less clean than it used to be.
+        val (user, greeting) = editDB {
+            (
+                User byName username,
+                Seq[String]()
+            )
+            .orCreate {
+                User ensure username map { (_, welcomeGreeting(username)) }
+            }
         }
-
+            
         val status : Status = action match {
             case Buy(asset)      => WithUser(user).buy(asset)
             case Sell(asset)     => WithUser(user).sell(asset)
@@ -41,16 +49,23 @@ case class WithUser(user: User) {
         case e => Failed(e.toString())
     }
 
-    /* TODO: buy & sell look very similar, condense. */
+    // TODO: buy & sell look very similar, condense.
     def buy(asset: StockAsset) =
         try (
                asset
-            |> { case StockShares(ticker, shares) =>
+            |> {
+                case StockShares(ticker, shares) => editDB {
                     user.mainPortfolio.buyStock(ticker, shares)
-                 case StockDollars(ticker, dollars) =>
+                }
+                    
+                case StockDollars(ticker, dollars) => editDB {
                     user.mainPortfolio.buyStock(ticker, dollars)
+                }
             }
-            |> { case ((a, b, c)) => TransactionResponse(a,b,c) }
+            |> {
+                case StockPurchase(_, shares, dollars) =>
+                    TransactionResponse(asset, dollars, shares)
+            }
         )
         catch failed
 
@@ -58,11 +73,13 @@ case class WithUser(user: User) {
         try (
                asset
             |> {
-               case StockShares(ticker, shares) =>
+                case StockShares(ticker, shares) => editDB {
                     user.mainPortfolio.sellStock(ticker, shares)
-               case StockDollars(ticker, dollars) =>
+                }
+                case StockDollars(ticker, dollars) => editDB {
                     user.mainPortfolio.sellStock(ticker, dollars)
-               }
+                }
+            }
             |> { _ => OK }
         )
         catch failed

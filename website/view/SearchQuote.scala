@@ -22,8 +22,6 @@ import intform._
 
 import stockdata._
 import model.StockPriceSource
-import model.Schema.User
-import model.derivatives._
 import scalaz.Scalaz._
 
 import control.LoginManager.loggedIn_?

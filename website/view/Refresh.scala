@@ -15,7 +15,6 @@ trait Refreshable extends CometActor with CometListener with Loggable
 {
     override def lowPriority: PartialFunction[Any, Unit] = {
         case Refresh =>
-            logger.info("Receiving a refresh!")
             refresh()
             reRender()
     }
@@ -31,7 +30,6 @@ trait RefreshHub extends LiftActor
     
     override def lowPriority = {
         case Refresh =>
-            logger.info("Receiving a refresh!")
             updateListeners()
     }
     

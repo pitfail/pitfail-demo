@@ -9,21 +9,21 @@ import http._
 import scala.xml._
 
 import intform._
-import model.Schema._
 import formats._
 import snippet.{UserLink}
+import model.schema._
 
 class OutgoingOffers extends Refreshable with Loggable {
     
     def registerWith = OutgoingOffers
     
-    def render = trans {
+    def render = readDB {
         import control.LoginManager._
         
         try {
             val user   = currentUser
             val port   = user.mainPortfolio
-            val offers = port.myAuctionOffers
+            val offers = port.auctionOffers
             
             lazy val all =
                 <div id="outgoing-offers" class="block">
@@ -62,7 +62,9 @@ class OutgoingOffers extends Refreshable with Loggable {
                     </tr>
                 
                 lazy val closeButton = FormSubmit("Close") {
-                    offer.close()
+                    editDB {
+                        offer.close()
+                    }
                     
                     OutgoingOffers   ! Refresh
                     Portfolio        ! Refresh
