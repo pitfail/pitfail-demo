@@ -42,7 +42,9 @@ trait StockSchema {
         self: Portfolio =>
         
         def myStockAssets = stockAssets filter (_.owner ~~ self) toList
-        def getMyStockAssets: java.util.List[StockAsset] = myStockAssets
+        
+        // Java interop
+        def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
         // Buy a stock in shares
         def buyStock(ticker: String, shares: Shares): Transaction[StockPurchase] = {

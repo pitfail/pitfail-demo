@@ -40,6 +40,11 @@ trait UserSchema {
         def ensure(name: String): Transaction[User] =
             byName(name).orCreate(newUser(name))
         
+        def ensureP(name: String): Transaction[Portfolio] = {
+            def port: Portfolio = byName(name).mainPortfolio
+            port orCreate newUserP(name)
+        }
+        
         def byName(name: String) = {
             val u = (users filter (_.username == name)).headOption
             u getOrElse (throw NoSuchUser)
@@ -52,6 +57,14 @@ trait UserSchema {
                 _    <- Portfolio(p, startingCash, u, Dollars("0")).insert
             }
             yield user
+        }
+        
+        def newUserP(name: String) = mutually { (u, p) =>
+            for {
+                user <- User(u, name, p).insert
+                port <- Portfolio(p, startingCash, u, Dollars("0")).insert
+            }
+            yield port
         }
     }
 }

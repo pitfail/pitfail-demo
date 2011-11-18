@@ -25,10 +25,7 @@ object operations
     }
     
     def getUserPortfolio(username: String): Portfolio = editDB {
-        for {
-            user <- User ensure username
-        }
-        yield user.mainPortfolio
+        User ensureP username
     }
 }
 

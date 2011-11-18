@@ -33,30 +33,40 @@ public class TestServlet extends HttpServlet {
     )
         throws ServletException, IOException
     {
-        PrintWriter out = response.getWriter();
-        Response resp = new Response();
-        
-        UserSchema.Portfolio port = operations.getUserPortfolio("ellbur_k_a");
-        
-        resp.cash = port.cash().dollars().doubleValue();
-        resp.assets = new ArrayList<ResponseAsset>();
-        
-        for (StockSchema.StockAsset asset : port.getMyStockAssets()) {
-            BigDecimal shares  = asset.shares().shares();
-            BigDecimal price   = asset.price().price();
-            BigDecimal dollars = asset.dollars().dollars();
+        try {
+            System.err.println("Running TestServlet");
             
-            ResponseAsset rAsset = new ResponseAsset();
-            rAsset.ticker  = asset.ticker();
-            rAsset.shares  = shares.doubleValue();
-            rAsset.price   = price.doubleValue();
-            rAsset.dollars = dollars.doubleValue();
+            PrintWriter out = response.getWriter();
+            Response resp = new Response();
             
-            resp.assets.add(rAsset);
+            UserSchema.Portfolio port = operations.getUserPortfolio("ellbur_k_a");
+            
+            resp.cash = port.cash().dollars().doubleValue();
+            resp.assets = new ArrayList<ResponseAsset>();
+            
+            for (StockSchema.StockAsset asset : port.getMyStockAssets()) {
+                BigDecimal shares  = asset.shares().shares();
+                BigDecimal price   = asset.price().price();
+                BigDecimal dollars = asset.dollars().dollars();
+                
+                ResponseAsset rAsset = new ResponseAsset();
+                rAsset.ticker  = asset.ticker();
+                rAsset.shares  = shares.doubleValue();
+                rAsset.price   = price.doubleValue();
+                rAsset.dollars = dollars.doubleValue();
+                
+                resp.assets.add(rAsset);
+            }
+            
+            String json = new Gson().toJson(resp);
+            out.println(json);
+            
+            System.err.println("Done TestServlet");
         }
-        
-        String json = new Gson().toJson(resp);
-        out.println(json);
+        catch (RuntimeException e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
     
     @Override
