@@ -1,16 +1,11 @@
+
 package servlets;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 
-import model.schema;
-import static model.schema.*;
-import model.*;
-import scala.collection.*;
-import static scala.collection.JavaConversions.*;
 import java.util.*;
-import scala.math.BigDecimal;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -21,6 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import model.*;
 
 /**
  * <code>HttpServlet</code> responsible for buying stocks.
@@ -29,8 +25,6 @@ import javax.servlet.http.HttpServletResponse;
  * 
  */
 public class BuyServlet extends HttpServlet {
-    /*
-
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 	@Override
@@ -43,14 +37,9 @@ System.out.println("buy called  ************************************************
 		String stockSymbol = request.getParameter("ticker");
 		String volume = request.getParameter("volume");
 
-
 		try {
-			
-				User user = ensureUser(userId);
-				Portfolio port = user.mainPortfolio().fetch(portfolios());
-				port.buyStock(stockSymbol, new Dollars(volume));
-
-
+                operations.userBuyStock(userId, stockSymbol, new Dollars(volume));
+                        
 				PrintWriter out = response.getWriter();
 				out.printf("success");
 				
@@ -66,5 +55,4 @@ System.out.println("buy called  ************************************************
 		}
 
 	}
-    */
 }

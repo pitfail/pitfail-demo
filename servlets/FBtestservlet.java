@@ -64,14 +64,13 @@ PrintWriter out = response.getWriter();
 			 stockSymbol = results.get(1);
 			 volume = results.get(2);
 
-	  */       //User user = ensureUser("sonu_pillai");
+	  */ 
 //System.out.println("***********"+userId+"***********");
 //System.out.println("***********"+volume+"***********");
 
 
          /*
-			 Portfolio port = user.mainPortfolio().fetch(portfolios());
-			 port.buyStock("GOOG", new Dollars("2000")); 
+             operations.userBuyStock("sonu_pillai", "GOOG", new Dollars("2000"));
          */
 	 } catch (Exception e) {  
 			 e.printStackTrace();  

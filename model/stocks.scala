@@ -6,6 +6,8 @@ import stockdata._
 import org.joda.time.DateTime
 import org.joda.time.Duration
 
+import scala.collection.JavaConversions._
+
 trait StockSchema {
     schema: UserSchema with DBMagic with SchemaErrors with NewsSchema =>
     
@@ -20,19 +22,27 @@ trait StockSchema {
             owner:  Link[Portfolio]
         )
         extends KL
+        with StockAssetOps
 
     case class StockPurchase(
-            asset:   StockAsset,
             shares:  Shares,
             dollars: Dollars
         )
-
+    
     // Operations
+    
+    trait StockAssetOps {
+        self: StockAsset =>
+            
+        def price: Price = Stocks.stockPrice(ticker)
+        def dollars: Dollars = shares * price
+    }
     
     trait PortfolioWithStocks {
         self: Portfolio =>
         
         def myStockAssets = stockAssets filter (_.owner ~~ self) toList
+        def getMyStockAssets: java.util.List[StockAsset] = myStockAssets
         
         // Buy a stock in shares
         def buyStock(ticker: String, shares: Shares): Transaction[StockPurchase] = {
@@ -53,13 +63,13 @@ trait StockSchema {
             
             for {
                 asset <- ensureAsset(ticker)
-                asset <- asset.copy(shares = asset.shares+shares).update
-                _     <- this.copy(cash=cash-dollars).update
+                _ <- asset update (a => a copy (shares=a.shares+shares))
+                _ <- this update (t => t copy (cash=t.cash-dollars))
                 
                 // Report the event
-                _  <- addBuyEvent(owner, ticker, shares, price)
+                _  <- Bought(this.owner, ticker, shares, dollars, price).report
             }
-            yield StockPurchase(asset, shares, dollars)
+            yield StockPurchase(shares, dollars)
         }
         
         // Create this stock asset if it does not already exist
@@ -69,23 +79,33 @@ trait StockSchema {
         }
         
         // Sell a stock in shares
-        def sellStock(ticker: String, shares: Shares): Transaction[Unit] =
-            sellStock(ticker, shares*Stocks.stockPrice(ticker), shares)
+        def sellStock(ticker: String, shares: Shares): Transaction[Unit] = {
+            val price = Stocks.stockPrice(ticker)
+            sellStock(ticker, shares*price, shares, price)
+        }
         
         // Sell a stock in dollars
-        def sellStock(ticker: String, dollars: Dollars): Transaction[Unit] =
-            sellStock(ticker, dollars, dollars /-/ Stocks.stockPrice(ticker))
+        def sellStock(ticker: String, dollars: Dollars): Transaction[Unit] = {
+            val price = Stocks.stockPrice(ticker)
+            sellStock(ticker, dollars, dollars /-/ price, price)
+        }
         
-        protected def sellStock(ticker: String, dollars: Dollars, shares: Shares) = {
+        protected def sellStock
+                (ticker: String, dollars: Dollars, shares: Shares, price: Price) =
+        {
             val asset = haveTicker(ticker) getOrElse (throw DontOwnStock(ticker))
             if (asset.shares < shares) throw NotEnoughShares(have=asset.shares, need=shares)
             
-            val newAsset = asset.copy(shares = asset.shares-shares)
-            val assetChange = if (newAsset.shares > Shares(0)) newAsset.update else asset.delete
+            val assetChange =
+                if (asset.shares > shares) asset update (a => a copy (shares=a.shares-shares))
+                else asset.delete
             
             for {
                 _ <- assetChange
-                _ <- this.copy(cash = cash+dollars).update
+                _ <- this update (t => t copy (cash=t.cash+dollars))
+                
+                // Report it to the news!
+                _ <- Sold(this.owner, ticker, shares, dollars, price).report
             }
             yield ()
         }
@@ -93,11 +113,13 @@ trait StockSchema {
         // Sell all of a single stock
         def sellAll(ticker: String): Transaction[Unit] = {
             val asset = haveTicker(ticker) getOrElse (throw DontOwnStock(ticker))
-            val dollars = asset.shares * Stocks.stockPrice(ticker)
+            val price = Stocks.stockPrice(ticker)
+            val dollars = asset.shares * price
             
             for {
                 _ <- asset.delete
-                _ <- this.copy(cash = cash+dollars).update
+                _ <- this update (t => t copy (cash=t.cash+dollars))
+                _ <- Sold(this.owner, ticker, asset.shares, dollars, price).report
             }
             yield ()
         }

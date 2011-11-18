@@ -5,6 +5,9 @@ import errors._
 import scala.collection.mutable.ArrayBuffer
 import net.liftweb.common.Loggable
 
+import scalaz._
+import scalaz.Scalaz._
+
 // This is very very temporary and should be replaced soon!
 class Table[R <: KL] extends ArrayBuffer[R] with Loggable {
     def lookup(k: Key) = {
@@ -80,31 +83,49 @@ trait Transactions extends Links with Loggable {
         def apply[A](result: A) = new Transaction(result, Seq())
     }
     
+    implicit val TransactionPure: Pure[Transaction] = new Pure[Transaction] {
+        def pure[A](a: => A) = Transaction(a)
+    }
+    
+    implicit val TransactionFunctor: Functor[Transaction] = new Functor[Transaction] {
+        def fmap[A,B](t: Transaction[A], f: A => B) = t map f
+    }
+    
+    implicit val TransactionBind: Bind[Transaction] = new Bind[Transaction] {
+        def bind[A,B](a: Transaction[A], f: A => Transaction[B]) = a flatMap f
+    }
+    
     sealed trait EditOp {
         def perform(): Unit
     }
     
     case class Insert[R<:KL](rec: R, table: Table[R]) extends EditOp {
         def perform() = {
+            logger.info("Inserting " + rec)
             table.insert(rec)
         }
     }
     
-    case class Update[R<:KL](rec: R, table: Table[R]) extends EditOp {
+    case class Update[R<:KL](rec: R, by: R=>R, table: Table[R]) extends EditOp {
         def perform() = {
-            table.update(rec)
+            table.update {
+                val next = by(table lookup rec.id getOrElse (throw NotFound))
+                logger.info("Updating " + next)
+                next
+            }
         }
     }
     
     case class Delete[R<:KL](rec: R, table: Table[R]) extends EditOp {
         def perform() = {
+            logger.info("Deleting " + rec)
             table.delete(rec)
         }
     }
     
     implicit def toOps[R<:KL](rec: R) = new {
         def insert(implicit table: Table[R]) = Transaction(rec, Insert(rec, table) :: Nil)
-        def update(implicit table: Table[R]) = Transaction(rec, Update(rec, table) :: Nil)
+        def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(rec, by, table) :: Nil)
         def delete(implicit table: Table[R]) = Transaction(rec, Delete(rec, table) :: Nil)
     }
     

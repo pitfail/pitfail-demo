@@ -1,20 +1,14 @@
+
 package servlets;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 
-import model.schema;
-import static model.schema.*;
-import model.*;
-import scala.collection.*;
-import static scala.collection.JavaConversions.*;
 import java.util.*;
-import scala.math.BigDecimal;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.sql.Connection;
 import java.sql.DriverManager;
 
 import javax.servlet.ServletException;
@@ -22,6 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import model.*;
 
 /**
  * <code>HttpServlet</code> responsible for buying stocks.
@@ -30,8 +25,6 @@ import javax.servlet.http.HttpServletResponse;
  * 
  */
 public class SellServlet extends HttpServlet {
-
-    /*
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 	@Override
@@ -45,10 +38,7 @@ public class SellServlet extends HttpServlet {
 
 
 		try {
-			
-				User user = ensureUser(userId);
-				Portfolio port = user.mainPortfolio().fetch(portfolios());
-				port.sellAll(stockSymbol);
+                operations.userSellStock(userId, stockSymbol);
 
 				out.printf("success");
 
@@ -64,5 +54,4 @@ public class SellServlet extends HttpServlet {
 		}
 
 	}
-    */
 }

@@ -32,8 +32,8 @@ trait UserSchema {
         with PortfolioWithStocks
         with PortfolioWithDerivatives
         with PortfolioWithAuctions
-    
-    // Operations
+        
+    // Detailed Operations
         
     object User {
         // If this user doesn't already exist, create it

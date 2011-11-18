@@ -2,9 +2,10 @@
 package model
 
 import org.joda.time.DateTime
+import scalaz.Scalaz._
 
 trait AuctionSchema {
-    schema: UserSchema with DerivativeSchema with SchemaErrors with DBMagic =>
+    schema: UserSchema with DerivativeSchema with SchemaErrors with DBMagic with NewsSchema =>
     
     implicit val auctionOffers = table[AuctionOffer]
     implicit val auctionBids   = table[AuctionBid]
@@ -33,15 +34,37 @@ trait AuctionSchema {
     trait AuctionOfferOps {
         self: AuctionOffer =>
         
-        def bids: Seq[AuctionBid] = sys.error("Not implemented")
+        def bids: Seq[AuctionBid] = auctionBids filter (_.offer ~~ this) toList
         
         def goingPrice =
             if (bids isEmpty) self.price
             else bids map (_.price) max
         
-        def highBid: Option[AuctionBid] = sys.error("Not implemented")
+        def highBid: Option[AuctionBid] =
+            if (bids isEmpty) None
+            else Some(bids maxBy (_.price))
         
-        def close(): Transaction[Unit] = sys.error("Not implemented")
+        def userClose() = editDB {
+            val deletion =
+                for {
+                    _ <- this.delete
+                    _ <- bids map (_.delete) sequence
+                }
+                yield ()
+            
+            val perform =
+                highBid match {
+                    case None      => deletion
+                    case Some(bid) => 
+                        deletion & offerer.accept(bid.price, bid.by, derivative)
+                }
+            
+            for {
+                _ <- perform
+                _ <- Closed(offerer.owner, this).report
+            }
+            yield ()
+        }
     }
     
     object AuctionOffer {
@@ -53,15 +76,21 @@ trait AuctionSchema {
     trait PortfolioWithAuctions {
         self: Portfolio =>
         
-        def castBid(auction: AuctionOffer, price: Dollars) {
-            sys.error("Not implemented")
-        }
-        
         def auctionOffers: Seq[AuctionOffer] = schema.auctionOffers filter
-            (_.offerer == this) toList
+            (_.offerer ~~ this) toList
+            
+        def userCastBid(auction: AuctionOffer, price: Dollars) = editDB {
+            if (price <= auction.goingPrice)
+                throw BidTooSmall(auction.goingPrice)
+            
+            (
+                  AuctionBid(offer=auction, by=this, price=price).insert
+                & Bid(this.owner, auction, price).report
+            )
+        }
     }
     
     def recentAuctions(n: Int): Seq[AuctionOffer] =
-        auctionOffers sortBy (_.when.getMillis) take n toList
+        auctionOffers sortBy (- _.when.getMillis) take n toList
 }
 

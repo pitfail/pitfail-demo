@@ -8,7 +8,7 @@ import formats._
 import net.liftweb.common.Loggable
 
 trait DerivativeSchema {
-    schema: UserSchema with DBMagic =>
+    schema: UserSchema with DBMagic with NewsSchema with AuctionSchema with SchemaErrors =>
     
     implicit val derivativeAssets      = table[DerivativeAsset]
     implicit val derivativeLiabilities = table[DerivativeLiability]
@@ -57,6 +57,13 @@ trait DerivativeSchema {
         def userExecuteManually() { sys.error("Not implemented") }
     }
     
+    object DerivativeLiability {
+        def byName(name: String) = derivativeLiabilities
+            .filter(_.name == name)
+            .headOption
+            .getOrElse(throw NoSuchDerivativeLiability)
+    }
+    
     trait PortfolioWithDerivatives {
         self: Portfolio =>
         
@@ -64,21 +71,64 @@ trait DerivativeSchema {
         def myDerivativeLiabilities = schema.derivativeLiabilities filter (_.owner ~~ this) toList
         def myDerivativeOffers = schema.derivativeOffers filter (_.to ~~ this) toList
         
-        def offerDerivativeTo(recip: User, deriv: Derivative, price: Dollars) {
-            sys.error("Not implemented")
+        def userOfferDerivativeTo(recip: User, deriv: Derivative, price: Dollars) =
+            editDB {
+                for {
+                    _ <- DerivativeOffer(derivative=deriv, from=this,
+                        to=recip.mainPortfolio, price=price, expires=new DateTime).insert
+                    _ <- Offered(this.owner, recip, deriv, price).report
+                }
+                yield ()
+            }
+        
+        def userOfferDerivativeAtAuction(deriv: Derivative, price: Dollars, expires: DateTime) =
+            editDB {
+                for {
+                    _ <- AuctionOffer(derivative=deriv, offerer=this,
+                        price=price, when=new DateTime, expires=expires).insert
+                    _ <- Auctioned(this.owner, deriv, price).report
+                }
+                yield ()
+            }
+        
+        def userAcceptOffer(id: String) = editDB {
+            val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
+            for {
+                _ <- accept(offer.price, offer.from, offer.derivative)
+                _ <- Accepted(offer.from.owner, offer.to.owner, offer.derivative,
+                        price=offer.price).report
+            }
+            yield ()
         }
         
-        def offerDerivativeAtAuction(deriv: Derivative, price: Dollars, expires: DateTime) {
-            sys.error("Not implemented")
+        def userDeclineOffer(id: String) = editDB {
+            val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
+            for {
+                _ <- offer.delete
+                _ <- Declined(offer.from.owner, offer.to.owner, offer.derivative,
+                        price=offer.price).report
+            }
+            yield ()
         }
         
-        def acceptOffer(id: String) {
-            sys.error("Not implemented")
+        protected[model] def accept(price: Dollars, seller: Portfolio, deriv: Derivative) = {
+            if (cash < price) throw NotEnoughCash(cash, price)
+            
+            for {
+                _ <- this update (t => copy (cash=t.cash-price))
+                _ <- seller update (t => copy (cash=t.cash+price))
+                _ <- enterContract(seller, deriv)
+            }
+            yield ()
         }
         
-        def declineOffer(id: String) {
-            sys.error("Not implemented")
-        }
+        protected[model] def enterContract(seller: Portfolio, deriv: Derivative) =
+            for {
+                liab <- DerivativeLiability(name=nextID, derivative=deriv, remaining=Scale("1.0"),
+                        exec=deriv.exec, owner = seller).insert
+                _ <- DerivativeAsset(peer=liab, scale=Scale("1.0"), owner=this).insert
+            }
+            yield ()
     }
 }
 
@@ -137,15 +187,15 @@ case class SecDerivative(
         scale: Scale 
     ) extends Security
 {
+    import schema._
+    
     def *(nextScale: Scale) = SecDerivative(name, scale*nextScale)
     
-    def spotValue = {sys.error("no")/*
-        val liab = DerivativeLiability byName name
-        liab match {
-            case None       => Dollars(0)
-            case Some(liab) => liab.derivative.spotValue * scale
+    def spotValue =
+        try readDB {
+            (DerivativeLiability byName name).derivative.spotValue * scale
         }
-    */}
+        catch { case NoSuchDerivativeLiability => Dollars(0) }
 }
 
 // -------------------------------------------

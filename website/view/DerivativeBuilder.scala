@@ -350,10 +350,10 @@ class DerivativeBuilder extends Page with Loggable
             val user = currentUser
             order.recipient match {
                 case SpecificUser(recip) =>
-                    user.mainPortfolio.offerDerivativeTo(recip, deriv, order.price)
+                    user.mainPortfolio.userOfferDerivativeTo(recip, deriv, order.price)
                     
                 case OpenAuction =>
-                    user.mainPortfolio.offerDerivativeAtAuction(deriv,
+                    user.mainPortfolio.userOfferDerivativeAtAuction(deriv,
                         order.price, expires
                     )
             }

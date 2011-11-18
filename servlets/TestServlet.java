@@ -7,7 +7,6 @@ import java.io.*;
 
 import java.util.*;
 import model.*;
-import model.schema.*;
 import scala.math.*;
 import com.google.gson.*;
 
@@ -27,7 +26,6 @@ public class TestServlet extends HttpServlet {
         public double dollars;
     }
     
-    /*
     @Override
     public void doPost(
         HttpServletRequest request,
@@ -38,13 +36,12 @@ public class TestServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         Response resp = new Response();
         
-        User user = Schema.ensureUser("ellbur_k_a");
-        Portfolio port = user.getMainPortfolio();
+        UserSchema.Portfolio port = operations.getUserPortfolio("ellbur_k_a");
         
         resp.cash = port.cash().dollars().doubleValue();
         resp.assets = new ArrayList<ResponseAsset>();
         
-        for (StockAsset asset : port.getMyStockAssets()) {
+        for (StockSchema.StockAsset asset : port.getMyStockAssets()) {
             BigDecimal shares  = asset.shares().shares();
             BigDecimal price   = asset.price().price();
             BigDecimal dollars = asset.dollars().dollars();
@@ -80,6 +77,5 @@ public class TestServlet extends HttpServlet {
         throws ServletException, IOException
     {
     }
-    */
 }
 

@@ -4,13 +4,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 
-import model.schema;
-import static model.schema.*;
-import model.*;
-import scala.collection.*;
-import static scala.collection.JavaConversions.*;
 import java.util.*;
-import scala.math.BigDecimal;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -24,6 +18,8 @@ import java.util.List;
 import java.util.ArrayList;
 import scala.math.*;
 
+import model.*;
+import scala.math.BigDecimal;
 
 /**
  * <code>HttpServlet</code> responsible for buying stocks.
@@ -32,8 +28,6 @@ import scala.math.*;
  * 
  */
 public class GetPortfolio extends HttpServlet {
-    /*
-    
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 
@@ -51,13 +45,11 @@ public class GetPortfolio extends HttpServlet {
 		String myportfolio = "";
        
 		try {
-			
-				User user = ensureUser(userId);
-				Portfolio port = user.mainPortfolio().fetch(portfolios());
+			    UserSchema.Portfolio port = operations.getUserPortfolio(userId);
 				BigDecimal cash = port.cash().dollars();
 				myportfolio = myportfolio.concat("Cash:"+cash);
-				
-				for (StockAsset asset : port.getMyStockAssets()){
+				                                         
+				for (StockSchema.StockAsset asset : port.getMyStockAssets()){
 						shares = asset.shares().shares();
 						dollars = asset.dollars().dollars();
 						myportfolio = myportfolio.concat(","+asset.ticker()+":"+dollars.doubleValue());
@@ -74,5 +66,4 @@ public class GetPortfolio extends HttpServlet {
 		}
 
 	}
-*/
 }

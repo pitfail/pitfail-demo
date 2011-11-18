@@ -94,7 +94,7 @@ class AuctionPage extends Page with Loggable {
                 
                 try {
                     val user = currentUser
-                    user.mainPortfolio.castBid(auction, amt)
+                    user.mainPortfolio.userCastBid(auction, amt)
                     
                     bidForm.reset()
                     comet.AuctionThumbnail ! comet.Refresh
