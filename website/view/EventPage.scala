@@ -33,28 +33,12 @@ class EventPage extends Page with Loggable {
         
         val ev = NewsEvent byID id
         
-        lazy val main =
-            <div id="event" class="block">
-                <h3 class="event"><span class="eventDate">{ev.when.toNearbyString}</span>:
-                    {eventDescription(ev, link=false)}</h3>
+        <div id="event" class="block">
+            <h3 class="event"><span class="eventDate">{ev.when.toNearbyString}</span>:
+                {eventDescription(ev, link=false)}</h3>
                 
-                <h3 class="comments">Comments:</h3>
-                {
-                    if (ev.comments isEmpty) <p>None</p>
-                    else showComments
-                }
-            </div>
-        
-        lazy val showComments = ev.comments map showComment _
-        
-        def showComment(c: EventComment) =
-            <div class="comment">
-                <span class="commentAuthor">{UserLink(c.by)}:</span>
-                <span class="commentText">{c.text}</span>
-                <span class="commentDate">{c.when.toNearbyString}</span>
-            </div>
-        
-        main
+            {commentPage(ev)}
+        </div>
     }
     catch { case _: BadUser =>
         <p>This event seems to not exist</p>

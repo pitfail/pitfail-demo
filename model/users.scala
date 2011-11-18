@@ -5,6 +5,7 @@ trait UserSchema {
     self: StockSchema
         with DerivativeSchema
         with AuctionSchema
+        with CommentSchema
         with DBMagic 
         with SchemaErrors =>
     
@@ -21,6 +22,7 @@ trait UserSchema {
             mainPortfolio: Link[Portfolio]
         )
         extends KL
+        with UserWithComments
 
     case class Portfolio(
             id:    Key,

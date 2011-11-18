@@ -26,9 +26,10 @@ trait CommentSchema {
     trait UserWithComments {
         self: User =>
         
-        def userPostComment(event: NewsEvent, text: String) = editDB {
+        def userPostComment(event: NewsEvent, text: String) = editDB(postComment(event, text))
+        
+        private[model] def postComment(event: NewsEvent, text: String) =
             EventComment(event=event, by=this, text=text, when=new DateTime).insert
-        }
     }
     
     trait NewsEventWithComments {
@@ -36,6 +37,14 @@ trait CommentSchema {
         
         def comments = eventComments filter (_.event ~~ this)
         def numComments = comments.length
+        
+        def userPostAnonymously(text: String) = editDB {
+            for {
+                user <- User ensure "Anonymous"
+                _ <- user postComment (this, text)
+            }
+            yield ()
+        }
     }
 }
 

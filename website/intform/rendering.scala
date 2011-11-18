@@ -191,3 +191,12 @@ trait DependentListRender extends FieldRender {
     def main: NodeSeq = renderer()
 }
 
+trait TextAreaRender extends FieldRender {
+    val initText: String
+    var text: String
+    
+    def main: NodeSeq = SHtml.onSubmit(text = _) {
+        <textarea/>
+    }
+}
+
