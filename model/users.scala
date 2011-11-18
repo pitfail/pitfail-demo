@@ -17,9 +17,10 @@ trait UserSchema {
     // Model tables
     
     case class User(
-            id:            Key,
-            username:      String,
-            mainPortfolio: Link[Portfolio]
+            id:               Key,
+            username:         String,
+            mainPortfolio:    Link[Portfolio],
+            votingPortfolio:  Link[Portfolio]
         )
         extends KL
         with UserWithComments
@@ -39,35 +40,32 @@ trait UserSchema {
         
     object User {
         // If this user doesn't already exist, create it
-        def ensure(name: String): Transaction[User] =
+        private[model] def ensure(name: String): Transaction[User] =
             byName(name).orCreate(newUser(name))
         
-        def ensureP(name: String): Transaction[Portfolio] = {
+        private[model] def ensureP(name: String): Transaction[Portfolio] = {
             def port: Portfolio = byName(name).mainPortfolio
             port orCreate newUserP(name)
         }
         
-        def byName(name: String) = {
+        private[model] def byName(name: String) = {
             val u = (users filter (_.username == name)).headOption
             u getOrElse (throw NoSuchUser)
         }
         
         // Create a new user
-        def newUser(name: String) = mutually { (u, p) =>
+        private[model] def newUserAll(name: String) = mutually { (u, p1, p2) =>
             for {
-                user <- User(u, name, p).insert
-                _    <- Portfolio(p, startingCash, u, Dollars("0")).insert
+                user    <- User(id=u, name=name, mainPortfolio=p1, votingPortfolio=p2).insert
+                mainP   <- Portfolio(id=p1, owner=u, cash=startingCash)
+                votingP <- Portfolio(id=p2, owner=u, cash=startingCash)
             }
-            yield user
+            yield (user, mainP, votingP)
         }
         
-        def newUserP(name: String) = mutually { (u, p) =>
-            for {
-                user <- User(u, name, p).insert
-                port <- Portfolio(p, startingCash, u, Dollars("0")).insert
-            }
-            yield port
-        }
+        private[model] def newUser(name: String) = newUserAll(name) map (_._1)
+        private[model] def newUserP(name: String) = newUserAll(name) map (_._2)
+        
     }
 }
 

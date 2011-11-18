@@ -26,7 +26,8 @@ trait StockSchema {
 
     case class StockPurchase(
             shares:  Shares,
-            dollars: Dollars
+            dollars: Dollars,
+            asset: Key
         )
     
     // Operations
@@ -47,18 +48,18 @@ trait StockSchema {
         def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
         // Buy a stock in shares
-        def buyStock(ticker: String, shares: Shares): Transaction[StockPurchase] = {
+        private[model] def buyStock(ticker: String, shares: Shares): Transaction[StockPurchase] = {
             val price = Stocks.stockPrice(ticker)
             buyStock(ticker, price * shares, shares, price)
         }
         
         // Buy a stock in dollars
-        def buyStock(ticker: String, dollars: Dollars): Transaction[StockPurchase] = {
+        private[model] def buyStock(ticker: String, dollars: Dollars): Transaction[StockPurchase] = {
             val price = Stocks.stockPrice(ticker)
             buyStock(ticker, dollars, dollars /-/ price, price)
         }
         
-        protected def buyStock(
+        private[model] def buyStock(
                 ticker: String, dollars: Dollars, shares: Shares, price: Price) =
         {
             if (cash <= dollars) throw NotEnoughCash(have=cash, need=dollars)
@@ -71,28 +72,28 @@ trait StockSchema {
                 // Report the event
                 _  <- Bought(this.owner, ticker, shares, dollars, price).report
             }
-            yield StockPurchase(shares, dollars)
+            yield StockPurchase(asset.id, shares, dollars)
         }
         
         // Create this stock asset if it does not already exist
-        protected def ensureAsset(ticker: String) = haveTicker(ticker) match {
+        private[model] def ensureAsset(ticker: String) = haveTicker(ticker) match {
             case Some(asset) => Transaction(asset)
             case None        => StockAsset(ticker=ticker,shares=Shares(0),owner=this).insert
         }
         
         // Sell a stock in shares
-        def sellStock(ticker: String, shares: Shares): Transaction[Unit] = {
+        private[model] def sellStock(ticker: String, shares: Shares): Transaction[Unit] = {
             val price = Stocks.stockPrice(ticker)
             sellStock(ticker, shares*price, shares, price)
         }
         
         // Sell a stock in dollars
-        def sellStock(ticker: String, dollars: Dollars): Transaction[Unit] = {
+        private[model] def sellStock(ticker: String, dollars: Dollars): Transaction[Unit] = {
             val price = Stocks.stockPrice(ticker)
             sellStock(ticker, dollars, dollars /-/ price, price)
         }
         
-        protected def sellStock
+        private[model] def sellStock
                 (ticker: String, dollars: Dollars, shares: Shares, price: Price) =
         {
             val asset = haveTicker(ticker) getOrElse (throw DontOwnStock(ticker))
@@ -113,7 +114,7 @@ trait StockSchema {
         }
         
         // Sell all of a single stock
-        def sellAll(ticker: String): Transaction[Unit] = {
+        private[model] def sellAll(ticker: String): Transaction[Unit] = {
             val asset = haveTicker(ticker) getOrElse (throw DontOwnStock(ticker))
             val price = Stocks.stockPrice(ticker)
             val dollars = asset.shares * price
