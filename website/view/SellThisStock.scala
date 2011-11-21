@@ -32,9 +32,8 @@ class SellThisStock(ticker: String)
         import control.LoginManager._
         import model.schema._
         
-        try editDB {
-            val user = currentUser
-            user.mainPortfolio.sellAll(ticker)
+        try {
+            currentUser.mainPortfolio.userSellAll(ticker)
         }
         catch {
             case NotLoggedIn =>

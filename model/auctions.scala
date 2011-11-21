@@ -56,7 +56,7 @@ trait AuctionSchema {
                 highBid match {
                     case None      => deletion
                     case Some(bid) => 
-                        deletion & offerer.accept(bid.price, bid.by, derivative)
+                        deletion & bid.by.enterContract(offerer, derivative, bid.price)
                 }
             
             for {

@@ -47,6 +47,20 @@ trait StockSchema {
         // Java interop
         def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
+        def userBuyStock(ticker: String, shares: Shares) =
+            editDB(buyStock(ticker, shares))
+        
+        def userBuyStock(ticker: String, dollars: Dollars) =
+            editDB(buyStock(ticker, dollars))
+        
+        def userSellStock(ticker: String, shares: Shares) =
+            editDB(buyStock(ticker, shares))
+        
+        def userSellStock(ticker: String, dollars: Dollars) =
+            editDB(buyStock(ticker, dollars))
+        
+        def userSellAll(ticker: String) = editDB(sellAll(ticker))
+        
         // Buy a stock in shares
         private[model] def buyStock(ticker: String, shares: Shares): Transaction[StockPurchase] = {
             val price = Stocks.stockPrice(ticker)
@@ -72,7 +86,7 @@ trait StockSchema {
                 // Report the event
                 _  <- Bought(this.owner, ticker, shares, dollars, price).report
             }
-            yield StockPurchase(asset.id, shares, dollars)
+            yield StockPurchase(shares, dollars, asset.id)
         }
         
         // Create this stock asset if it does not already exist

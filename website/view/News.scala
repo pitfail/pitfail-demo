@@ -54,7 +54,7 @@ object News extends RefreshHub {
             case Offered(from, to, derivative, price) =>
                 <span>{UserLink(from)} {alink("made an offer")} to {UserLink(to)}</span>
             
-            case Accepted(from, to, derivative, price) =>
+            case Accepted(from, to, derivative, price, _, _) =>
                 <span>{UserLink(to)} {alink("accepted")} {UserLink(from)}'s offer</span>
                 
             case Declined(from, to, derivative, price) =>

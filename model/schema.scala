@@ -70,6 +70,7 @@ object schema
     with AuctionSchema
     with NewsSchema
     with CommentSchema
+    with VotingSchema
     
 trait SchemaErrors {
     case object NegativeVolume extends BadUser

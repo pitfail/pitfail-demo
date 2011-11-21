@@ -8,7 +8,8 @@ import formats._
 import net.liftweb.common.Loggable
 
 trait DerivativeSchema {
-    schema: UserSchema with DBMagic with NewsSchema with AuctionSchema with SchemaErrors =>
+    schema: UserSchema with DBMagic with NewsSchema
+        with AuctionSchema with SchemaErrors with VotingSchema =>
     
     implicit val derivativeAssets      = table[DerivativeAsset]
     implicit val derivativeLiabilities = table[DerivativeLiability]
@@ -94,9 +95,10 @@ trait DerivativeSchema {
         def userAcceptOffer(id: String) = editDB {
             val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
             for {
-                _ <- accept(offer.price, offer.from, offer.derivative)
+                (buyerAside, sellerAside) <- enterContract(offer.from, offer.derivative, offer.price)
+                _ <- offer.delete
                 _ <- Accepted(offer.from.owner, offer.to.owner, offer.derivative,
-                        price=offer.price).report
+                        price=offer.price, buyerAside=buyerAside, sellerAside=sellerAside).report
             }
             yield ()
         }
@@ -111,24 +113,31 @@ trait DerivativeSchema {
             yield ()
         }
         
-        protected[model] def accept(price: Dollars, seller: Portfolio, deriv: Derivative) = {
-            if (cash < price) throw NotEnoughCash(cash, price)
+        private[model] def enterContract(seller: Portfolio, deriv: Derivative, price: Dollars) = {
+            logger.info(owner.username + " Buying for " + price + " from " + seller.owner.username)
+            logger.info(this + " <- " + seller)
             
-            for {
-                _ <- this update (t => copy (cash=t.cash-price))
-                _ <- seller update (t => copy (cash=t.cash+price))
-                _ <- enterContract(seller, deriv)
-            }
-            yield ()
-        }
-        
-        protected[model] def enterContract(seller: Portfolio, deriv: Derivative) =
             for {
                 liab <- DerivativeLiability(name=nextID, derivative=deriv, remaining=Scale("1.0"),
                         exec=deriv.exec, owner = seller).insert
-                _ <- DerivativeAsset(peer=liab, scale=Scale("1.0"), owner=this).insert
+                
+                asset <- DerivativeAsset(peer=liab, scale=Scale("1.0"), owner=this).insert
+                
+                // This is for voting. We set aside some of the asset to be voted on.
+                (buyerAside, sellerAside, actualPrice) <- owner.setupSetAside(
+                    owner, seller.owner, deriv, price)
+                
+                _ = logger.info("Actual price is = " + actualPrice)
+                
+                _ <- this update (t => t copy (cash=t.cash-actualPrice))
+                _ <- seller update (t => t copy (cash=t.cash+actualPrice))
             }
-            yield ()
+            yield {
+                // Because of our sneaky monad this check can be done last!
+                if (cash < actualPrice) throw NotEnoughCash(have=cash, need=actualPrice)
+                (buyerAside, sellerAside)
+            }
+        }
     }
 }
 

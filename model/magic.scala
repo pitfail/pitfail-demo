@@ -11,14 +11,21 @@ import scalaz.Scalaz._
 // This is very very temporary and should be replaced soon!
 class Table[R <: KL] extends ArrayBuffer[R] with Loggable {
     def lookup(k: Key) = {
-        this filter (_.id ==  k) headOption
+        this filter (_.id == k) headOption
     }
-    def insert(r: R) { this += r }
+    def insert(r: R) {
+        logger.info("(Inserting) " + r)
+        this += r
+    }
     def update(r: R) {
-        this remove (this indexWhere (_.id == r.id))
+        this delete r
         this insert r
     }
-    def delete(r: R) { this remove (this indexWhere (_.id == r.id)) }
+    def delete(r: R) {
+        logger.info("(Deleting) " + r)
+        this remove (this indexWhere (_.id == r.id))
+        logger.info("Leaving " + this)
+    }
 }
     
 trait DBMagic extends Transactions{
@@ -61,7 +68,9 @@ trait Links {
 
 trait Transactions extends Links with Loggable {
     
-    def editDB[A](trans: => Transaction[A]) = {
+    // Only use this inside the model code. Then make public proxy methods for
+    // outside-the-model code.
+    private[model] def editDB[A](trans: => Transaction[A]) = {
         val Transaction(result, ops) = trans
         ops foreach (_.perform)
         result
@@ -76,6 +85,9 @@ trait Transactions extends Links with Loggable {
         }
         
         def map[B](f: A => B) = Transaction(f(result), ops)
+        def filter(f: A => Boolean) =
+            if (f(result)) this
+            else sys.error("Match error")
         
         def &[B](tr: Transaction[B]) = Transaction((result,tr.result), ops ++ tr.ops)
     }
@@ -109,8 +121,12 @@ trait Transactions extends Links with Loggable {
     case class Update[R<:KL](rec: R, by: R=>R, table: Table[R]) extends EditOp {
         def perform() = {
             table.update {
-                val next = by(table lookup rec.id getOrElse (throw NotFound))
-                logger.info("Updating " + next)
+                logger.info("Updating " + rec)
+                val old = table lookup rec.id getOrElse (throw NotFound)
+                logger.info("->Updating " + old)
+                val next = by(old)
+                assert(next.id == old.id, "You changed an object's ID")
+                logger.info("~>Updating " + next)
                 next
             }
         }
@@ -140,5 +156,6 @@ trait Transactions extends Links with Loggable {
     }
     
     def mutually[A](op: (Key, Key) => A) = op(nextID, nextID)
+    def mutually[A](op: (Key, Key, Key) => A) = op(nextID, nextID, nextID)
 }
 
