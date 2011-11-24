@@ -23,7 +23,8 @@ class Boot extends Loggable {
         System.err.println
 
         /* Start the twitter server */
-        texttrading.twit.run()
+        // I'm sorry I take this out for testing
+        // texttrading.twit.run()
 
         val lr = LiftRules.realInstance
         import lr.{
@@ -51,7 +52,8 @@ class Boot extends Loggable {
             Menu.i("Test") / "testform",
             Menu.i("Schema") / "schema",
             Menu.i("1") / "auction",
-            Menu.i("2") / "user"
+            Menu.i("2") / "user",
+            Menu.i("3") / "event"
         )
         setSiteMap(SiteMap(entries:_*))
 

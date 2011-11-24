@@ -44,10 +44,14 @@ class UserPage extends Page with Loggable {
             try Some(currentUser)
             catch { case NotLoggedIn => None }
         
-        if (curUser map (_ == user) getOrElse false)
+        if (curUser map (_ ~~ user) getOrElse false) {
+            this.logger.info("Showing page for US")
             us
-        else them
-       <p/>
+        }
+        else {
+            this.logger.info("Showing page for THEM")
+            them
+        }
     }
     catch {
         case e: BadUser => <p>Sorry, {standardMessage(e)}</p>

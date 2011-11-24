@@ -158,3 +158,19 @@ object DateTimeField {
         new DateTimeField(initial, formatter)
 }
 
+// -----------------------------------------------------------------------
+// TextAreaField
+
+class TextAreaField(val initText: String)
+    extends Field[String] with TextAreaRender
+{
+    var text: String = initText
+    
+    def produce() = OK(text)
+    def reset() { text = initText }
+}
+
+object TextAreaField {
+    def apply(initText: String = "") = new TextAreaField(initText)
+}
+

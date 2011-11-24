@@ -60,17 +60,21 @@ PrintWriter out = response.getWriter();
 			 stockSymbol = results.get(1);
 			 volume = results.get(2);
 
-	  */       //User user = ensureUser("sonu_pillai");
+	  */ 
 //System.out.println("***********"+userId+"***********");
 //System.out.println("***********"+volume+"***********");
 
 
          /*
+<<<<<<< HEAD
 			 Portfolio port = user.mainPortfolio().fetch(portfolios());
 <<<<<<< HEAD
 //			 port.buyStock("GOOG", new Dollars("2000")); 
 =======
 			 port.buyStock("GOOG", new Dollars("2000")); 
+=======
+             operations.userBuyStock("sonu_pillai", "GOOG", new Dollars("2000"));
+>>>>>>> 0ac5ea52bca94da03a4411cfed7c55036a379bf5
          */
 >>>>>>> 1d7d8d61f61fc4cb52138433fe219de6fe004e04
 	 } catch (Exception e) {  

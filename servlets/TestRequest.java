@@ -6,7 +6,7 @@
 // The website needs to be running also for it to
 // have something to connect to.
 
-package servlets;
+/*package servlets;
 
 import java.net.*;
 import java.io.*;
@@ -39,4 +39,4 @@ public class TestRequest {
     }
     
 }
-
+*/

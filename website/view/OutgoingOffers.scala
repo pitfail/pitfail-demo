@@ -62,9 +62,7 @@ class OutgoingOffers extends Refreshable with Loggable {
                     </tr>
                 
                 lazy val closeButton = FormSubmit("Close") {
-                    editDB {
-                        offer.close()
-                    }
+                    offer.userClose()
                     
                     OutgoingOffers   ! Refresh
                     Portfolio        ! Refresh

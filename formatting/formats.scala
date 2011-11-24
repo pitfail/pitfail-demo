@@ -19,7 +19,7 @@ def standardMessage(error: Any) = {
         case NotEnoughCash(have, need)    => "You need %s you have %s" format (have.$, need.$)
         case DontOwnStock(ticker)         => "You don't own %s" format ticker
         case NotEnoughShares(have, need)  => "You have %s shares you need %s" format (have.###(), need.###())
-        case OfferExpired                 => "The offer has already expired"
+        case NoSuchOffer                  => "This offer doesn't exist"
         case NotExecutable                => "You can't exercise this derivative early"
         
         case e =>

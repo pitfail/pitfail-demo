@@ -63,7 +63,7 @@ case class WithUser(user: User) {
                 }
             }
             |> {
-                case StockPurchase(_, shares, dollars) =>
+                case StockPurchase(shares, dollars) =>
                     TransactionResponse(asset, dollars, shares)
             }
         )

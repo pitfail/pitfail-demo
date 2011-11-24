@@ -99,7 +99,7 @@ class Offers extends Refreshable with Loggable
         
         try {
             val user = currentUser
-            user.mainPortfolio acceptOffer offerID
+            user.mainPortfolio userAcceptOffer offerID
             
             comet.Offers ! Refresh
             comet.Portfolio ! Refresh
@@ -108,7 +108,7 @@ class Offers extends Refreshable with Loggable
             case NotLoggedIn =>
                 throw new BadInput("You're not logged in")
                 
-            case OfferExpired =>
+            case NoSuchOffer =>
                 throw new BadInput("This offer has expired")
         }
     }
@@ -118,7 +118,7 @@ class Offers extends Refreshable with Loggable
         
         try {
             val user = currentUser
-            user.mainPortfolio.declineOffer(offerID)
+            user.mainPortfolio.userDeclineOffer(offerID)
             comet.Offers ! Refresh
             comet.Portfolio ! Refresh
         }
@@ -126,7 +126,7 @@ class Offers extends Refreshable with Loggable
             case NotLoggedIn =>
                 throw new BadInput("You're not logged in")
                 
-            case OfferExpired =>
+            case NoSuchOffer =>
                 throw new BadInput("This offer has expired")
         }
     }

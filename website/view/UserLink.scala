@@ -13,7 +13,9 @@ import JE._
 import Helpers._
 
 object UserLink {
-    def apply(username: String) =
+    def apply(username: String): NodeSeq =
         <a href={"/user?name=%s" format username}>{username}</a>
+    
+    def apply(user: model.schema.User): NodeSeq = apply(user.username)
 }
 

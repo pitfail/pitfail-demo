@@ -5,6 +5,7 @@ trait UserSchema {
     self: StockSchema
         with DerivativeSchema
         with AuctionSchema
+        with CommentSchema
         with DBMagic 
         with SchemaErrors =>
     
@@ -21,6 +22,7 @@ trait UserSchema {
             mainPortfolio: Link[Portfolio]
         )
         extends KL
+        with UserWithComments
 
     case class Portfolio(
             id:    Key,
@@ -32,13 +34,18 @@ trait UserSchema {
         with PortfolioWithStocks
         with PortfolioWithDerivatives
         with PortfolioWithAuctions
-    
-    // Operations
+        
+    // Detailed Operations
         
     object User {
         // If this user doesn't already exist, create it
         def ensure(name: String): Transaction[User] =
             byName(name).orCreate(newUser(name))
+        
+        def ensureP(name: String): Transaction[Portfolio] = {
+            def port: Portfolio = byName(name).mainPortfolio
+            port orCreate newUserP(name)
+        }
         
         def byName(name: String) = {
             val u = (users filter (_.username == name)).headOption
@@ -52,6 +59,14 @@ trait UserSchema {
                 _    <- Portfolio(p, startingCash, u, Dollars("0")).insert
             }
             yield user
+        }
+        
+        def newUserP(name: String) = mutually { (u, p) =>
+            for {
+                user <- User(u, name, p).insert
+                port <- Portfolio(p, startingCash, u, Dollars("0")).insert
+            }
+            yield port
         }
     }
 }

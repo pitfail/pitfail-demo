@@ -54,6 +54,10 @@ block:
         yield ()
     }
 
+One point of caution: If you do not include an editDB block, the operations
+will not happen! I would advise always using a combination editDB { for { } }
+because that way you won't drop operations.
+    
 */
 
 object schema
@@ -65,18 +69,22 @@ object schema
     with DerivativeSchema
     with AuctionSchema
     with NewsSchema
+    with CommentSchema
     
 trait SchemaErrors {
     case object NegativeVolume extends BadUser
     case class NotEnoughCash(have: Dollars, need: Dollars) extends BadUser
     case class DontOwnStock(ticker: String) extends BadUser
     case class NotEnoughShares(have: Shares, need: Shares) extends BadUser
-    case object OfferExpired extends BadUser
+    case object NoSuchOffer extends BadUser
     case object NotExecutable extends BadUser
     case object NoSuchAuction extends BadUser
     case class BidTooSmall(going: Dollars) extends BadUser
     case object NoSuchUser extends BadUser
     case object NoSuchDerivativeAsset extends BadUser
+    case object NoSuchDerivativeLiability extends BadUser
+    case object NoSuchEvent extends BadUser
+    case object NoSuchComment extends BadUser
 }
 
 case object NotFound extends BadUser
