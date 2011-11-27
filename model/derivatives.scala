@@ -95,7 +95,7 @@ trait DerivativeSchema {
         def userAcceptOffer(id: String) = editDB {
             val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
             for {
-                (buyerAside, sellerAside) <- enterContract(offer.from, offer.derivative, offer.price)
+                (buyerAside, sellerAside) <- enterContractWithVotes(offer.from, offer.derivative, offer.price)
                 _ <- offer.delete
                 _ <- Accepted(offer.from.owner, offer.to.owner, offer.derivative,
                         price=offer.price, buyerAside=buyerAside, sellerAside=sellerAside).report
@@ -114,30 +114,27 @@ trait DerivativeSchema {
         }
         
         private[model] def enterContract(seller: Portfolio, deriv: Derivative, price: Dollars) = {
-            logger.info(owner.username + " Buying for " + price + " from " + seller.owner.username)
-            logger.info(this + " <- " + seller)
-            
             for {
                 liab <- DerivativeLiability(name=nextID, derivative=deriv, remaining=Scale("1.0"),
                         exec=deriv.exec, owner = seller).insert
                 
                 asset <- DerivativeAsset(peer=liab, scale=Scale("1.0"), owner=this).insert
                 
-                // This is for voting. We set aside some of the asset to be voted on.
-                (buyerAside, sellerAside, actualPrice) <- owner.setupSetAside(
-                    owner, seller.owner, deriv, price)
-                
-                _ = logger.info("Actual price is = " + actualPrice)
-                
-                _ <- this update (t => t copy (cash=t.cash-actualPrice))
-                _ <- seller update (t => t copy (cash=t.cash+actualPrice))
+                _ <- this update (t => t copy (cash=t.cash-price))
+                _ <- seller update (t => t copy (cash=t.cash+price))
             }
             yield {
                 // Because of our sneaky monad this check can be done last!
-                if (cash < actualPrice) throw NotEnoughCash(have=cash, need=actualPrice)
-                (buyerAside, sellerAside)
+                if (cash < price) throw NotEnoughCash(have=cash, need=price)
             }
         }
+        
+        private[model] def enterContractWithVotes(seller: Portfolio, deriv: Derivative, price: Dollars) =
+            for {
+                _ <- enterContract(seller, deriv, price)
+                (buyerAside, sellerAside) <- setupSetAside(this, seller, deriv, price)
+            }
+            yield (buyerAside, sellerAside)
     }
 }
 

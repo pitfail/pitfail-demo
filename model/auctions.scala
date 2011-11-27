@@ -48,22 +48,22 @@ trait AuctionSchema {
             val deletion =
                 for {
                     _ <- this.delete
-                    _ <- bids map (_.delete) sequence
+                    _ <- (bids map (_.delete)).sequence
+                    _ <- Closed(offerer.owner, this).report
                 }
                 yield ()
             
-            val perform =
-                highBid match {
-                    case None      => deletion
-                    case Some(bid) => 
-                        deletion & bid.by.enterContract(offerer, derivative, bid.price)
-                }
-            
-            for {
-                _ <- perform
-                _ <- Closed(offerer.owner, this).report
+            highBid match {
+                case None      => deletion
+                case Some(bid) =>
+                    for {
+                        _ <- deletion
+                        (buyerAside, sellerAside) <-
+                            bid.by.enterContractWithVotes(offerer, derivative, bid.price)
+                        _ <- Won(bid.by.owner, offerer.owner, derivative, buyerAside, sellerAside).report
+                    }
+                    yield ()
             }
-            yield ()
         }
     }
     

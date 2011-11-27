@@ -16,12 +16,10 @@ trait UserSchema {
     case class User(
             id:               Key,
             username:         String,
-            mainPortfolio:    Link[Portfolio],
-            votingPortfolio:  Link[Portfolio]
+            mainPortfolio:    Link[Portfolio]
         )
         extends KL
         with UserWithComments
-        with UserWithVotes
 
     case class Portfolio(
             id:    Key,
@@ -33,6 +31,7 @@ trait UserSchema {
         with PortfolioWithStocks
         with PortfolioWithDerivatives
         with PortfolioWithAuctions
+        with PortfolioWithVotes
         
     // Detailed Operations
         
@@ -59,13 +58,12 @@ trait UserSchema {
         }
         
         // Create a new user
-        private[model] def newUserAll(name: String) = mutually { (u, p1, p2) =>
+        private[model] def newUserAll(name: String) = mutually { (u, p1) =>
             for {
-                user    <- User(id=u, username=name, mainPortfolio=p1, votingPortfolio=p2).insert
-                mainP   <- Portfolio(id=p1, owner=u, cash=startingCash, loan=Dollars(0)).insert
-                votingP <- Portfolio(id=p2, owner=u, cash=startingCash, loan=Dollars(0)).insert
+                user  <- User(id=u, username=name, mainPortfolio=p1).insert
+                mainP <- Portfolio(id=p1, owner=u, cash=startingCash, loan=Dollars(0)).insert
             }
-            yield (user, mainP, votingP)
+            yield (user, mainP)
         }
         
         private[model] def newUser(name: String) = newUserAll(name) map (_._1)

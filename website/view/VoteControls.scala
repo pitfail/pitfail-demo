@@ -16,28 +16,51 @@ import formats._
 import intform._
 import errors._
 
+import model._
 import model.schema._
 
 object voteControls {
 //
 
-def apply(ev: NewsEvent): NodeSeq = ev match {
-    case Accepted(buyerAside=b, sellerAside=s) => controls(b, s)
+def apply(ref: Refreshable, ev: NewsEvent): NodeSeq = ev.asVotable match {
+    case Some((buyerAside, sellerAside)) => controls(ref, ev, buyerAside, sellerAside)
     case _ => Nil
 }
 
-def controls(buyerAside: DerivativeBuyerSetAside, sellerAside: DerivativeSellerSetAside) = {
+def controls(ref: Refreshable, ev: NewsEvent,
+        buyerAside: DerivativeBuyerSetAside, sellerAside: DerivativeSellerSetAside) = {
+    import control.LoginManager._
+    
     val up = FormSubmit.rendered("Up") {
-        currentUser.userVoteUp(buyerAside)
+        try {
+            currentUser.mainPortfolio.userVoteUp(ev, buyerAside)
+        }
+        catch { case NotLoggedIn =>
+            throw BadInput("You must be logged in to vote")
+        }
+        ref.refresh
     }
     
     val down = FormSubmit.rendered("Down") {
-        currentUser.userVoteDown(sellerAside)
+        try {
+            currentUser.mainPortfolio.userVoteDown(ev, sellerAside)
+        }
+        catch { case NotLoggedIn =>
+            throw BadInput("You must be logged in to vote")
+        }
+        ref.refresh
     }
     
-    <span>{up} {down}</span>
+    <span>
+        {up} ({priceSpec(-buyerAside.price * buyerAside.remaining)})
+        {down} ({priceSpec(sellerAside.price * sellerAside.remaining)})
+    </span>
 }
 
+def priceSpec(price: Dollars) =
+    if (price < Dollars(0)) <span>pay {(-price).$}</span>
+    else <span>receive {price.$}</span>
+    
 //
 }
 

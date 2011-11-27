@@ -143,6 +143,7 @@ trait Transactions extends Links with Loggable {
         def insert(implicit table: Table[R]) = Transaction(rec, Insert(rec, table) :: Nil)
         def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(rec, by, table) :: Nil)
         def delete(implicit table: Table[R]) = Transaction(rec, Delete(rec, table) :: Nil)
+        def refetch(implicit table: Table[R]) = table lookup(rec.id) getOrElse (throw NotFound)
     }
     
     implicit def toOrCreate[R](already: => R) = new {

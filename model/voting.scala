@@ -12,74 +12,108 @@ trait VotingSchema {
     implicit val derivativeSellerVotes = table[DerivativeSellerVote]
     
     case class DerivativeBuyerSetAside(
-            id:        Key = nextID,
-            buyer:     Link[User],
-            asset:     Link[DerivativeAsset],
+            id:         Key = nextID,
+            buyer:      Link[Portfolio],
+            seller:     Link[Portfolio],
+            derivative: Derivative,
+            price:      Dollars,
+            remaining:  Scale
         )
         extends KL
         
     case class DerivativeSellerSetAside(
-            id:        Key = nextID,
-            seller:    Link[User],
-            liability: Link[DerivativeLiability],
+            id:         Key = nextID,
+            buyer:      Link[Portfolio],
+            seller:     Link[Portfolio],
+            derivative: Derivative,
+            price:      Dollars,
+            remaining:  Scale
         )
         extends KL
     
     case class DerivativeBuyerVote(
             id: Key = nextID,
-            caster: Link[User],
+            caster: Link[Portfolio],
             event:  Link[NewsEvent]
         )
         extends KL
         
     case class DerivativeSellerVote(
             id:     Key = nextID,
-            caster: Link[User],
+            caster: Link[Portfolio],
             event:  Link[NewsEvent]
         )
         extends KL
     
-    trait UserWithVotes {
-        self: User =>
+    trait PortfolioWithVotes {
+        self: Portfolio =>
         
         def userVoteUp(ev: NewsEvent, aside: DerivativeBuyerSetAside) =
-            editDB(voteUp(ev, aside))
+            editDB(this.refetch.voteUp(ev, aside.refetch))
         
-        def userVoteDown(ev: NewsEvent aside: DerivativeSellerSetAside) =
-            editDB(voteDown(ev, aside))
+        def userVoteDown(ev: NewsEvent, aside: DerivativeSellerSetAside) =
+            editDB(this.refetch.voteDown(ev, aside.refetch))
         
-        private[model] def voteUp(ev: NewsEvent, aside: DerivativeBuyerSetAside) =
+        private[model] def voteUp(ev: NewsEvent, aside: DerivativeBuyerSetAside) = {
+            val take = aside.remaining * Scale("0.5")
+            val price = aside.price * take
+                
             for {
+                _ <- DerivativeBuyerVote(caster=this,  event=ev).insert
+                _ <- enterContract(aside.seller, aside.derivative*take, price)
+                
+                _ <- aside update (a => a copy (remaining=a.remaining-take))
             }
             yield ()
+        }
             
-        private[model] def voteDown(ev: NewsEvent, aside: DerivativeBuyerSetAside) =
+        private[model] def voteDown(ev: NewsEvent, aside: DerivativeSellerSetAside) = {
+            val take = aside.remaining * Scale("0.5")
+            val price = aside.price * take
+                
             for {
+                _ <- DerivativeSellerVote(caster=this, event=ev).insert
+                _ <- aside.buyer.enterContract(this, aside.derivative*take, price)
+                
+                _ <- aside update (a => a copy (remaining=a.remaining-take))
             }
             yield ()
+        }
         
         private[model] def setupSetAside
-                (buyer: User, seller: User, deriv: Derivative, price: Dollars) =
+                (buyer: Portfolio, seller: Portfolio, deriv: Derivative, price: Dollars) =
         {
-            val buyerPort = buyer.votingPortfolio
-            val sellerPort = seller.votingPortfolio
-            val derivFrac = deriv * setAsideFraction
-            
-            // We need to change the buyer a little more to cover it
-            val actualPrice = price * (Scale(1) + setAsideFraction)
-            
             for {
-                // Create the set aside asset and liability
-                liab <- DerivativeLiability(name=nextID, derivative=derivFrac, remaining=Scale(1),
-                    owner=sellerPort, exec=deriv.exec).insert
-                asset <- DerivativeAsset(peer=liab, scale=Scale(1), owner=buyerPort).insert
-                
-                // Create fake "companies" to own them
-                buyerSetAside <- DerivativeBuyerSetAside(buyer=buyer, asset=asset).insert
-                sellerSetAside <- DerivativeSellerSetAside(seller=seller, liability=liab).insert
+                buyerSetAside <- DerivativeBuyerSetAside(buyer=buyer, seller=seller,
+                    derivative=deriv, price=price, remaining=setAsideFraction).insert
+                sellerSetAside <- DerivativeSellerSetAside(buyer=buyer, seller=seller,
+                    derivative=deriv, price=price, remaining=setAsideFraction).insert
             }
-            yield (buyerSetAside, sellerSetAside, actualPrice)
+            yield (buyerSetAside, sellerSetAside)
         }
+    }
+    
+    trait NewsEventWithVotes {
+        self: NewsEvent =>
+            
+        def isVotable = action match {
+            case Accepted(_, _, _, _, b, s) => true
+            case Won(_, _, _, b, s)         => true
+            case _  => false
+        }
+            
+        def asVotable: Option[(DerivativeBuyerSetAside,DerivativeSellerSetAside)] =
+            action match {
+                case Accepted(_, _, _, _, b, s) => Some((b, s))
+                case Won(_, _, _, b, s)         => Some((b, s))
+                case _  => None
+            }
+        
+        def buyerVotes  = derivativeBuyerVotes  filter (_.event ~~ this)
+        def sellerVotes = derivativeSellerVotes filter (_.event ~~ this)
+        
+        def buyerTally = buyerVotes.length
+        def sellerTally = sellerVotes.length
     }
 }
 
