@@ -193,8 +193,7 @@ class DerivativeBuilder extends Page with Loggable
 
     lazy val toField = CaseField[Recipient](
         Seq(
-            //toUserField,
-            ConstField(OpenAuction),
+            toUserField,
             ConstField(OpenAuction)
         ),
         choices =>

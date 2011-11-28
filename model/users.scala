@@ -3,11 +3,8 @@ package model
 
 trait UserSchema {
     self: StockSchema
-        with DerivativeSchema
-        with AuctionSchema
-        with CommentSchema
-        with DBMagic 
-        with SchemaErrors =>
+        with DerivativeSchema with AuctionSchema with CommentSchema
+        with DBMagic with SchemaErrors with VotingSchema =>
     
     val startingCash = Dollars("200000")
             
@@ -17,9 +14,9 @@ trait UserSchema {
     // Model tables
     
     case class User(
-            id:            Key,
-            username:      String,
-            mainPortfolio: Link[Portfolio]
+            id:               Key,
+            username:         String,
+            mainPortfolio:    Link[Portfolio]
         )
         extends KL
         with UserWithComments
@@ -34,40 +31,47 @@ trait UserSchema {
         with PortfolioWithStocks
         with PortfolioWithDerivatives
         with PortfolioWithAuctions
+        with PortfolioWithVotes
         
     // Detailed Operations
         
     object User {
-        // If this user doesn't already exist, create it
-        def ensure(name: String): Transaction[User] =
-            byName(name).orCreate(newUser(name))
-        
-        def ensureP(name: String): Transaction[Portfolio] = {
-            def port: Portfolio = byName(name).mainPortfolio
-            port orCreate newUserP(name)
-        }
-        
         def byName(name: String) = {
             val u = (users filter (_.username == name)).headOption
             u getOrElse (throw NoSuchUser)
         }
         
-        // Create a new user
-        def newUser(name: String) = mutually { (u, p) =>
-            for {
-                user <- User(u, name, p).insert
-                _    <- Portfolio(p, startingCash, u, Dollars("0")).insert
-            }
-            yield user
+        def userEnsure(name: String) = editDB { ensure(name) }
+        
+        def isNew(name: String) = editDB {
+            try Transaction(OldUser(byName(name)))
+            catch { case NoSuchUser => ensure(name) map (NewUser(_)) }
         }
         
-        def newUserP(name: String) = mutually { (u, p) =>
-            for {
-                user <- User(u, name, p).insert
-                port <- Portfolio(p, startingCash, u, Dollars("0")).insert
-            }
-            yield port
+        // If this user doesn't already exist, create it
+        private[model] def ensure(name: String): Transaction[User] =
+            byName(name).orCreate(newUser(name))
+        
+        private[model] def ensureP(name: String): Transaction[Portfolio] = {
+            def port: Portfolio = byName(name).mainPortfolio
+            port orCreate newUserP(name)
         }
+        
+        // Create a new user
+        private[model] def newUserAll(name: String) = mutually { (u, p1) =>
+            for {
+                user  <- User(id=u, username=name, mainPortfolio=p1).insert
+                mainP <- Portfolio(id=p1, owner=u, cash=startingCash, loan=Dollars(0)).insert
+            }
+            yield (user, mainP)
+        }
+        
+        private[model] def newUser(name: String) = newUserAll(name) map (_._1)
+        private[model] def newUserP(name: String) = newUserAll(name) map (_._2)
     }
+    
+    sealed trait IsNewUser
+    case class NewUser(user: User)
+    case class OldUser(user: User)
 }
 

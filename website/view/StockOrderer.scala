@@ -109,9 +109,7 @@ class StockOrderer extends Page with Loggable
         val shares = dollars /-/ quote.price
 
         if (shares > Shares(0)) {
-            editDB {
-                currentUser.mainPortfolio.buyStock(quote.stock.symbol, shares)
-            }
+            currentUser.mainPortfolio.userBuyStock(quote.stock.symbol, shares)
             currentQuote = None
 
             comet.Portfolio ! comet.Refresh

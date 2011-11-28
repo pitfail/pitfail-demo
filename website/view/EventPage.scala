@@ -35,7 +35,7 @@ class EventPage extends Page with Loggable {
         
         <div id="event" class="block">
             <h3 class="event"><span class="eventDate">{ev.when.toNearbyString}</span>:
-                {eventDescription(ev, link=false)}</h3>
+                {eventDescription(ev, link=false)}{voteControls(refreshable, ev)}</h3>
                 
             {commentPage(ev)}
         </div>

@@ -30,6 +30,7 @@ class News extends Refreshable
     def newsContents = {
         val items = recentEvents(10) map { ev =>
             <li class="event">
+                {News.eventBriefTally(ev)}
                 {News.eventDescription(ev, link=true)}
                 ({News.link(ev,ev.numComments + " comments")})
             </li>
@@ -54,7 +55,7 @@ object News extends RefreshHub {
             case Offered(from, to, derivative, price) =>
                 <span>{UserLink(from)} {alink("made an offer")} to {UserLink(to)}</span>
             
-            case Accepted(from, to, derivative, price) =>
+            case Accepted(from, to, derivative, price, _, _) =>
                 <span>{UserLink(to)} {alink("accepted")} {UserLink(from)}'s offer</span>
                 
             case Declined(from, to, derivative, price) =>
@@ -79,5 +80,11 @@ object News extends RefreshHub {
     }
     
     def link(ev: NewsEvent, text: String) = <a href={"/event?id="+ev.id}>{text}</a>
+    
+    def eventBriefTally(ev: NewsEvent) =
+        if (ev.isVotable)
+            <span class="brief-tally">+{ev.buyerTally}/-{ev.sellerTally}</span>
+        else
+            Nil
 }
 

@@ -27,10 +27,7 @@ object LoginManager extends Loggable {
         import comet._
         
         _currentLogin := Some(name)
-        logger.info("Ensuring user " + name)
-        editDB {
-            User ensure name
-        }
+        User userEnsure name
         
         Portfolio        ! Refresh
         News             ! Refresh
@@ -46,7 +43,7 @@ object LoginManager extends Loggable {
     def currentLogin: Option[String] = _currentLogin.is
     def currentUser: User =
         currentLogin match {
-            case Some(name) => editDB { User ensure name }
+            case Some(name) => User userEnsure name
             case _          => throw NotLoggedIn
         }
     
