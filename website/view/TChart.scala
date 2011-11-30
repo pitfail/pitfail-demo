@@ -25,220 +25,258 @@ import model.schema._
 
 object tChart extends Loggable {
 //
+
+def apply(user: User, modifiable: Boolean) = {
+//
     
-def apply(
-        user: User,
-        modifiable: Boolean
-    ) =
-{
-    def render = readDB {
-        val port = user.mainPortfolio
+var showHidden = false
+
+lazy val refreshable = Refreshable(doRender)
+def render = refreshable.render
+    
+def doRender: NodeSeq = {
+    val port = user.mainPortfolio
+    
+    val myStockAssets           = port.myStockAssets
+    val myCashAmount            = port.cash
+    val myDerivativeAssets      = port.myDerivativeAssets
+    val myDerivativeLiabilities = port.myDerivativeLiabilities
+    
+    lazy val result =
+        <div>
+            {hiddenControls}
+            {table}
+        </div>
+    
+    lazy val table =
+        <table id="portfolio" class="block container portfolio">
+            <col class="tchart-left1"/>
+            <col class="tchart-left2"/>
+            <col class="tchart-right1"/>
+            <col class="tchart-right2"/>
+            <tr class="tchart-top">
+                <td colspan="2" class="tchart-top">Assets</td>
+                <td colspan="2" class="tchart-top">Liabilities</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="tchart-half">{assetsTable}</td>
+                <td colspan="2" class="tchart-half">{liabilitiesTable}</td>
+            </tr>
+            <tr class="tchart-section tchart-total tchart">
+                <td>Total:</td>
+                <td class="tchart-dollars">{total.$}</td>
+                <td>Total:</td>
+                <td class="tchart-dollars">{liabilitiesTotal.$}</td>
+            </tr>
+            <tr class="tchart">
+                <td class="tchart-section tchart-total">
+                    Equity:
+                </td>
+                <td class="tchart-section tchart-total tchart-dollars">
+                {(total - liabilitiesTotal).$}
+                </td>
+            </tr>
+        </table>
+
+    lazy val assetsTable =
+        <table class="tchart assets">
+            <tr class="tchart-section">
+                <td>Cash</td>
+                <td/>
+                <td/>
+                <td class="tchart-dollars">{myCashAmount.$}</td>
+            </tr>
+
+            <tr class="tchart-section">
+                <td colspan="2">Stocks</td>
+                <td colspan="1"/>
+                <td class="tchart-dollars">{stocksTotal.$}</td>
+            </tr>
+            {stocks}
+
+            <tr class="tchart-section">
+                <td colspan="2">Derivatives</td>
+                <td/>
+                <td class="tchart-dollars">**{derivsTotal.$}</td>
+            </tr>
+            {derivativeAssets}
+        </table>
+            
+    lazy val stocksTotal = (
+                 myStockAssets
+             map stockDollars _
+             map (_ getOrElse Dollars(0))
+         )
+        .foldLeft(Dollars("0"))(_ + _)
+    
+    lazy val derivsTotal = (myDerivativeAssets
+            map (_.derivative) map (_.spotValue))
+        .foldLeft(Dollars("0"))(_ + _)
         
-        val myStockAssets           = port.myStockAssets
-        val myCashAmount            = port.cash
-        val myDerivativeAssets      = port.myDerivativeAssets
-        val myDerivativeLiabilities = port.myDerivativeLiabilities
+    lazy val total = stocksTotal + myCashAmount + derivsTotal
         
-        lazy val result =
-            <table id="portfolio" class="block container portfolio">
-                <col class="tchart-left1"/>
-                <col class="tchart-left2"/>
-                <col class="tchart-right1"/>
-                <col class="tchart-right2"/>
-                <tr class="tchart-top">
-                    <td colspan="2" class="tchart-top">Assets</td>
-                    <td colspan="2" class="tchart-top">Liabilities</td>
-                </tr>
+    lazy val stocks = {
+        if (myStockAssets isEmpty)
+            <tr><td colspan="4">none</td></tr>
+        else
+            myStockAssets map { (asset) =>
                 <tr>
-                    <td colspan="2" class="tchart-half">{assetsTable}</td>
-                    <td colspan="2" class="tchart-half">{liabilitiesTable}</td>
-                </tr>
-                <tr class="tchart-section tchart-total tchart">
-                    <td>Total:</td>
-                    <td class="tchart-dollars">{total.$}</td>
-                    <td>Total:</td>
-                    <td class="tchart-dollars">{liabilitiesTotal.$}</td>
-                </tr>
-                <tr class="tchart">
-                    <td class="tchart-section tchart-total">
-                        Equity:
+                    <td class="tchart-ticker">{asset.ticker}</td>
+                    <td class="tchart-price">({asset.shares.###() + " @ " + mehPrice(asset)})</td>
+                    <td class="buttons">
+                    {
+                    if (modifiable)
+                        snippet.SellThisStock(asset.ticker)
+                    else
+                        Nil
+                    }
                     </td>
-                    <td class="tchart-section tchart-total tchart-dollars">
-                    {(total - liabilitiesTotal).$}
-                    </td>
+                    <td class="tchart-dollars">{mehDollars(asset)}</td>
                 </tr>
-            </table>
-
-        lazy val assetsTable =
-            <table class="tchart assets">
-                <tr class="tchart-section">
-                    <td>Cash</td>
-                    <td/>
-                    <td/>
-                    <td class="tchart-dollars">{myCashAmount.$}</td>
-                </tr>
-
-                <tr class="tchart-section">
-                    <td colspan="2">Stocks</td>
-                    <td colspan="1"/>
-                    <td class="tchart-dollars">{stocksTotal.$}</td>
-                </tr>
-                {stocks}
-
-                <tr class="tchart-section">
-                    <td colspan="2">Derivatives</td>
-                    <td/>
-                    <td class="tchart-dollars">**{derivsTotal.$}</td>
-                </tr>
-                {derivativeAssets}
-            </table>
-                
-        lazy val stocksTotal = (
-                     myStockAssets
-                 map stockDollars _
-                 map (_ getOrElse Dollars(0))
-             )
-            .foldLeft(Dollars("0"))(_ + _)
-        
-        lazy val derivsTotal = (myDerivativeAssets
-                map (_.derivative) map (_.spotValue))
-            .foldLeft(Dollars("0"))(_ + _)
+            }
+    }
+    
+    lazy val derivativeAssets =
+        if (myDerivativeAssets isEmpty)
+            <tr class="deriv-row deriv-header"><td colspan="3">none</td></tr>
+        else
+            myDerivativeAssets flatMap renderDerivativeAsset _
+    
+    def renderDerivativeAsset(asset: DerivativeAsset) =
+        if (asset.hidden && !showHidden) Nil
+        else {
+            val deriv = asset.derivative
+            val liab = asset.peer
             
-        lazy val total = stocksTotal + myCashAmount + derivsTotal
-            
-        lazy val stocks = {
-            if (myStockAssets isEmpty)
-                <tr><td colspan="4">none</td></tr>
-            else
-                myStockAssets map { (asset) =>
-                    <tr>
-                        <td class="tchart-ticker">{asset.ticker}</td>
-                        <td class="tchart-price">({asset.shares.###() + " @ " + mehPrice(asset)})</td>
-                        <td class="buttons">
-                        {
-                        if (modifiable)
-                            snippet.SellThisStock(asset.ticker)
-                        else
-                            Nil
-                        }
-                        </td>
-                        <td class="tchart-dollars">{mehDollars(asset)}</td>
-                    </tr>
-                }
+            <tr class="deriv-row deriv-header">
+                <td>Secs:</td>
+                <td>{deriv.securities toHumanString}</td>
+                <td class="buttons">{
+                    if (modifiable && asset.derivative.early)
+                        execDerivative(asset)
+                    else
+                        Nil
+                }</td>
+                <td class="tchart-dollars">**{deriv.spotValue.$}</td>
+            </tr>
+            <tr class="deriv-row">
+                <td>From:</td>
+                <td colspan="3">{UserLink(liab.owner.owner)}</td>
+            </tr>
+            <tr class="deriv-row">
+                <td>On:</td>
+                <td colspan="3">{deriv.exec toNearbyString}</td>
+            </tr>
+            <tr class="deriv-row">
+                <td>If:</td>
+                <td colspan="3">{deriv.condition toHumanString}</td>
+            </tr>
         }
-        
-        lazy val derivativeAssets =
-            if (myDerivativeAssets isEmpty)
-                <tr class="deriv-row deriv-header"><td colspan="3">none</td></tr>
-            else
-                myDerivativeAssets map { (asset) =>
-                    val deriv = asset.derivative
-                    val liab = asset.peer
-                    
-                    <tr class="deriv-row deriv-header">
-                        <td>Secs:</td>
-                        <td>{deriv.securities toHumanString}</td>
-                        <td class="buttons">{
-                            if (modifiable && asset.derivative.early)
-                                execDerivative(asset)
-                            else
-                                Nil
-                        }</td>
-                        <td class="tchart-dollars">**{deriv.spotValue.$}</td>
-                    </tr>
-                    <tr class="deriv-row">
-                        <td>From:</td>
-                        <td colspan="3">{UserLink(liab.owner.owner.username)}</td>
-                    </tr>
-                    <tr class="deriv-row">
-                        <td>On:</td>
-                        <td colspan="3">{deriv.exec toNearbyString}</td>
-                    </tr>
-                    <tr class="deriv-row">
-                        <td>If:</td>
-                        <td colspan="3">{deriv.condition toHumanString}</td>
-                    </tr>
-                }
-        
-        lazy val liabilitiesTable =
-            <table class="tchart liabilities">
-                <tr class="tchart-section">
-                    <td colspan="2">Derivatives</td>
-                    <td/>
-                    <td class="tchart-dollars">**{derivativeLiabilitiesTotal.$}</td>
-                </tr>
-                {derivativeLiabilities}
-            </table>
+    
+    lazy val liabilitiesTable =
+        <table class="tchart liabilities">
+            <tr class="tchart-section">
+                <td colspan="2">Derivatives</td>
+                <td/>
+                <td class="tchart-dollars">**{derivativeLiabilitiesTotal.$}</td>
+            </tr>
+            {derivativeLiabilities}
+        </table>
 
-        lazy val valuedDerivativeLiabilities = myDerivativeLiabilities map { lia =>
-            (lia, lia.derivative.spotValue * lia.remaining)
-        }
-        
-        lazy val derivativeLiabilities =
-            if (myDerivativeLiabilities isEmpty)
-                <tr><td colspan="4">none</td></tr>
-            else
-                valuedDerivativeLiabilities map { case (liability, dollars) =>
-                    val deriv = liability.derivative
-                    
-                    <tr class="deriv-row deriv-header">
-                        <td>Secs:</td>
-                        <td>{deriv.securities toHumanString}</td>
-                        <td> </td>
-                        <td class="tchart-dollars">**{dollars.$}</td>
-                    </tr>
-                    <tr class="deriv-row">
-                        <td>On:</td>
-                        <td>{deriv.exec toNearbyString}</td>
-                    </tr>
-                    <tr class="deriv-row">
-                        <td>If:</td>
-                        <td>{deriv.condition toHumanString}</td>
-                    </tr>
-                }
-        
-        lazy val derivativeLiabilitiesTotal = (valuedDerivativeLiabilities
-            map (_._2)).foldLeft(Dollars(0))(_ + _)
-        
-        lazy val liabilitiesTotal = derivativeLiabilitiesTotal
-        
-        result
+    lazy val valuedDerivativeLiabilities = myDerivativeLiabilities map { lia =>
+        (lia, lia.derivative.spotValue * lia.remaining)
     }
     
-    def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Exercise") {
-        try {
-            da.userExecuteManually()
+    lazy val derivativeLiabilities =
+        if (myDerivativeLiabilities isEmpty)
+            <tr><td colspan="4">none</td></tr>
+        else
+            valuedDerivativeLiabilities flatMap (renderDerivativeLiability _).tupled
+    
+    def renderDerivativeLiability(liability: DerivativeLiability, dollars: Dollars) =
+        if (liability.hidden && !showHidden) Nil
+        else {
+            val deriv = liability.derivative
+            
+            <tr class="deriv-row deriv-header">
+                <td>Secs:</td>
+                <td>{deriv.securities toHumanString}</td>
+                <td> </td>
+                <td class="tchart-dollars">**{dollars.$}</td>
+            </tr>
+            <tr class="deriv-row">
+                <td>On:</td>
+                <td>{deriv.exec toNearbyString}</td>
+            </tr>
+            <tr class="deriv-row">
+                <td>If:</td>
+                <td>{deriv.condition toHumanString}</td>
+            </tr>
         }
-        catch { case NoSuchDerivativeAsset =>
-            throw BadInput("No longer exists")
-        }
+            
+    lazy val derivativeLiabilitiesTotal = (valuedDerivativeLiabilities
+        map (_._2)).foldLeft(Dollars(0))(_ + _)
+    
+    lazy val liabilitiesTotal = derivativeLiabilitiesTotal
+    
+    result
+}
+
+def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Exercise") {
+    try {
+        da.userExecuteManually()
     }
-    
-    def mehDollars(asset: StockAsset): String =
-        stockDollars(asset) map (_.$) getOrElse "???"
-    
-    def stockDollars(asset: StockAsset): Option[Dollars] =
-        stockPrice(asset) map (_ * asset.shares)
-    
-    def mehPrice(asset: StockAsset): String =
-        stockPrice(asset) map (_.$) getOrElse "???"
-    
-    def stockPrice(asset: StockAsset): Option[Price] = {
-        try {
-            Some(model.Stocks stockPrice asset.ticker)
-        }
-        catch {
-            case e: NoSuchStockException =>
-                logger.error("Ugh", e)
-                None
-                
-            case e: DatabaseException    => None
-                logger.error("Ugh", e)
-                None
-        }
+    catch { case NoSuchDerivativeAsset =>
+        throw BadInput("No longer exists")
     }
+}
+
+def mehDollars(asset: StockAsset): String =
+    stockDollars(asset) map (_.$) getOrElse "???"
+
+def stockDollars(asset: StockAsset): Option[Dollars] =
+    stockPrice(asset) map (_ * asset.shares)
+
+def mehPrice(asset: StockAsset): String =
+    stockPrice(asset) map (_.$) getOrElse "???"
+
+def stockPrice(asset: StockAsset): Option[Price] = {
+    try {
+        Some(model.Stocks stockPrice asset.ticker)
+    }
+    catch {
+        case e: NoSuchStockException =>
+            logger.error("Ugh", e)
+            None
+            
+        case e: DatabaseException    => None
+            logger.error("Ugh", e)
+            None
+    }
+}
+
+def hiddenControls =
+    if (   (user.mainPortfolio.myDerivativeAssets exists (_.hidden))
+        || (user.mainPortfolio.myDerivativeLiabilities exists (_.hidden)) )
+    {
+        lazy val showLink = FormSubmit.rendered("Show Hidden") {
+            showHidden = true
+            refreshable.refresh
+        }
+        
+        lazy val hideLink = FormSubmit.rendered("Hide Hidden") {
+            showHidden = false
+            refreshable.refresh
+        }
+        
+        if (showHidden)
+            <p>show hidden {hideLink}</p>
+        else
+            <p>{showLink} hide hidden</p>
+    }
+    else Nil
     
-    render
+render
 }
 
 //

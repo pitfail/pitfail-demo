@@ -38,6 +38,7 @@ def controls(ref: Refreshable, ev: NewsEvent,
         catch { case NotLoggedIn =>
             throw BadInput("You must be logged in to vote")
         }
+        comet.News ! comet.Refresh
         ref.refresh
     }
     
@@ -48,6 +49,7 @@ def controls(ref: Refreshable, ev: NewsEvent,
         catch { case NotLoggedIn =>
             throw BadInput("You must be logged in to vote")
         }
+        comet.News ! comet.Refresh
         ref.refresh
     }
     

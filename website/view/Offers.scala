@@ -77,7 +77,7 @@ class Offers extends Refreshable with Loggable
                 val deriv = o.derivative
                 
                 <tr>
-                    <td>{UserLink(o.from.owner.username)}</td>
+                    <td>{UserLink(o.from.owner)}</td>
                     <td>{deriv.securities toHumanString}</td>
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>

@@ -58,6 +58,11 @@ case class Dollars(dollars: BigDecimal)
         if (dollars < 0) "-$%.2f" format (-(dollars doubleValue))
         else "$%.2f" format (dollars doubleValue)
         
+    def $short: String =
+        if      (dollars >= 1000000) "$%.0fM" format ((dollars doubleValue)/1000000)
+        else if (dollars >= 1000)    "$%.0fk" format ((dollars doubleValue)/1000)
+        else                                  "$%.0f"  format ((dollars doubleValue))
+        
     def no$: String = "%.2f" format (dollars doubleValue)
 }
 

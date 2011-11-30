@@ -48,6 +48,6 @@ object LoginManager extends Loggable {
         }
     
     // Who we're logged in as
-    object _currentLogin extends SessionVar[Option[String]](Some("test_user"))
+    object _currentLogin extends SessionVar[Option[String]](Some("ellbur_k_a"))
 }
 

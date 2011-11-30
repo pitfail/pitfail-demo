@@ -573,3 +573,10 @@ tr.deriv-header {
     color: #000;
     background: #D8CBC4;
 }
+
+/* User links */
+
+.big-name {
+    font-weight: bold;
+}
+

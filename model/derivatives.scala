@@ -18,10 +18,11 @@ trait DerivativeSchema {
     // Model tables
     
     case class DerivativeAsset(
-            id:    Key = nextID,
-            peer:  Link[DerivativeLiability],
-            scale: Scale,
-            owner: Link[Portfolio]
+            id:     Key = nextID,
+            peer:   Link[DerivativeLiability],
+            scale:  Scale,
+            owner:  Link[Portfolio],
+            hidden: Boolean
         )
         extends KL
         with DerivativeAssetOps
@@ -32,7 +33,8 @@ trait DerivativeSchema {
             derivative: Derivative,
             remaining:  Scale,
             exec:       DateTime,
-            owner:      Link[Portfolio]
+            owner:      Link[Portfolio],
+            hidden:     Boolean
         )
         extends KL
         
@@ -48,14 +50,18 @@ trait DerivativeSchema {
     
     // Operations
         
+    def systemCheckForExercise() = logger.info("TODO: This")
+    
     trait DerivativeAssetOps {
         self: DerivativeAsset =>
-            
+                
         def derivative = self.peer.derivative
         
         // When a user wants to exercise a derivative early.
         // Not all derivatives can be exercised early.
         def userExecuteManually() { sys.error("Not implemented") }
+            
+        def spotValue: Dollars = derivative.spotValue * scale
     }
     
     object DerivativeLiability {
@@ -75,11 +81,11 @@ trait DerivativeSchema {
         def userOfferDerivativeTo(recip: User, deriv: Derivative, price: Dollars) =
             editDB {
                 for {
-                    _ <- DerivativeOffer(derivative=deriv, from=this,
+                    offer <- DerivativeOffer(derivative=deriv, from=this,
                         to=recip.mainPortfolio, price=price, expires=new DateTime).insert
                     _ <- Offered(this.owner, recip, deriv, price).report
                 }
-                yield ()
+                yield offer
             }
         
         def userOfferDerivativeAtAuction(deriv: Derivative, price: Dollars, expires: DateTime) =
@@ -97,10 +103,10 @@ trait DerivativeSchema {
             for {
                 (buyerAside, sellerAside) <- enterContractWithVotes(offer.from, offer.derivative, offer.price)
                 _ <- offer.delete
-                _ <- Accepted(offer.from.owner, offer.to.owner, offer.derivative,
+                event <- Accepted(offer.from.owner, offer.to.owner, offer.derivative,
                         price=offer.price, buyerAside=buyerAside, sellerAside=sellerAside).report
             }
-            yield ()
+            yield event
         }
         
         def userDeclineOffer(id: String) = editDB {
@@ -113,12 +119,14 @@ trait DerivativeSchema {
             yield ()
         }
         
-        private[model] def enterContract(seller: Portfolio, deriv: Derivative, price: Dollars) = {
+        private[model] def enterContract
+            (seller: Portfolio, deriv: Derivative, price: Dollars, hidden: Boolean=false) =
+        {
             for {
                 liab <- DerivativeLiability(name=nextID, derivative=deriv, remaining=Scale("1.0"),
-                        exec=deriv.exec, owner = seller).insert
+                        exec=deriv.exec, owner=seller, hidden=hidden).insert
                 
-                asset <- DerivativeAsset(peer=liab, scale=Scale("1.0"), owner=this).insert
+                asset <- DerivativeAsset(peer=liab, scale=Scale("1.0"), owner=this, hidden=hidden).insert
                 
                 _ <- this update (t => t copy (cash=t.cash-price))
                 _ <- seller update (t => t copy (cash=t.cash+price))

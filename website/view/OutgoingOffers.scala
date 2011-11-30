@@ -50,7 +50,7 @@ class OutgoingOffers extends Refreshable with Loggable {
             
             lazy val offerRows = offers map { offer =>
                 val high = offer.highBid
-                val highBidder = high map (_.by.owner.username)
+                val highBidder = high map (_.by.owner)
                 
                 lazy val all =
                     <tr>

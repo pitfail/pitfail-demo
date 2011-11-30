@@ -42,9 +42,9 @@ object commentPage {
         
         def showComment(c: EventComment) =
             <div class="comment">
+                <span class="commentDate">{c.when.toNearbyString}</span>
                 <span class="commentAuthor">{UserLink(c.by)}:</span>
                 <span class="commentText">{c.text}</span>
-                <span class="commentDate">{c.when.toNearbyString}</span>
             </div>
             
         // -----------------------------------------------
@@ -71,6 +71,7 @@ object commentPage {
                 case NotLoggedIn => ev.userPostAnonymously(text)
             }
             
+            comet.News ! comet.Refresh
             main.refresh()
         }
         
