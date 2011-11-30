@@ -40,6 +40,7 @@ class Portfolio extends Refreshable with Loggable
                 <p>Login to view your portfolio</p>
         }
     }
+    
 }
 
 object Portfolio extends RefreshHub

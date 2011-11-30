@@ -25,9 +25,11 @@ trait UserSchema {
             id:    Key,
             cash:  Dollars,
             owner: Link[User],
-            loan:  Dollars
+            loan:  Dollars,
+            rank:  Int
         )
         extends KL
+        with PortfolioOps
         with PortfolioWithStocks
         with PortfolioWithDerivatives
         with PortfolioWithAuctions
@@ -61,7 +63,7 @@ trait UserSchema {
         private[model] def newUserAll(name: String) = mutually { (u, p1) =>
             for {
                 user  <- User(id=u, username=name, mainPortfolio=p1).insert
-                mainP <- Portfolio(id=p1, owner=u, cash=startingCash, loan=Dollars(0)).insert
+                mainP <- Portfolio(id=p1, owner=u, cash=startingCash, loan=Dollars(0), rank=0).insert
             }
             yield (user, mainP)
         }
@@ -73,5 +75,15 @@ trait UserSchema {
     sealed trait IsNewUser
     case class NewUser(user: User)
     case class OldUser(user: User)
+    
+    trait PortfolioOps {
+        self: Portfolio with PortfolioWithStocks with PortfolioWithDerivatives =>
+        
+        def spotValue: Dollars = (
+              cash
+            + (myStockAssets map (_.dollars)).foldLeft(Dollars(0))(_+_)
+            + (myDerivativeAssets map (_.spotValue)).foldLeft(Dollars(0))(_+_)
+        )
+    }
 }
 

@@ -28,7 +28,7 @@ class Table[R <: KL] extends ArrayBuffer[R] with Loggable {
     }
 }
     
-trait DBMagic extends Transactions{
+trait DBMagic extends Transactions {
     def table[R <: KL] = new Table[R]()
 }
 

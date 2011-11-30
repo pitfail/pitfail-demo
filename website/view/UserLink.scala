@@ -12,10 +12,26 @@ import JsCmds._
 import JE._
 import Helpers._
 
+import model._
+import model.schema._
+
 object UserLink {
-    def apply(username: String): NodeSeq =
-        <a href={"/user?name=%s" format username}>{username}</a>
-    
-    def apply(user: model.schema.User): NodeSeq = apply(user.username)
+    def apply(user: User): NodeSeq = readDB {
+        val username = user.username
+        val wealth = user.mainPortfolio.spotValue
+        
+        val rank = user.mainPortfolio.rank
+        val big = rank <= 10
+        
+        val standing = {
+            if (big) <span>(#{rank} {wealth.$short})</span>
+            else <span>({wealth.$short})</span>
+        }
+        
+        if (big)
+            <a class="big-name" href={"/user?name=%s" format username}>{username} {standing}</a>
+        else
+            <a href={"/user?name=%s" format username}>{username} {standing}</a>
+    }
 }
 

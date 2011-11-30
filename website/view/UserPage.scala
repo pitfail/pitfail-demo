@@ -27,7 +27,7 @@ class UserPage extends Page with Loggable {
         }
         val user = User byName name
         
-        val chart = tChart(user, false)
+        val chart = tChart(user, modifiable=false)
         
         val them =
             <div id="user-page" class="block">

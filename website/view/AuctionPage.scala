@@ -46,7 +46,7 @@ class AuctionPage extends Page with Loggable {
                     <table class="boxy auction">
                         <tr>
                             <th>Seller:</th>
-                            <td>{UserLink(seller.username)}</td>
+                            <td>{UserLink(seller)}</td>
                         </tr>
                         <tr>
                             <th>Going Price:</th>
@@ -54,7 +54,7 @@ class AuctionPage extends Page with Loggable {
                         </tr>
                         <tr>
                             <th>High Bidder:</th>
-                            <td>{highBidder map (b => UserLink(b.username)) getOrElse "-"}</td>
+                            <td>{highBidder map (UserLink(_)) getOrElse "-"}</td>
                         </tr>
                         <tr>
                             <th>Derivative:</th>

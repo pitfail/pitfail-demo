@@ -30,6 +30,8 @@ trait AuctionSchema {
             price: Dollars
         )
         extends KL
+        
+    def systemCheckForAuctionClosings() = logger.info("TODO: This")
 
     trait AuctionOfferOps {
         self: AuctionOffer =>

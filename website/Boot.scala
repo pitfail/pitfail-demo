@@ -68,6 +68,9 @@ class Boot extends Loggable {
 
         // Runs every 30 minutes
         control.Checker.run()
+        
+        // Test data
+        insertTestData()
     }
 }
 

@@ -60,7 +60,7 @@ trait VotingSchema {
                 
             for {
                 _ <- DerivativeBuyerVote(caster=this,  event=ev).insert
-                _ <- enterContract(aside.seller, aside.derivative*take, price)
+                _ <- enterContract(aside.seller, aside.derivative*take, price, hidden=true)
                 
                 _ <- aside update (a => a copy (remaining=a.remaining-take))
             }
@@ -73,7 +73,7 @@ trait VotingSchema {
                 
             for {
                 _ <- DerivativeSellerVote(caster=this, event=ev).insert
-                _ <- aside.buyer.enterContract(this, aside.derivative*take, price)
+                _ <- aside.buyer.enterContract(this, aside.derivative*take, price, hidden=true)
                 
                 _ <- aside update (a => a copy (remaining=a.remaining-take))
             }
