@@ -45,6 +45,18 @@ PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
         <url-pattern>/servlet/getportfolio</url-pattern>
     </servlet-mapping>
 
+	
+	<servlet>
+        <servlet-name>StockUpdates</servlet-name>
+        <servlet-class>servlets.StockUpdates</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>StockUpdates</servlet-name>
+        <url-pattern>/servlet/stockupdates</url-pattern>
+    </servlet-mapping>
+
+
 	<filter>
         <filter-name>LiftFilter</filter-name>
         <display-name>Lift Filter</display-name>

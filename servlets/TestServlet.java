@@ -7,7 +7,6 @@ import java.io.*;
 import model.schema;
 import static model.schema.*;
 import model.*;
-<<<<<<< HEAD
 import scala.collection.*;
 import static scala.collection.JavaConversions.*;
 import java.util.*;
@@ -16,10 +15,8 @@ import scala.math.BigDecimal;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.DriverManager;
-=======
 import scala.math.*;
 import com.google.gson.*;
->>>>>>> 0ac5ea52bca94da03a4411cfed7c55036a379bf5
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -35,12 +32,11 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class TestServlet extends HttpServlet {
     
-<<<<<<< HEAD
 
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 	int i = 0;
-	@Override
+/*	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		
@@ -49,13 +45,13 @@ public class TestServlet extends HttpServlet {
 		String stockSymbol = request.getParameter("ticker");
 		String volume = request.getParameter("volume");
 
-*/		try {
+		try {
 			
 /*				User user = ensureUser(userId);
 				Portfolio port = user.mainPortfolio().fetch(portfolios());
 				port.buyStock(stockSymbol, new Dollars(volume));
 
-*/
+
 				PrintWriter out = response.getWriter();
 				out.printf("success");
 				
@@ -72,8 +68,7 @@ public class TestServlet extends HttpServlet {
 		}
 
 	}
-    
-=======
+*/    
     public static class Response {
         public double cash;
         public List<ResponseAsset> assets;
@@ -147,5 +142,4 @@ public class TestServlet extends HttpServlet {
         throws ServletException, IOException
     {
     }
->>>>>>> 0ac5ea52bca94da03a4411cfed7c55036a379bf5
 }
