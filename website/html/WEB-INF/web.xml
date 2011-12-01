@@ -45,24 +45,15 @@ PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
         <url-pattern>/servlet/getportfolio</url-pattern>
     </servlet-mapping>
 
+	
 	<servlet>
-        <servlet-name>FBtestservlet</servlet-name>
-        <servlet-class>servlets.FBtestservlet</servlet-class>
+        <servlet-name>StockUpdates</servlet-name>
+        <servlet-class>servlets.StockUpdates</servlet-class>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>FBtestservlet</servlet-name>
-        <url-pattern>/servlet/fbtestservlet</url-pattern>
-    </servlet-mapping>
-
-	<servlet>
-        <servlet-name>FBsellservlet</servlet-name>
-        <servlet-class>servlets.FBsellservlet</servlet-class>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>FBsellservlet</servlet-name>
-        <url-pattern>/servlet/fbsellservlet</url-pattern>
+        <servlet-name>StockUpdates</servlet-name>
+        <url-pattern>/servlet/stockupdates</url-pattern>
     </servlet-mapping>
 
 
