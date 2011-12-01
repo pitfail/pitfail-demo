@@ -4,7 +4,7 @@ package model
 trait UserSchema {
     self: StockSchema
         with DerivativeSchema with AuctionSchema with CommentSchema
-        with DBMagic with SchemaErrors with VotingSchema =>
+        with DBMagic with SchemaErrors with VotingSchema with AutoTradeSchema =>
     
     val startingCash = Dollars("200000")
             
@@ -34,6 +34,7 @@ trait UserSchema {
         with PortfolioWithDerivatives
         with PortfolioWithAuctions
         with PortfolioWithVotes
+        with PortfolioWithAutoTrades
         
     // Detailed Operations
         

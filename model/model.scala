@@ -51,6 +51,7 @@ case class Dollars(dollars: BigDecimal)
     
     def ~/~(price: Price) = Shares(dollars / price.price)
     def /-/(price: Price) = Shares((dollars / price.price).floor)
+    def /(shares: Shares) = Price(dollars/shares.shares)
 
     def compare(other: Dollars) = dollars.compare(other.dollars)
 

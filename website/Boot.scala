@@ -53,7 +53,8 @@ class Boot extends Loggable {
             Menu.i("Schema") / "schema",
             Menu.i("1") / "auction",
             Menu.i("2") / "user",
-            Menu.i("3") / "event"
+            Menu.i("3") / "event",
+            Menu.i("4") / "auto"
         )
         setSiteMap(SiteMap(entries:_*))
 

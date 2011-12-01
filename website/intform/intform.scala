@@ -107,7 +107,8 @@ object UnitProcessable extends Processable[Unit] {
 class Submit[A](
         form: () => Processable[A] with Refreshable,
         callback: (A) => JsCmd,
-        val value: String
+        val value: String,
+        refresh: Boolean
     )
     extends SubmitRender
     with Loggable
@@ -127,12 +128,13 @@ class Submit[A](
             result map callback getOrElse Noop
         }
             
-        form().refresh() & cmd
+        if (refresh) form().refresh() & cmd
+        else cmd
     }
 }
 object Submit {
-    def apply[A](form: =>Form[A], value: String)(callback: (A) => JsCmd) =
-        new Submit(() => form, callback, value)
+    def apply[A](form: =>Form[A], value: String, refresh: Boolean=false)(callback: (A) => JsCmd) =
+        new Submit(() => form, callback, value, refresh)
     
     def cancel(r: Refreshable, text: String)(callback: =>JsCmd) =
         new SubmitRender

@@ -19,7 +19,9 @@ trait StockSchema {
             id:     Key = nextID,
             ticker: String,
             shares: Shares,
-            owner:  Link[Portfolio]
+            owner:  Link[Portfolio],
+            purchasePrice: Price,
+            notifiedPrice: Price
         )
         extends KL
         with StockAssetOps
@@ -47,6 +49,13 @@ trait StockSchema {
         // Java interop
         def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
+        def howManyShares(ticker: String) = readDB {
+            haveTicker(ticker) map (_.shares) getOrElse Shares(0)
+        }
+        
+        def howManyDollars(ticker: String) =
+            howManyShares(ticker) * Stocks.stockPrice(ticker)
+        
         def userBuyStock(ticker: String, shares: Shares) =
             editDB(buyStock(ticker, shares))
         
@@ -54,10 +63,10 @@ trait StockSchema {
             editDB(buyStock(ticker, dollars))
         
         def userSellStock(ticker: String, shares: Shares) =
-            editDB(buyStock(ticker, shares))
+            editDB(sellStock(ticker, shares))
         
         def userSellStock(ticker: String, dollars: Dollars) =
-            editDB(buyStock(ticker, dollars))
+            editDB(sellStock(ticker, dollars))
         
         def userSellAll(ticker: String) = editDB(sellAll(ticker))
         
@@ -70,7 +79,16 @@ trait StockSchema {
         // Buy a stock in dollars
         private[model] def buyStock(ticker: String, dollars: Dollars): Transaction[StockPurchase] = {
             val price = Stocks.stockPrice(ticker)
-            buyStock(ticker, dollars, dollars /-/ price, price)
+            try {
+                buyStock(ticker, dollars, dollars /-/ price, price)
+            }
+            catch {
+                case e: ArithmeticException =>
+                    logger.info("Failed to buy because the price is zero")
+                    logger.info("%s %s" format (ticker.toString, price.toString))
+                    // TODO: This is not good
+                    buyStock(ticker, Dollars(1), Shares(1), Price(1))
+            }
         }
         
         private[model] def buyStock(
@@ -80,7 +98,10 @@ trait StockSchema {
             
             for {
                 asset <- ensureAsset(ticker)
-                _ <- asset update (a => a copy (shares=a.shares+shares))
+                _ <- asset update (a => a copy (
+                    shares = a.shares + shares,
+                    purchasePrice = (a.purchasePrice*a.shares + price*shares) / (a.shares+shares)
+                ))
                 _ <- this update (t => t copy (cash=t.cash-dollars))
                 
                 // Report the event
@@ -92,7 +113,9 @@ trait StockSchema {
         // Create this stock asset if it does not already exist
         private[model] def ensureAsset(ticker: String) = haveTicker(ticker) match {
             case Some(asset) => Transaction(asset)
-            case None        => StockAsset(ticker=ticker,shares=Shares(0),owner=this).insert
+            case None        =>
+                StockAsset(ticker=ticker,shares=Shares(0),owner=this,
+                    purchasePrice=Price(0),notifiedPrice=Price(0)).insert
         }
         
         // Sell a stock in shares

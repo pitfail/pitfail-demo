@@ -72,6 +72,7 @@ object schema
     with CommentSchema
     with VotingSchema
     with RankingSchema
+    with AutoTradeSchema
     
 trait SchemaErrors {
     case object NegativeVolume extends BadUser

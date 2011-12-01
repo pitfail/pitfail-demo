@@ -42,6 +42,7 @@ public class GetPortfolio extends HttpServlet {
 		BigDecimal shares;
 		BigDecimal price;
 		BigDecimal dollars;
+        BigDecimal purchasePrice;
 		String myportfolio = "";
        
 		try {
@@ -52,6 +53,7 @@ public class GetPortfolio extends HttpServlet {
 				for (StockSchema.StockAsset asset : port.getMyStockAssets()){
 						shares = asset.shares().shares();
 						dollars = asset.dollars().dollars();
+                        purchasePrice = asset.purchasePrice().price();
 						myportfolio = myportfolio.concat(","+asset.ticker()+":"+dollars.doubleValue());
 				}
 				out.printf("%s",myportfolio);

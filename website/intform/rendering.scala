@@ -196,7 +196,7 @@ trait TextAreaRender extends FieldRender {
     var text: String
     
     def main: NodeSeq = SHtml.onSubmit(text = _) {
-        <textarea/>
+        <textarea>{text}</textarea>
     }
 }
 
