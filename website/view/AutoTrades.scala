@@ -26,8 +26,9 @@ class AutoTrades extends Page with Loggable {
     
     def doRender: NodeSeq = {
         import control.LoginManager._
+        import control.PortfolioSwitcher._
         
-        try main(currentUser.mainPortfolio)
+        try main(currentPortfolio)
         catch { 
             case NotLoggedIn =>
                 <p>Login to use auto trades</p>

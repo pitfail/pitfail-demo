@@ -85,6 +85,8 @@ trait BasicErrors {
                 Noop
             }
 
+            case e: LiftFlowOfControlException => throw e
+            
             case e: Throwable => {
                 error = Some("An unknown error occurred (see log messages)")
                 new Logger { error("Error in form submission", e) }
@@ -133,7 +135,7 @@ class Submit[A](
     }
 }
 object Submit {
-    def apply[A](form: =>Form[A], value: String, refresh: Boolean=false)(callback: (A) => JsCmd) =
+    def apply[A](form: =>Form[A], value: String, refresh: Boolean=true)(callback: (A) => JsCmd) =
         new Submit(() => form, callback, value, refresh)
     
     def cancel(r: Refreshable, text: String)(callback: =>JsCmd) =

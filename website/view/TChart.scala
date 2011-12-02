@@ -26,7 +26,7 @@ import model.schema._
 object tChart extends Loggable {
 //
 
-def apply(user: User, modifiable: Boolean) = {
+def apply(port: Portfolio, modifiable: Boolean) = {
 //
     
 var showHidden = false
@@ -35,8 +35,6 @@ lazy val refreshable = Refreshable(doRender)
 def render = refreshable.render
     
 def doRender: NodeSeq = {
-    val port = user.mainPortfolio
-    
     val myStockAssets           = port.myStockAssets
     val myCashAmount            = port.cash
     val myDerivativeAssets      = port.myDerivativeAssets
@@ -161,7 +159,7 @@ def doRender: NodeSeq = {
             </tr>
             <tr class="deriv-row">
                 <td>From:</td>
-                <td colspan="3">{UserLink(liab.owner.owner)}</td>
+                <td colspan="3">{PortfolioLink(liab.owner)}</td>
             </tr>
             <tr class="deriv-row">
                 <td>On:</td>
@@ -256,8 +254,8 @@ def stockPrice(asset: StockAsset): Option[Price] = {
 }
 
 def hiddenControls =
-    if (   (user.mainPortfolio.myDerivativeAssets exists (_.hidden))
-        || (user.mainPortfolio.myDerivativeLiabilities exists (_.hidden)) )
+    if (   (port.myDerivativeAssets exists (_.hidden))
+        || (port.myDerivativeLiabilities exists (_.hidden)) )
     {
         lazy val showLink = FormSubmit.rendered("Show Hidden") {
             showHidden = true

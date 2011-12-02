@@ -49,7 +49,7 @@ block:
     editDB {
         for {
             user <- User ensure "joe"
-            _ <- user.mainPortfolio.buyStock("MSFT", Dollars(500))
+            _ <- user.lastPortfolio.buyStock("MSFT", Dollars(500))
         }
         yield ()
     }
@@ -84,10 +84,12 @@ trait SchemaErrors {
     case object NoSuchAuction extends BadUser
     case class BidTooSmall(going: Dollars) extends BadUser
     case object NoSuchUser extends BadUser
+    case object NoSuchPortfolio extends BadUser
     case object NoSuchDerivativeAsset extends BadUser
     case object NoSuchDerivativeLiability extends BadUser
     case object NoSuchEvent extends BadUser
     case object NoSuchComment extends BadUser
+    case object NameInUse extends BadUser
 }
 
 case object NotFound extends BadUser

@@ -13,18 +13,24 @@ object insertTestData {
 //
 
 def apply() {
-    val ellbur = User userEnsure "ellbur_k_a"
-    val pitfail = User userEnsure "pitfail"
+    val ellburU = (User userEnsure "ellbur_k_a")
+    val pitfailU = (User userEnsure "pitfail")
+    
+    val ellbur = ellburU.lastPortfolio
+    val pitfail = pitfailU.lastPortfolio
     
     val deriv = Derivative(SecStock("MSFT", Shares(30))::Nil,
         DateTime.now.plusDays(7), CondAlways, true)
     
-    val offer = pitfail.mainPortfolio.userOfferDerivativeTo(ellbur, deriv, Dollars(1000))
+    val offer = pitfail.userOfferDerivativeTo(ellbur, deriv, Dollars(1000))
     
-    val event = ellbur.mainPortfolio.userAcceptOffer(offer.id)
+    val event = ellbur.userAcceptOffer(offer.id)
     val Some((b, s)) = event.asVotable
     
-    ellbur.mainPortfolio.userVoteUp(event, b)
+    ellbur.userVoteUp(event, b)
+    
+    val joejoe = pitfailU.userCreatePortfolio("joejoe")
+    joejoe.userInviteUser(ellburU)
     
     systemRecalculateRankings()
 }

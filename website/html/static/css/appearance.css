@@ -13,6 +13,14 @@ a {
 /* ---------------------------------------------- */
 /* Forms */
 
+.button form {
+    display: inline;
+}
+
+.button div {
+    display: inline;
+}
+
 span.input-error {
     position: relative;
 }
@@ -612,5 +620,31 @@ tr.deriv-header {
     vertical-align: top;
     position: relative;
     background-color: #ddd;
+}
+
+/* Tab bar */
+
+.tab-bar {
+    position: relative;
+    clear: both;
+}
+
+.tab {
+    float: left;
+    border: 1px solid #000;
+    padding: 0.5em;
+}
+
+.active {
+    background-color: #fee;
+}
+
+.inactive {
+    background-color: #aaa;
+}
+
+.tab-pane {
+    clear: both;
+    border: 1px solid #000;
 }
 

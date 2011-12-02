@@ -78,12 +78,12 @@ trait DerivativeSchema {
         def myDerivativeLiabilities = schema.derivativeLiabilities filter (_.owner ~~ this) toList
         def myDerivativeOffers = schema.derivativeOffers filter (_.to ~~ this) toList
         
-        def userOfferDerivativeTo(recip: User, deriv: Derivative, price: Dollars) =
+        def userOfferDerivativeTo(recip: Portfolio, deriv: Derivative, price: Dollars) =
             editDB {
                 for {
                     offer <- DerivativeOffer(derivative=deriv, from=this,
-                        to=recip.mainPortfolio, price=price, expires=new DateTime).insert
-                    _ <- Offered(this.owner, recip, deriv, price).report
+                        to=recip, price=price, expires=new DateTime).insert
+                    _ <- Offered(this, recip, deriv, price).report
                 }
                 yield offer
             }
@@ -93,7 +93,7 @@ trait DerivativeSchema {
                 for {
                     _ <- AuctionOffer(derivative=deriv, offerer=this,
                         price=price, when=new DateTime, expires=expires).insert
-                    _ <- Auctioned(this.owner, deriv, price).report
+                    _ <- Auctioned(this, deriv, price).report
                 }
                 yield ()
             }
@@ -103,7 +103,7 @@ trait DerivativeSchema {
             for {
                 (buyerAside, sellerAside) <- enterContractWithVotes(offer.from, offer.derivative, offer.price)
                 _ <- offer.delete
-                event <- Accepted(offer.from.owner, offer.to.owner, offer.derivative,
+                event <- Accepted(offer.from, offer.to, offer.derivative,
                         price=offer.price, buyerAside=buyerAside, sellerAside=sellerAside).report
             }
             yield event
@@ -113,7 +113,7 @@ trait DerivativeSchema {
             val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
             for {
                 _ <- offer.delete
-                _ <- Declined(offer.from.owner, offer.to.owner, offer.derivative,
+                _ <- Declined(offer.from, offer.to, offer.derivative,
                         price=offer.price).report
             }
             yield ()

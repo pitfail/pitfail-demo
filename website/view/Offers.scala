@@ -26,10 +26,10 @@ class Offers extends Refreshable with Loggable
     
     def render = (in: NodeSeq) => readDB {
         import control.LoginManager._
+        import control.PortfolioSwitcher._
         
         try {
-            val user = currentUser
-            val myOffers = user.mainPortfolio.myDerivativeOffers
+            val myOffers = currentPortfolio.myDerivativeOffers
             
             import snippet._
             
@@ -77,7 +77,7 @@ class Offers extends Refreshable with Loggable
                 val deriv = o.derivative
                 
                 <tr>
-                    <td>{UserLink(o.from.owner)}</td>
+                    <td>{PortfolioLink(o.from)}</td>
                     <td>{deriv.securities toHumanString}</td>
                     <td>{deriv.exec toNearbyString}</td>
                     <td>{deriv.condition toHumanString}</td>
@@ -96,10 +96,10 @@ class Offers extends Refreshable with Loggable
     
     def acceptOffer(offerID: String) = FormSubmit.rendered("Accept") {
         import control.LoginManager._
+        import control.PortfolioSwitcher._
         
         try {
-            val user = currentUser
-            user.mainPortfolio userAcceptOffer offerID
+            currentPortfolio userAcceptOffer offerID
             
             comet.Offers ! Refresh
             comet.Portfolio ! Refresh
@@ -115,10 +115,10 @@ class Offers extends Refreshable with Loggable
     
     def declineOffer(offerID: String) = FormSubmit.rendered("Decline") {
         import control.LoginManager._
+        import control.PortfolioSwitcher._
         
         try {
-            val user = currentUser
-            user.mainPortfolio.userDeclineOffer(offerID)
+            currentPortfolio.userDeclineOffer(offerID)
             comet.Offers ! Refresh
             comet.Portfolio ! Refresh
         }

@@ -50,10 +50,10 @@ case class WithUser(user: User) {
                asset
             |> {
                 case StockShares(ticker, shares) =>
-                    (ticker, user.mainPortfolio.userBuyStock(ticker, shares))
+                    (ticker, user.lastPortfolio.userBuyStock(ticker, shares))
                     
                 case StockDollars(ticker, dollars) =>
-                    (ticker, user.mainPortfolio.userBuyStock(ticker, dollars))
+                    (ticker, user.lastPortfolio.userBuyStock(ticker, dollars))
             }
             |> {
                 case (ticker, StockPurchase(shares, dollars, _)) =>
@@ -67,22 +67,22 @@ case class WithUser(user: User) {
                asset
             |> {
                 case StockShares(ticker, shares) =>
-                    user.mainPortfolio.userSellStock(ticker, shares)
+                    user.lastPortfolio.userSellStock(ticker, shares)
                     
                 case StockDollars(ticker, dollars) => 
-                    user.mainPortfolio.userSellStock(ticker, dollars)
+                    user.lastPortfolio.userSellStock(ticker, dollars)
             }
             |> { _ => OK }
         )
         catch failed
 
     def portfolio = StringResponse(
-            user.mainPortfolio.cash.$ + " in cash," +
-            (( user.mainPortfolio.myStockAssets map (_.ticker) ) mkString (", "))
+            user.lastPortfolio.cash.$ + " in cash," +
+            (( user.lastPortfolio.myStockAssets map (_.ticker) ) mkString (", "))
         )
 
     def stockInfo(ticker: String) = StringResponse(
-        user.mainPortfolio.haveTicker(ticker) match {
+        user.lastPortfolio.haveTicker(ticker) match {
             case Some(a) => "Have " + a
             case None    => "You don't have any " + ticker + "."
         }
@@ -90,7 +90,7 @@ case class WithUser(user: User) {
 
     def sellAll(ticker: String) =
         try {
-            user.mainPortfolio.userSellAll(ticker)
+            user.lastPortfolio.userSellAll(ticker)
             OK
         }
         catch failed

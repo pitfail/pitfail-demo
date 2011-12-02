@@ -11,7 +11,7 @@ trait RankingSchema {
     
     def recalculateRankings = {
         val ports = portfolios.toList sortBy (- _.spotValue)
-        val ranks = 1 to ports.length
+        val ranks = List.range(1, ports.length+1)
         
         val updates: List[Transaction[Unit]] = {
             ports zip ranks map { case (port, rank) =>

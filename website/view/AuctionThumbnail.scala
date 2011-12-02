@@ -25,12 +25,12 @@ class AuctionThumbnail extends Refreshable
         val auctions = recentAuctions(5)
         
         val items = auctions map { auc =>
-            val from  = auc.offerer.owner.username
+            val from  = auc.offerer
             val price = auc.goingPrice.$
             
             val url = "/auction?id=%s" format auc.id
             
-            <li><a href={url}>from {from} for {price}</a></li>
+            <li><a href={url}>from {PortfolioLink(from)} for {price}</a></li>
         }
 
         if (items nonEmpty) {

@@ -26,14 +26,47 @@ class Portfolio extends Refreshable with Loggable
     
     def render = readDB {
         import control.LoginManager._
-        
-        this.logger.info("Rendering a portfolio for " + currentUser)
+        import control.PortfolioSwitcher._
         
         try {
-            <div class="block">
-                <h2>Portfolio</h2>
-                {snippet.tChart(currentUser, true)}
-            </div>
+            val user = currentUser
+            val ports = user.myPortfolios
+            
+            if (ports.length == 0) {
+                <p>You have no portfolios. <a href="/create-portfolio">Create one</a>.</p>
+            }
+            else if (ports.length == 1) {
+                <div class="block">
+                    <h2>Portfolio</h2>
+                    {snippet.tChart(currentPortfolio, modifiable=true)}
+                </div>
+            }
+            else {
+                val current = currentPortfolio
+                
+                val tabs = ports map { port =>
+                    if (port ~~ current) {
+                        <div class="tab active">
+                            <p>{port.name}</p>
+                        </div>
+                    }
+                    else {
+                        <div class="tab inactive">
+                            <p><a href={"/my-portfolio?name="+port.name}>{port.name}</a></p>
+                        </div>
+                    }
+                }
+                
+                <div class="block">
+                    <h2>Portfolio</h2>
+                    <div class="tab-bar">
+                        {tabs}
+                    </div>
+                    <div class="tab-pane">
+                        {snippet.tChart(current, modifiable=true)}
+                    </div>
+                </div>
+            }
         }
         catch {
             case NotLoggedIn =>

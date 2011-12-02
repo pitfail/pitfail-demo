@@ -10,7 +10,7 @@ import scala.xml._
 
 import intform._
 import formats._
-import snippet.{UserLink}
+import snippet.{PortfolioLink}
 import model.schema._
 
 class OutgoingOffers extends Refreshable with Loggable {
@@ -19,10 +19,10 @@ class OutgoingOffers extends Refreshable with Loggable {
     
     def render = readDB {
         import control.LoginManager._
+        import control.PortfolioSwitcher._
         
         try {
-            val user   = currentUser
-            val port   = user.mainPortfolio
+            val port   = currentPortfolio
             val offers = port.auctionOffers
             
             lazy val all =
@@ -50,13 +50,13 @@ class OutgoingOffers extends Refreshable with Loggable {
             
             lazy val offerRows = offers map { offer =>
                 val high = offer.highBid
-                val highBidder = high map (_.by.owner)
+                val highBidder = high map (_.by)
                 
                 lazy val all =
                     <tr>
                         <td>{closeButton.render}</td>
                         <td>{offer.goingPrice.$}</td>
-                        <td>{highBidder map (UserLink(_)) getOrElse <span>-</span>}</td>
+                        <td>{highBidder map (PortfolioLink(_)) getOrElse <span>-</span>}</td>
                         <td>{offer.expires toNearbyString}</td>
                         <td>{offer.derivative toHumanString}</td>
                     </tr>

@@ -35,8 +35,8 @@ class AuctionPage extends Page with Loggable {
                 }
             
             goingPrice = auction.goingPrice
-            highBidder = auction.highBid map (_.by.owner)
-            seller     = auction.offerer.owner
+            highBidder = auction.highBid map (_.by)
+            seller     = auction.offerer
             deriv      = auction.derivative
         } yield  {
             lazy val all =
@@ -46,7 +46,7 @@ class AuctionPage extends Page with Loggable {
                     <table class="boxy auction">
                         <tr>
                             <th>Seller:</th>
-                            <td>{UserLink(seller)}</td>
+                            <td>{PortfolioLink(seller)}</td>
                         </tr>
                         <tr>
                             <th>Going Price:</th>
@@ -54,7 +54,7 @@ class AuctionPage extends Page with Loggable {
                         </tr>
                         <tr>
                             <th>High Bidder:</th>
-                            <td>{highBidder map (UserLink(_)) getOrElse "-"}</td>
+                            <td>{highBidder map (PortfolioLink(_)) getOrElse "-"}</td>
                         </tr>
                         <tr>
                             <th>Derivative:</th>
@@ -91,10 +91,11 @@ class AuctionPage extends Page with Loggable {
             lazy val bidField = DollarsField(goingPrice.no$)
             lazy val castSubmit = Submit(bidForm, "Cast") { case Bid(amt) =>
                 import control.LoginManager._
+                import control.PortfolioSwitcher._
                 
                 try {
-                    val user = currentUser
-                    user.mainPortfolio.userCastBid(auction, amt)
+                    val port = currentPortfolio
+                    port.userCastBid(auction, amt)
                     
                     bidForm.reset()
                     comet.AuctionThumbnail ! comet.Refresh

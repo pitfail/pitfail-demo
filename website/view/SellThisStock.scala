@@ -30,10 +30,11 @@ class SellThisStock(ticker: String)
     
     def userSellStock() {
         import control.LoginManager._
+        import control.PortfolioSwitcher._
         import model.schema._
         
         try {
-            currentUser.mainPortfolio.userSellAll(ticker)
+            currentPortfolio.userSellAll(ticker)
         }
         catch {
             case NotLoggedIn =>

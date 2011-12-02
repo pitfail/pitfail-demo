@@ -27,34 +27,63 @@ class UserPage extends Page with Loggable {
         }
         val user = User byName name
         
-        val chart = tChart(user, modifiable=false)
-        
-        val them =
-            <div id="user-page" class="block">
-                <h2>User: {name}</h2>
-                {chart}
-            </div>
-        
-        val us =
-            <lift:comet type="Offers"/> ++
-            <lift:comet type="Portfolio"/> ++
-            <lift:comet type="OutgoingOffers"/>
-            
         val curUser =
             try Some(currentUser)
             catch { case NotLoggedIn => None }
         
-        if (curUser map (_ ~~ user) getOrElse false) {
-            this.logger.info("Showing page for US")
-            us
-        }
-        else {
-            this.logger.info("Showing page for THEM")
-            them
-        }
+        if (curUser map (_ ~~ user) getOrElse false) myPage(user)
+        else theirPage(user)
     }
     catch {
         case e: BadUser => <p>Sorry, {standardMessage(e)}</p>
     }
+}
+
+object myPage {
+//
+def apply(user: User) =
+    <lift:comet type="Offers"/> ++
+    <lift:comet type="Portfolio"/> ++
+    <lift:comet type="OutgoingOffers"/>
+    
+//
+}
+
+object theirPage {
+//
+def apply(user: User) = {
+    val ports = user.myPortfolios
+    
+    val portStuff = {
+        if (ports.length == 0) {
+            <p>This user has no portfolios.</p>
+            <p>You should whine to them about that.</p>
+        }
+        else if (ports.length == 1) {
+        }
+        else {
+            val portList = ports map { port =>
+                <li>{PortfolioLink(port)}</li>
+            }
+            <ul>{portList}</ul>
+        }
+    }
+    
+    <div id="user-page" class="block">
+        <h2>User: {user.username}</h2>
+        {portStuff}
+    </div>
+}
+//
+}
+
+object theirPortfolio {
+//
+def apply(port: Portfolio): NodeSeq =
+    <div id="user-page" class="block">
+        <h2>Portfolio: {port.name}</h2>
+        {tChart(port, modifiable=false)}
+    </div>
+//
 }
 

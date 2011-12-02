@@ -47,31 +47,31 @@ object News extends RefreshHub {
     
         ev.action match {    
             case Bought(buyer, stock, shares, dollars, price) =>
-                <span>{UserLink(buyer)} {alink("bought")} {dollars.$} of {stock}</span>
+                <span>{PortfolioLink(buyer)} {alink("bought")} {dollars.$} of {stock}</span>
                 
             case Sold(seller, stock, shares, dollars, price) =>
-                <span>{UserLink(seller)} {alink("sold")} {dollars.$} of {stock}</span>
+                <span>{PortfolioLink(seller)} {alink("sold")} {dollars.$} of {stock}</span>
             
             case Offered(from, to, derivative, price) =>
-                <span>{UserLink(from)} {alink("made an offer")} to {UserLink(to)}</span>
+                <span>{PortfolioLink(from)} {alink("made an offer")} to {PortfolioLink(to)}</span>
             
             case Accepted(from, to, derivative, price, _, _) =>
-                <span>{UserLink(to)} {alink("accepted")} {UserLink(from)}'s offer</span>
+                <span>{PortfolioLink(to)} {alink("accepted")} {PortfolioLink(from)}'s offer</span>
                 
             case Declined(from, to, derivative, price) =>
-                <span>{UserLink(to)} {alink("declined")} {UserLink(from)}'s offer</span>
+                <span>{PortfolioLink(to)} {alink("declined")} {PortfolioLink(from)}'s offer</span>
                 
             case Auctioned(from, derivative, price) =>
-                <span>{UserLink(from)} {alink("opened")} an auction</span>
+                <span>{PortfolioLink(from)} {alink("opened")} an auction</span>
                 
             case Bid(from, on, price) =>
-                <span>{UserLink(from)} {alink("bid")} on an auction</span>
+                <span>{PortfolioLink(from)} {alink("bid")} on an auction</span>
             
-            case Closed(user, offer) =>
-                <span>{UserLink(user)} {alink("closed")} an auction</span>
+            case Closed(port, offer) =>
+                <span>{PortfolioLink(port)} {alink("closed")} an auction</span>
                 
-            case Exercised(user, derivative) =>
-                <span>{UserLink(user)} {alink("exercised")} a derivative</span>
+            case Exercised(port, derivative) =>
+                <span>{PortfolioLink(port)} {alink("exercised")} a derivative</span>
                 
             case other =>
                 logger warn ("Don't know the event " + other)

@@ -81,7 +81,7 @@ lazy val api = Map(
     }
 )
 
-def me = currentUser.mainPortfolio
+def me = control.PortfolioSwitcher.currentPortfolio
 
 lazy val setup = ("$(function () {\n"
     + (api map { case (name, value) =>

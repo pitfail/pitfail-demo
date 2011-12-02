@@ -30,10 +30,11 @@ def apply(ref: Refreshable, ev: NewsEvent): NodeSeq = ev.asVotable match {
 def controls(ref: Refreshable, ev: NewsEvent,
         buyerAside: DerivativeBuyerSetAside, sellerAside: DerivativeSellerSetAside) = {
     import control.LoginManager._
+    import control.PortfolioSwitcher._
     
     val up = FormSubmit.rendered("Up") {
         try {
-            currentUser.mainPortfolio.userVoteUp(ev, buyerAside)
+            currentPortfolio.userVoteUp(ev, buyerAside)
         }
         catch { case NotLoggedIn =>
             throw BadInput("You must be logged in to vote")
@@ -44,7 +45,7 @@ def controls(ref: Refreshable, ev: NewsEvent,
     
     val down = FormSubmit.rendered("Down") {
         try {
-            currentUser.mainPortfolio.userVoteDown(ev, sellerAside)
+            currentPortfolio.userVoteDown(ev, sellerAside)
         }
         catch { case NotLoggedIn =>
             throw BadInput("You must be logged in to vote")

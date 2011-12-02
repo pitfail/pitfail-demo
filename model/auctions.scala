@@ -51,7 +51,7 @@ trait AuctionSchema {
                 for {
                     _ <- this.delete
                     _ <- (bids map (_.delete)).sequence
-                    _ <- Closed(offerer.owner, this).report
+                    _ <- Closed(offerer, this).report
                 }
                 yield ()
             
@@ -62,7 +62,7 @@ trait AuctionSchema {
                         _ <- deletion
                         (buyerAside, sellerAside) <-
                             bid.by.enterContractWithVotes(offerer, derivative, bid.price)
-                        _ <- Won(bid.by.owner, offerer.owner, derivative, buyerAside, sellerAside).report
+                        _ <- Won(bid.by, offerer, derivative, buyerAside, sellerAside).report
                     }
                     yield ()
             }
@@ -87,7 +87,7 @@ trait AuctionSchema {
             
             (
                   AuctionBid(offer=auction, by=this, price=price).insert
-                & Bid(this.owner, auction, price).report
+                & Bid(this, auction, price).report
             )
         }
     }

@@ -11,7 +11,7 @@ object operations
     def userBuyStock(username: String, ticker: String, dollars: Dollars) = editDB {
         for {
             user <- User ensure username
-            _ <- user.mainPortfolio.buyStock(ticker, dollars)
+            _ <- user.lastPortfolio.buyStock(ticker, dollars)
         }
         yield ()
     }
@@ -19,7 +19,7 @@ object operations
     def userSellStock(username: String, ticker: String) = editDB {
         for {
             user <- User ensure username
-            _ <- user.mainPortfolio.sellAll(ticker)
+            _ <- user.lastPortfolio.sellAll(ticker)
         }
         yield ()
     }

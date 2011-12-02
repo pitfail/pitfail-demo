@@ -28,7 +28,7 @@ import model.schema._
 import model._
 
 abstract class Recipient
-case class SpecificUser(user: User) extends Recipient
+case class SpecificUser(portfolio: Portfolio) extends Recipient
 case object OpenAuction extends Recipient
 
 sealed abstract class Direction {
@@ -210,10 +210,10 @@ class DerivativeBuilder extends Page with Loggable
             </ul>
     )
 
-    lazy val recipientField = new UserField("") with FieldErrorRender
+    lazy val recipientField = new PortfolioField("") with FieldErrorRender
     lazy val toUserField = AggregateField(
         SpecificUser,
-        recipientField: UserField,
+        recipientField: PortfolioField,
         <span>{recipientField.main & <input class="blank"/>}</span>
     )
 
@@ -329,6 +329,7 @@ class DerivativeBuilder extends Page with Loggable
     
     lazy val offerSubmit = Submit(form, "Offer")  { order =>
         import control.LoginManager._
+        import control.PortfolioSwitcher._
         
         try {
             val expires = (new DateTime).plusDays(3)
@@ -346,13 +347,13 @@ class DerivativeBuilder extends Page with Loggable
                 early      = order.early
             )
             
-            val user = currentUser
+            val myPort = currentPortfolio
             order.recipient match {
                 case SpecificUser(recip) =>
-                    user.mainPortfolio.userOfferDerivativeTo(recip, deriv, order.price)
+                    myPort.userOfferDerivativeTo(recip, deriv, order.price)
                     
                 case OpenAuction =>
-                    user.mainPortfolio.userOfferDerivativeAtAuction(deriv,
+                    myPort.userOfferDerivativeAtAuction(deriv,
                         order.price, expires
                     )
             }

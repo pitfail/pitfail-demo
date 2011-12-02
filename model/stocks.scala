@@ -105,7 +105,7 @@ trait StockSchema {
                 _ <- this update (t => t copy (cash=t.cash-dollars))
                 
                 // Report the event
-                _  <- Bought(this.owner, ticker, shares, dollars, price).report
+                _  <- Bought(this, ticker, shares, dollars, price).report
             }
             yield StockPurchase(shares, dollars, asset.id)
         }
@@ -145,7 +145,7 @@ trait StockSchema {
                 _ <- this update (t => t copy (cash=t.cash+dollars))
                 
                 // Report it to the news!
-                _ <- Sold(this.owner, ticker, shares, dollars, price).report
+                _ <- Sold(this, ticker, shares, dollars, price).report
             }
             yield ()
         }
@@ -159,7 +159,7 @@ trait StockSchema {
             for {
                 _ <- asset.delete
                 _ <- this update (t => t copy (cash=t.cash+dollars))
-                _ <- Sold(this.owner, ticker, asset.shares, dollars, price).report
+                _ <- Sold(this, ticker, asset.shares, dollars, price).report
             }
             yield ()
         }
