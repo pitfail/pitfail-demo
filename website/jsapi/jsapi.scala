@@ -81,14 +81,31 @@ lazy val api = Map(
     }
 )
 
+def me = currentUser.mainPortfolio
+
 lazy val setup = ("$(function () {\n"
     + (api map { case (name, value) =>
         "    self."+name+" = " + value;
     } mkString ";\n")
+    + otherLibs
     + "\n} )"
 )
 
-def me = currentUser.mainPortfolio
+lazy val otherLibs =
+    """|
+       | self.runAutoTrade = (function(key) {
+       |    var code = $("#code-"+key).val()
+       |    var outplace = $("#output-"+key)
+       |    outplace.text("")
+       |    try {
+       |        eval(code)
+       |    }
+       |    catch (e) {
+       |        outplace.text(outplace.text() + e + "\n")
+       |    }
+       | })
+       |
+       |""".stripMargin
 
 def func(args: String*)(callback: Map[String,String]=>JsCmd) = {
     def opFunc(arg: Any) = {

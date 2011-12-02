@@ -580,3 +580,37 @@ tr.deriv-header {
     font-weight: bold;
 }
 
+/* Auto trades */
+
+.auto-trade {
+    position: relative;
+    left: 0%;
+    width: 100%;
+}
+
+.auto-trade-table {
+    position: relative;
+    left: 0%;
+    width: 100%;
+}
+
+.auto-trade-left-col {
+    width: 50%;
+}
+
+.auto-trade-right-col {
+    width: 50%;
+}
+
+.auto-trade-left {
+    text-align: left;
+    vertical-align: top;
+}
+
+.auto-trade-right {
+    text-align: left;
+    vertical-align: top;
+    position: relative;
+    background-color: #ddd;
+}
+

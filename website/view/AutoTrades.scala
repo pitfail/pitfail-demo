@@ -52,6 +52,8 @@ class AutoTrades extends Page with Loggable {
     }
     
     def renderAutoTrade(trade: AutoTrade) = {
+        val key = java.util.UUID.randomUUID.toString
+        
         val title = trade.title
         val code  = trade.code
         
@@ -60,9 +62,9 @@ class AutoTrades extends Page with Loggable {
                 titleField,
                 bodyField
             ),
-            <div class="auto-trade">
+            <div class="auto-trade-form">
                 <div class="auto-trade-title">{titleField.main} {titleField.errors}</div>
-                <div class="auto-trade-body">{bodyField.main}</div>
+                <div class="auto-trade-body">{bodyField.main & <textarea id={"code-"+key}/>}</div>
                 <div class="auto-trade-controls">
                     {saveButton.main} {saveButton.errors}
                     {executeButton.main} {executeButton.errors}
@@ -80,10 +82,27 @@ class AutoTrades extends Page with Loggable {
         lazy val executeButton = Submit(form, "Run", refresh=false) { result =>
             trade.userModify(result.title, result.code)
             logger.info("Executing " + result.code)
-            JsRaw(result.code)
+            Call("runAutoTrade", Str(key))
         }
         
-        form.render
+        lazy val outputPane = {
+            <pre id={"output-"+key} class="auto-trade-output">Stuff goes here</pre>
+        }
+        
+        <div class="auto-trade">
+            <table class="auto-trade-table">
+                <col class="auto-trade-left-col"/>
+                <col class="auto-trade-right-col"/>
+                <tr>
+                    <td>Code:</td>
+                    <td>Output:</td>
+                </tr>
+                <tr>
+                    <td class="auto-trade-left">{form.render}</td>
+                    <td class="auto-trade-right">{outputPane}</td>
+                </tr>
+            </table>
+        </div>
     }
     
     case class AutoTradeSubmit(
