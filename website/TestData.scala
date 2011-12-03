@@ -2,12 +2,14 @@
 package bootstrap.liftweb
 
 import code._
-
 import model._
 import model.schema._
 
 // Joda time
 import org.joda.time.DateTime
+import net.liftweb.json
+import scalaz.Scalaz._
+import scala.io.Source
 
 object insertTestData {
 //
@@ -31,6 +33,30 @@ def apply() {
     
     val joejoe = pitfailU.userCreatePortfolio("joejoe")
     joejoe.userInviteUser(ellburU)
+    
+    def slurpResource(name: String) = {
+        val resource = getClass.getClassLoader getResourceAsStream name
+        if (resource == null) {
+            sys.error("Failed to find " + name)
+        }
+        else Source fromInputStream resource mkString
+    }
+    
+    implicit val _ = json.DefaultFormats
+    val demoScripts = (
+           "jsapi/demo-scripts/list.json" |> slurpResource _
+        |> json.parse _ ).extract[List[String]]
+        
+    demoScripts foreach { script =>
+        val code = slurpResource("jsapi/demo-scripts/" + script)
+        
+        val trade = ellbur.userMakeNewAutoTrade()
+        trade.userModify(title=script, code=code)
+    }
+    
+    pitfail.userBuyStock("MSFT", Shares(10))
+    pitfail.userBuyStock("F", Shares(10))
+    pitfail.userSellStock("F", Shares(2))
     
     systemRecalculateRankings()
 }

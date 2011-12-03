@@ -525,6 +525,11 @@ tr.deriv-header {
     padding-top: 0.5em;
 }
 
+.sharing {
+    font-size: normal;
+    font-style: italic;
+}
+
 /* ------------------------------------------------------------------ */
 /* Pending Offers */
 

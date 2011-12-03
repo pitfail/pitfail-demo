@@ -5,7 +5,7 @@ package comet
 import net.liftweb.{common, http, util}
 import common.{Loggable}
 import util._
-import scala.xml.{NodeSeq}
+import scala.xml._
 import http._
 import js._
 import JsCmds._
@@ -35,36 +35,51 @@ class Portfolio extends Refreshable with Loggable
             if (ports.length == 0) {
                 <p>You have no portfolios. <a href="/create-portfolio">Create one</a>.</p>
             }
-            else if (ports.length == 1) {
-                <div class="block">
-                    <h2>Portfolio</h2>
-                    {snippet.tChart(currentPortfolio, modifiable=true)}
-                </div>
-            }
             else {
                 val current = currentPortfolio
                 
-                val tabs = ports map { port =>
-                    if (port ~~ current) {
-                        <div class="tab active">
-                            <p>{port.name}</p>
-                        </div>
+                val body = {
+                    if (ports.length == 1) {
+                        snippet.tChart(currentPortfolio, modifiable=true)
                     }
                     else {
-                        <div class="tab inactive">
-                            <p><a href={"/my-portfolio?name="+port.name}>{port.name}</a></p>
+                        val tabs = ports map { port =>
+                            if (port ~~ current) {
+                                <div class="tab active">
+                                    <p>{port.name}</p>
+                                </div>
+                            }
+                            else {
+                                <div class="tab inactive">
+                                    <p><a href={"/my-portfolio?name="+port.name}>{port.name}</a></p>
+                                </div>
+                            }
+                        }
+                        <div class="tab-bar">
+                            {tabs}
+                        </div>
+                        <div class="tab-pane">
+                            {snippet.tChart(current, modifiable=true)}
                         </div>
                     }
                 }
                 
+                val sharing = {
+                    val others = current.owners filter (o => !(o~~user))
+                    this.logger.info("Shared with " + others)
+                    if (others.length == 0) Nil
+                    else {
+                        val links = others map (snippet.UserLink(_))
+                        val list = links reduceLeft { (a, b) =>
+                            a ++ <span>, </span> ++ b
+                        }
+                        <span class="sharing">(Shared with {list})</span>
+                    }
+                }
+                
                 <div class="block">
-                    <h2>Portfolio</h2>
-                    <div class="tab-bar">
-                        {tabs}
-                    </div>
-                    <div class="tab-pane">
-                        {snippet.tChart(current, modifiable=true)}
-                    </div>
+                    <h2>Portfolio {sharing}</h2>
+                    {body}
                 </div>
             }
         }

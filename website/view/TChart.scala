@@ -42,8 +42,8 @@ def doRender: NodeSeq = {
     
     lazy val result =
         <div>
-            {hiddenControls}
             {table}
+            {hiddenControls}
         </div>
     
     lazy val table =
@@ -268,9 +268,9 @@ def hiddenControls =
         }
         
         if (showHidden)
-            <p>show hidden {hideLink}</p>
+            <p>show hidden <span class="button">{hideLink}</span></p>
         else
-            <p>{showLink} hide hidden</p>
+            <p><span class="button">{showLink}</span> hide hidden</p>
     }
     else Nil
     
