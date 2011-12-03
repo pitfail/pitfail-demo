@@ -6,7 +6,7 @@ trait UserSchema {
         with DerivativeSchema with AuctionSchema with CommentSchema
         with DBMagic with SchemaErrors with VotingSchema with AutoTradeSchema =>
     
-    val startingCash = Dollars("200000")
+    val startingCash = Dollars(200000)
             
     implicit val users            = table[User]
     implicit val portfolios       = table[Portfolio]
