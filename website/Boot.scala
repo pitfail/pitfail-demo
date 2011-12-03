@@ -10,6 +10,8 @@ import http._
 import sitemap._
 import Loc._
 
+import pitfail.rest.{Rest => PFRest}
+
 import code.control
 
 class Boot extends Loggable {
@@ -43,6 +45,8 @@ class Boot extends Loggable {
                 })
                 => false
         }
+
+	LiftRules.dispatch.append(PFRest)
         
         // where to search snippet
         LiftRules.addToPackages("code")
