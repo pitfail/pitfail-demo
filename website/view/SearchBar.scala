@@ -28,42 +28,66 @@ import control.LoginManager.loggedIn_?
 import org.joda.time.Duration
 
 import formats._
+import texttrading._
 
 class SearchBar extends Page with Loggable
 {
-    private var currentQuote: Option[Quote] = None;
-    private var listeners: List[Option[Quote] => JsCmd] = Nil;
-
-    private val refreshable = Refreshable(
-        <div id="search" class="container">
+    sealed trait Status
+    case object Idle extends Status
+    case class HaveQuote(quote: Quote) extends Status
+    case class HaveCommand(command: String, response: Seq[String]) extends Status
+    
+    private var status: Status = Idle
+    
+    private val refreshable = Refreshable (
+       <div id="search" class="container">
             {queryForm.render}
-            {quoteBlock}
+            {feedback}
         </div>
     )
+    
+    /*
+     * Listening
+     */
+    private var listeners: List[Status => JsCmd] = Nil;
 
-    private def notify(quote: Option[Quote], cmd: JsCmd = Noop): JsCmd =
-        (listeners map { (callback) => callback(quote) }).foldLeft(Noop)(_ & _)
+    private def notify(status: Status, cmd: JsCmd = Noop): JsCmd =
+        (listeners map { callback => callback(status) }).foldLeft(Noop)(_ & _)
 
-    private def notifyAndRefresh(quote: Option[Quote], cmd: JsCmd = Noop): JsCmd = {
+    private def notifyAndRefresh(status: Status, cmd: JsCmd = Noop): JsCmd = {
         // This order is important because cmd may apply to the new contents.
-        notify(quote, Noop) & refreshable.refresh & cmd
+        notify(status, Noop) & refreshable.refresh & cmd
     }
 
     /*
      * Public API
      */
-    def listen(callback: Option[Quote] => JsCmd) {
+    def listen(callback: Status => JsCmd) {
         listeners ::= callback
     }
 
     def changeQuote(stock: Stock): JsCmd = {
-        currentQuote = Some(StockPriceSource.getQuotes(Iterable(stock)).head)
-        notifyAndRefresh(currentQuote, Focus("search-quantity"))
+        status = HaveQuote(StockPriceSource.getQuotes(Iterable(stock)).head)
+        notifyAndRefresh(status, Focus("search-quantity"))
+    }
+    
+    def runCommand(command: String): JsCmd = {
+        import control.LoginManager._
+        
+        val username =
+            try
+                currentUser.username
+            catch {
+                case NotLoggedIn => "Anonymous"
+            }
+            
+        status = HaveCommand(command, TextTrader.runCommand(username, command, backend))
+        notifyAndRefresh(status, Focus("search-query-field"))
     }
 
-    def clearQuote: JsCmd = {
-        currentQuote = None
-        notifyAndRefresh(currentQuote, Focus("search-query-field"))
+    def clear: JsCmd = {
+        status = Idle
+        notifyAndRefresh(status, Focus("search-query-field"))
     }
 
     override def render = refreshable.render
@@ -71,8 +95,8 @@ class SearchBar extends Page with Loggable
     /*
      * Search Form
      */
-    lazy val queryForm: Form[Stock] = Form(
-        (sym: String) => Stock(sym toUpperCase),
+    lazy val queryForm: Form[String] = Form(
+        identity[String],
         (
             tickerField: Field[String]
         ),
@@ -80,56 +104,49 @@ class SearchBar extends Page with Loggable
             <div id="search-query-field-hack">
                 {tickerField.main & <input id="search-query-field"/>}
             </div>
-            {submitStock.main & <input id="search-query-button"/>}
-            {submitStock.errors}
+            {submit.main & <input id="search-query-button"/>}
+            {submit.errors}
         </div> ++
         <p>{tickerField.errors}</p>
     )
     
     lazy val tickerField = new StringField("")
 
-    lazy val submitStock = Submit(queryForm, "Go") { stock =>
-        try {
-            changeQuote(stock)
-        } catch {
-            case _: NoSuchStockException =>
-                logger.info("Failed to find " + stock)
-                
-                throw BadFieldInput(
-                    tickerField,
-                    "There is no stock with symbol " + stock.symbol + "."
-                )
+    lazy val submit = Submit(queryForm, "Go") { fullText =>
+        val text = fullText.trim
+        if (text.indexOf(' ') != -1 || TextTrader.looksLikeCommand(text)) {
+            queryForm.reset()
+            runCommand(text)
+        }
+        else {
+            try
+                changeQuote(Stock(text))
+            catch {
+                case _: NoSuchStockException =>
+                    logger.info("Failed to find " + text)
+                    
+                    throw BadFieldInput(
+                        tickerField,
+                        "There is no stock with symbol " + text + "."
+                    )
+            }
         }
     }
-
+    
     /*
-     * Quote
+     * Commands
      */
-    def quoteBlock =
-        currentQuote match {
-            case Some(quote) => quoteBlockPresent(quote)
-            case None        => quoteBlockInstructions
+    private val backend = new PitFailBackend
+    
+    def feedback =
+        status match {
+            case HaveQuote(quote) => quoteReport(quote)
+            case HaveCommand(command, response) => commandReport(command, response)
+            case Idle => instructions
         }
-
-    def quoteBlockPresent(quote: Quote) = 
-        <div id="search-quote" class="quote block">
-            <h2>{quote.stock.symbol} - {quote.company}</h2>
-            <h3>
-                <span class="quote-price">{quote.price.$}</span> -
-                <span class="quote-change">{quote.info.percentChange.%()}</span>
-            </h3>
-            <dl> {
-                import quote.info._
-                (<dt>Open</dt>    <dd class="quote-open">{openPrice.$}</dd>
-                <dt>Low</dt>      <dd class="quote-low">{lowPrice.$}</dd>
-                <dt>High</dt>     <dd class="quote-high">{highPrice.$}</dd>
-                <dt>Dividend</dt> <dd class="quote-dividend">{dividendShare.$}</dd>)
-            } </dl>
-            {quote |> quoteGraph}
-        </div>
-
+    
     /* TODO: if we are on a user page, put the username here. */
-    def quoteBlockInstructions =
+    def instructions =
         <div id="search-instructions" class="block">
             <ol>
                 {
@@ -141,16 +158,13 @@ class SearchBar extends Page with Loggable
                 <li>Manage your portfolio!</li>
             </ol>
         </div>
-
-    def quoteGraph(quote: Quote) =
-        <img
-            class="quote-graph"
-            alt="stock price over time"
-            src={graphURL(quote)}
-        />
-        
-    def graphURL(quote: Quote) =
-        "http://ichart.finance.yahoo.com/instrument/1.0/%s/chart;range=1d/image;size=239x110"
-         .format(quote.stock.symbol toLowerCase)
+    
+    def commandReport(command: String, response: Seq[String]) = {
+        val lines = response map {l => <p>{l}</p>}
+        <div class="block">
+            <p>&gt; {command}</p>
+            {lines}
+        </div>
+    }
 }
 
