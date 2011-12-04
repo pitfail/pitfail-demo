@@ -1,6 +1,5 @@
 
 package code
-
 package snippet
 
 import java.math.{MathContext,RoundingMode}
@@ -30,7 +29,7 @@ import org.joda.time.Duration
 
 import formats._
 
-class SearchQuote extends Page with Loggable
+class SearchBar extends Page with Loggable
 {
     private var currentQuote: Option[Quote] = None;
     private var listeners: List[Option[Quote] => JsCmd] = Nil;
@@ -154,3 +153,4 @@ class SearchQuote extends Page with Loggable
         "http://ichart.finance.yahoo.com/instrument/1.0/%s/chart;range=1d/image;size=239x110"
          .format(quote.stock.symbol toLowerCase)
 }
+

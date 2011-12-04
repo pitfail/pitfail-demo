@@ -25,7 +25,7 @@ import formats._
 
 class SearchPipeline extends Page with Loggable
 {
-    val searchForm = new SearchQuote()
+    val searchForm = new SearchBar()
     val actionForm = new StockOrderer()
     val derivativeForm = new DerivativeBuilder()
 
@@ -59,3 +59,4 @@ class SearchPipeline extends Page with Loggable
 
     def render = refreshable.render
 }
+
