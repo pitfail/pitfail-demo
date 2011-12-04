@@ -5,9 +5,7 @@ trait UserSchema {
     self: StockSchema
         with DerivativeSchema with AuctionSchema with CommentSchema
         with DBMagic with SchemaErrors with VotingSchema with AutoTradeSchema =>
-    
-    val startingCash = Dollars(200000)
-            
+
     implicit val users            = table[User]
     implicit val portfolios       = table[Portfolio]
     implicit val ownerships       = table[Ownership]
@@ -57,7 +55,8 @@ trait UserSchema {
 
     case class League(
             id: Key = nextID,
-            name: String
+            name: String,
+            startingCash: Dollars
         )
         extends KL
 
@@ -90,9 +89,12 @@ trait UserSchema {
         private[model] def createPortfolio(name: String) = {
             if (portfolios exists (_.name == name)) throw NameInUse
 
+            val league = League.default
+            val cash = league.startingCash
+
             for {
                 /* XXX: change to a different league with param. */
-                port <- Portfolio(name=name, league=League.default, cash=startingCash, loan=startingCash, rank=1000).insert
+                port <- Portfolio(name=name, league=league, cash=cash, loan=cash, rank=1000).insert
                 _    <- Ownership(user=this, portfolio=port).insert
             }
             yield (port)
@@ -135,13 +137,18 @@ trait UserSchema {
         }
         
         // Create a new user
-        private[model] def newUserAll(name: String) =
+        // XXX: this duplicates logic in createPortfolio
+        private[model] def newUserAll(name: String) = {
+
+            val league = League.default
+            val cash = league.startingCash
             for {
-                port  <- Portfolio(name=name, league=League.default, cash=startingCash, loan=Dollars(0), rank=0).insert
+                port  <- Portfolio(name=name, league=League.default, cash=cash, loan=cash, rank=0).insert
                 user  <- User(username=name, lastPortfolio=port).insert
                 _     <- Ownership(user=user, portfolio=port).insert
             }
             yield (user, port)
+        }
 
         private[model] def newUser (name: String) : Transaction[User] =
             newUserAll(name) map (_._1)
@@ -189,10 +196,13 @@ trait UserSchema {
 
     object League {
         val defaultName = "default"
+        val defaultStartingCash = Dollars(200000)
 
         /* XXX: Embedding an editDB here is nasty */
         def leagueEnsure(name: String) : League = editDB {
-            byName(name).orCreate(League(name=name).insert)
+            byName(name).orCreate(
+                League(name=name,startingCash=defaultStartingCash).insert
+            )
         }
 
         /* XXX: DB reads and writes need to be composed from the same monad
