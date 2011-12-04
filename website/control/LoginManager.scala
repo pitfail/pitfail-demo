@@ -29,12 +29,6 @@ object LoginManager extends Loggable {
         _currentLogin := Some(name)
         User userEnsure name
         PortfolioSwitcher.clearOnLogin()
-        
-        Portfolio        ! Refresh
-        News             ! Refresh
-        AuctionThumbnail ! Refresh
-        Offers           ! Refresh
-        OutgoingOffers   ! Refresh
     }
     
     def logout() {

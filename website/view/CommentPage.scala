@@ -71,7 +71,6 @@ object commentPage {
                 case NotLoggedIn => ev.userPostAnonymously(text)
             }
             
-            comet.News ! comet.Refresh
             main.refresh()
         }
         

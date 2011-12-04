@@ -73,6 +73,7 @@ object schema
     with VotingSchema
     with RankingSchema
     with AutoTradeSchema
+    with DividendSchema
     
 trait SchemaErrors {
     case object NegativeVolume extends BadUser

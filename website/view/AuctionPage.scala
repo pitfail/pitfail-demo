@@ -98,9 +98,6 @@ class AuctionPage extends Page with Loggable {
                     port.userCastBid(auction, amt)
                     
                     bidForm.reset()
-                    comet.AuctionThumbnail ! comet.Refresh
-                    comet.News ! comet.Refresh
-                    comet.OutgoingOffers ! comet.Refresh
                     refreshable.refresh()
                 }
                 catch {

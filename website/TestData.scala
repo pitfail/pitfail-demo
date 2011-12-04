@@ -4,6 +4,7 @@ package bootstrap.liftweb
 import code._
 import model._
 import model.schema._
+import stockdata._
 
 // Joda time
 import org.joda.time.DateTime
@@ -58,7 +59,13 @@ def apply() {
     pitfail.userBuyStock("F", Shares(10))
     pitfail.userSellStock("F", Shares(2))
     
+    val now = new DateTime
+    model.Stocks.syntheticDividends ++= List(
+        Dividend("MSFT", now plusMinutes 1, Price("0.30"))
+    )
+    
     systemRecalculateRankings()
+    systemCheckForDividends()
 }
 
 }

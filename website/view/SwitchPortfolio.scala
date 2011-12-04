@@ -31,7 +31,7 @@ class SwitchPortfolio extends Page with Loggable {
                 case _ => ()
             }
             
-            myPage(currentUser)
+            myPage()
         }
         catch {
             case NotLoggedIn => <p>You don't seemed to be logged in. How sad ;(;(;(</p>

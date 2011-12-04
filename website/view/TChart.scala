@@ -26,7 +26,7 @@ import model.schema._
 object tChart extends Loggable {
 //
 
-def apply(port: Portfolio, modifiable: Boolean) = {
+def apply(port: Portfolio, currentUser: Option[User], modifiable: Boolean) = {
 //
     
 var showHidden = false
@@ -35,16 +35,30 @@ lazy val refreshable = Refreshable(doRender)
 def render = refreshable.render
     
 def doRender: NodeSeq = {
-    val myStockAssets           = port.myStockAssets
+    val myStockAssets           = port.myStockAssetsGrouped
     val myCashAmount            = port.cash
     val myDerivativeAssets      = port.myDerivativeAssets
     val myDerivativeLiabilities = port.myDerivativeLiabilities
     
     lazy val result =
-        <div>
+        <div class="block">
+            <h2>Portfolio {sharing}</h2>
             {table}
             {hiddenControls}
         </div>
+        
+    lazy val sharing = currentUser map { currentUser =>
+        val others = port.owners filter (o => !(o~~currentUser))
+        this.logger.info("Shared with " + others)
+        if (others.length == 0) Nil
+        else {
+            val links = others map (snippet.UserLink(_))
+            val list = links reduceLeft { (a, b) =>
+                a ++ <span>, </span> ++ b
+            }
+            <span class="sharing">(Shared with {list})</span>
+        }
+    } getOrElse <span/>
     
     lazy val table =
         <table id="portfolio" class="block container portfolio">
@@ -229,16 +243,16 @@ def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Exercise") {
     }
 }
 
-def mehDollars(asset: StockAsset): String =
+def mehDollars(asset: GroupedStockAsset): String =
     stockDollars(asset) map (_.$) getOrElse "???"
 
-def stockDollars(asset: StockAsset): Option[Dollars] =
+def stockDollars(asset: GroupedStockAsset): Option[Dollars] =
     stockPrice(asset) map (_ * asset.shares)
 
-def mehPrice(asset: StockAsset): String =
+def mehPrice(asset: GroupedStockAsset): String =
     stockPrice(asset) map (_.$) getOrElse "???"
 
-def stockPrice(asset: StockAsset): Option[Price] = {
+def stockPrice(asset: GroupedStockAsset): Option[Price] = {
     try {
         Some(model.Stocks stockPrice asset.ticker)
     }

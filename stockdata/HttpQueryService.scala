@@ -44,3 +44,4 @@ object HttpQueryService {
           (URLDecoder.decode(encodedKey, encoding), URLDecoder.decode(encodedValue, encoding))
     })): _*)
 }
+
