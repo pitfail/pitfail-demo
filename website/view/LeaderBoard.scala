@@ -46,20 +46,27 @@ class LeaderPage extends Page with Loggable {
         } yield p
 
         val n : NodeSeq = (for {
-            p  <- p1.headOption.getOrElse(List[Portfolio]())
+            p  <- p1
         } yield {
-            <li>hi</li>
+            <li>
+                name: {p.name} with cash: {p.cash.$}
+            </li>
         })
 
-        ml match {
+        val stuff = ml match {
             case Some(l) =>
             <ol>
-                <lh>Portfolios in {l}</lh>
+                <lh>Portfolios in {l.name}</lh>
                 {n}
             </ol>
             case None =>
             <p>No such league {league_n}</p>
         }
+
+        <div id="leader-page" class="block">
+            {stuff}
+        </div>
+
     } catch {
         case e => <p>Sorry, {standardMessage(e)}</p>
     }
