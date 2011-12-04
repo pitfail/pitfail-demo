@@ -12,15 +12,12 @@ import JsCmds._
 import JE._
 import Helpers._
 
-class RefreshHack extends intform.Page with Loggable
-{
-    def render = {
-        import comet._
-        
-        model.schema.tables foreach (_ ! model.Refresh)
-        
-        Nil: NodeSeq
+import intform._
+import control.Checker
+
+class RunChecks {
+    def render = FormSubmit.rendered("Run Checks") {
+        Checker.runChecks()
     }
 }
-
 

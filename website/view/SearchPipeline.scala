@@ -25,27 +25,27 @@ import formats._
 
 class SearchPipeline extends Page with Loggable
 {
-    val searchForm = new SearchQuote()
+    val searchForm = new SearchBar()
     val actionForm = new StockOrderer()
     val derivativeForm = new DerivativeBuilder()
 
     searchForm.listen(_ match {
-        case Some(quote) =>
+        case searchForm.HaveQuote(quote) =>
             actionForm.changeQuote(quote) 
 
-        case None =>
+        case _ =>
             actionForm.clearQuote & Focus("search-query-field")
     })
 
     actionForm.listen(_ match {
         case _: NoOrder =>
-            searchForm.clearQuote & Focus("search-query-field")
+            searchForm.clear & Focus("search-query-field")
 
         case _: BuyShares =>
-            searchForm.clearQuote & Focus("search-query-field")
+            searchForm.clear & Focus("search-query-field")
 
         case order: AddToDerivative => {
-            searchForm.clearQuote & derivativeForm.addOrder(order) & Focus("to-user-name")
+            searchForm.clear & derivativeForm.addOrder(order) & Focus("to-user-name")
         }
     })
 
@@ -59,3 +59,4 @@ class SearchPipeline extends Page with Loggable
 
     def render = refreshable.render
 }
+

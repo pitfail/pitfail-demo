@@ -358,12 +358,6 @@ class DerivativeBuilder extends Page with Loggable
                     )
             }
             
-            comet.Portfolio        ! comet.Refresh
-            comet.News             ! comet.Refresh
-            comet.Offers           ! comet.Refresh
-            comet.OutgoingOffers   ! comet.Refresh
-            comet.AuctionThumbnail ! comet.Refresh
-            
             clearAll()
         }
         catch {

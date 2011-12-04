@@ -6,13 +6,10 @@ import java.net.URL
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import net.liftweb.json.JsonAST.JValue
 
-import net.liftweb.json.{DefaultFormats,JsonParser,MappingException}
 import model.{Dollars, Shares, Price}
 
 class YahooCSVStockDatabase(queryService: QueryService) extends StockDatabase {
-  private implicit val formats = DefaultFormats
   private val flags = List(
     "s",  // Symbol
     "x",  // StockExchange

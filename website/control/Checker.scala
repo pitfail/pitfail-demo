@@ -28,11 +28,8 @@ object Checker extends Loggable {
         logger.info("Updating the rankings...")
         systemRecalculateRankings()
         
-        Portfolio        ! Refresh
-        News             ! Refresh
-        AuctionThumbnail ! Refresh
-        Offers           ! Refresh
-        OutgoingOffers   ! Refresh
+        logger.info("Checking for dividends")
+        systemCheckForDividends()
     }
 }
 

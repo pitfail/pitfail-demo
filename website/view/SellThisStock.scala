@@ -23,9 +23,6 @@ class SellThisStock(ticker: String)
         import comet._
         
         userSellStock()
-        
-        Portfolio ! Refresh
-        News ! Refresh
     }
     
     def userSellStock() {

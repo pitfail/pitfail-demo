@@ -19,7 +19,7 @@ import model.schema._
 class News extends Refreshable
     with Loggable
 {
-    def registerWith = News
+    def registerWith = newsEvents
     
     def render = (in: NodeSeq) => readDB {
         <ul class="news"> {
@@ -41,7 +41,7 @@ class News extends Refreshable
     }
 }
 
-object News extends RefreshHub {
+object News extends Loggable {
     def eventDescription(ev: NewsEvent, link: Boolean) = {
         def alink(text: String) = if (link) News.link(ev,text) else text
     

@@ -20,7 +20,7 @@ trait AutoTradeSchema {
     
         def userMakeNewAutoTrade() = editDB(makeNewAutoTrade)
         
-        def myAutoTrades = autoTrades.toList
+        def myAutoTrades = autoTrades filter (_.owner~~this) toList
         
         private[model] def makeNewAutoTrade =
             AutoTrade(owner=this, title="", code="").insert
