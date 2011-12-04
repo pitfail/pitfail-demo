@@ -12,9 +12,10 @@ trait UserSchema {
     implicit val portfolios       = table[Portfolio]
     implicit val ownerships       = table[Ownership]
     implicit val portfolioInvites = table[PortfolioInvite]
+    implicit val leagues	  = table[League]
     
     // Model tables
-    
+
     case class User(
             id:            Key = nextID,
             username:      String,
@@ -26,6 +27,7 @@ trait UserSchema {
 
     case class Portfolio(
             id:    Key = nextID,
+            league: Link[League],
             name:  String,
             cash:  Dollars,
             loan:  Dollars,
@@ -52,9 +54,15 @@ trait UserSchema {
             to:   User
         )
         extends KL
-    
+
+    case class League(
+            id: Key = nextID,
+            name: String
+        )
+        extends KL
+
     // Detailed Operations
-    
+
     trait UserOps {
         self: User =>
         
@@ -81,9 +89,10 @@ trait UserSchema {
         
         private[model] def createPortfolio(name: String) = {
             if (portfolios exists (_.name == name)) throw NameInUse
-            
+
             for {
-                port <- Portfolio(name=name, cash=startingCash, loan=startingCash, rank=1000).insert
+                /* XXX: change to a different league with param. */
+                port <- Portfolio(name=name, league=League.default, cash=startingCash, loan=startingCash, rank=1000).insert
                 _    <- Ownership(user=this, portfolio=port).insert
             }
             yield (port)
@@ -128,49 +137,74 @@ trait UserSchema {
         // Create a new user
         private[model] def newUserAll(name: String) =
             for {
-                port  <- Portfolio(name=name, cash=startingCash, loan=Dollars(0), rank=0).insert
+                port  <- Portfolio(name=name, league=League.default, cash=startingCash, loan=Dollars(0), rank=0).insert
                 user  <- User(username=name, lastPortfolio=port).insert
                 _     <- Ownership(user=user, portfolio=port).insert
             }
             yield (user, port)
-        
-        private[model] def newUser(name: String) = newUserAll(name) map (_._1)
-        private[model] def newUserP(name: String) = newUserAll(name) map (_._2)
+
+        private[model] def newUser (name: String) : Transaction[User] =
+            newUserAll(name) map (_._1)
+        private[model] def newUserP(name: String) : Transaction[Portfolio] =
+            newUserAll(name) map (_._2)
     }
-    
+
     object Portfolio {
         def byID(id: Key) =
             portfolios lookup id getOrElse (throw NoSuchPortfolio)
         
-        def byName(name: String) =
+        def byName(name: String) : Portfolio =
             (portfolios filter (_.name==name)).headOption getOrElse {
                 throw NoSuchPortfolio
             }
+
+        def byLeague(league: League) = portfolios filter (_.league.id==league.id)
+
     }
     
     sealed trait IsNewUser
     case class NewUser(user: User)
     case class OldUser(user: User)
-    
+
     trait PortfolioOps {
         self: Portfolio with PortfolioWithStocks with PortfolioWithDerivatives =>
-        
+
         def spotValue: Dollars = (
               cash
             + (myStockAssets map (_.dollars)).foldLeft(Dollars(0))(_+_)
             + (myDerivativeAssets map (_.spotValue)).foldLeft(Dollars(0))(_+_)
         )
-        
+
         def userInviteUser(user: User) = editDB(inviteUser(user))
-        
+
         def owners: List[User] = readDB {
             ownerships filter (_.portfolio~~this) map (_.user) toList
         }
-        
+
         def isOwnedBy(user: User): Boolean = owners exists (_ ~~ user)
-        
+
         private[model] def inviteUser(user: User) =
             PortfolioInvite(from=this, to=user).insert
+    }
+
+    object League {
+        val defaultName = "default"
+
+        /* XXX: Embedding an editDB here is nasty */
+        def leagueEnsure(name: String) : League = editDB {
+            byName(name).orCreate(League(name=name).insert)
+        }
+
+        /* XXX: DB reads and writes need to be composed from the same monad
+         * so that I can avoid this unconditional 'get'
+         * initially the code was:
+         *  def default() = League byName defaultName getOrElse (League(name=defaultName).insert)
+         * which fails as   ^^^^^^^^^^^^^^^^^^^^^^^^^ is not    ^^^^^^^^^^^^^^^^^
+         */
+        def default() = leagueEnsure(defaultName)
+
+        def byName(name: String) = (leagues filter (_.name==name)).headOption
+        def byID(id: Key) = leagues lookup id
     }
 }
 

@@ -13,6 +13,7 @@ class Table[R <: KL] extends ArrayBuffer[R] with Loggable {
     def lookup(k: Key) = {
         this filter (_.id == k) headOption
     }
+
     def insert(r: R) {
         logger.info("(Inserting) " + r)
         this += r
@@ -131,14 +132,14 @@ trait Transactions extends Links with Loggable {
             }
         }
     }
-    
+
     case class Delete[R<:KL](rec: R, table: Table[R]) extends EditOp {
         def perform() = {
             logger.info("Deleting " + rec)
             table.delete(rec)
         }
     }
-    
+
     implicit def toOps[R<:KL](rec: R) = new {
         def insert(implicit table: Table[R]) = Transaction(rec, Insert(rec, table) :: Nil)
         def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(rec, by, table) :: Nil)
@@ -155,7 +156,15 @@ trait Transactions extends Links with Loggable {
                 trans
             }
     }
-    
+
+    implicit def toOrCreateOpt[R](already: => Option[R]) = new {
+        def orCreate(trans: => Transaction[R]) =
+            already match {
+                case Some(r) => Transaction(r, Nil)
+                case None    => trans
+            }
+    }
+
     def mutually[A](op: (Key, Key) => A) = op(nextID, nextID)
     def mutually[A](op: (Key, Key, Key) => A) = op(nextID, nextID, nextID)
 }
