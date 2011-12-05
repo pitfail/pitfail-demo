@@ -39,26 +39,35 @@ class LeaderPage extends Page with Loggable {
         val count = countParam intValue
         val league_n = leagueParam
 
+        val last = start + count - 1
+
         val ml  = League byName league_n
         val p1 = for {
             l <- ml.toList
             p <- Portfolio.byLeague(l).sortBy(_.rank).drop(start).take(count)
         } yield p
 
-        val n : NodeSeq = (for {
-            p  <- p1
+        val n : NodeSeq = for {
+            (p, c) <- p1 zip (start to last)
         } yield {
-            <li>
-                name: {p.name} with cash: {p.cash.$}
-            </li>
-        })
+            <tr>
+                <tc>{c}</tc>
+                <tc>{p.name}</tc>
+                <tc>{p.cash.$}</tc>
+            </tr>
+        }
 
         val stuff = ml match {
             case Some(l) =>
-            <ol>
-                <lh>Portfolios in {l.name}</lh>
+            <h2>Portfolios in league "{l.name}"
+                {if (start != 0)
+                    <span> ({start} to {last})</span>
+                }
+            </h2>
+            <table>
+                <th><tc>Rank</tc><tc>Portfolio</tc><tc>Cash</tc></th>
                 {n}
-            </ol>
+            </table>
             case None =>
             <p>No such league {league_n}</p>
         }
