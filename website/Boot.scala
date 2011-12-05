@@ -16,7 +16,7 @@ class Boot extends Loggable {
 
     def boot {
         org.apache.log4j.PropertyConfigurator.configure("log4j.properties")
-        
+
         System.err.println("\033[42m--------------------------------------------------------\033[0m")
         System.err.println
         System.err.println("\033[42m--------------------------------------------------------\033[0m")
@@ -31,7 +31,7 @@ class Boot extends Loggable {
             setSiteMap, ajaxStart, ajaxEnd, jsArtifacts, early,
             dispatch
         }
-        
+
         // Look at this example:
         // https://gist.github.com/166669
         LiftRules.passNotFoundToChain = true
@@ -43,7 +43,7 @@ class Boot extends Loggable {
                 })
                 => false
         }
-        
+
         // where to search snippet
         LiftRules.addToPackages("code")
 
@@ -57,7 +57,8 @@ class Boot extends Loggable {
             Menu.i("4") / "auto",
             Menu.i("5") / "new-portfolio",
             Menu.i("6") / "my-portfolio",
-            Menu.i("7") / "portfolio"
+            Menu.i("7") / "portfolio",
+            Menu.i("8") / "leaderboard"
         )
         setSiteMap(SiteMap(entries:_*))
 
