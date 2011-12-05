@@ -72,11 +72,12 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase with 
                     throw new NoSuchStockException(stock)
             }
         
+        val price = Price((quoteElement\"LastTradePriceOnly").extract[String])
         val quote = Quote(
             stock      = stock,
             company    = (quoteElement\"Name").extract[String],
             exchange   = (quoteElement\"StockExchange").extract[String],
-            price      = Price((quoteElement\"LastTradePriceOnly").extract[String]),
+            price      = price,
             updateTime = new DateTime(),
             info = QuoteInfo(
                 percentChange = Some(BigDecimal((quoteElement\"ChangeinPercent")
@@ -85,7 +86,9 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase with 
                 openPrice     = tryExtractNumber(quoteElement\"Open"),
                 lowPrice      = tryExtractNumber(quoteElement\"DaysLow"),
                 highPrice     = tryExtractNumber(quoteElement\"DaysHigh")
-            )
+            ),
+            bidPrice = price, // TODO: Make these accurate
+            askPrice = price
         )
         
         (stock, quote)
@@ -111,14 +114,19 @@ class YahooStockDatabase(queryService: QueryService) extends StockDatabase with 
     }}}
   }
 
-  private def makeUpQuote(stock: Stock) = Quote(
-      stock      ,
-      exchange   = "PITFAIL",
-      company    = "Enterprise Solutions Inc",
-      price      = Price(scala.math.random * 100),
-      updateTime = new DateTime,
-      info       = QuoteInfo(None, None, None, None, None)
-  )
+  private def makeUpQuote(stock: Stock) = {
+      val price = Price(scala.math.random * 100)
+      Quote(
+          stock      ,
+          exchange   = "PITFAIL",
+          company    = "Enterprise Solutions Inc",
+          price      = price,
+          updateTime = new DateTime,
+          info       = QuoteInfo(None, None, None, None, None),
+          bidPrice   = price,
+          askPrice   = price
+      )
+  }
   
   private def tryExtractNumber(field: JValue): Option[BigDecimal] = {
     try {

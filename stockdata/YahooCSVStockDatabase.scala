@@ -21,7 +21,9 @@ class YahooCSVStockDatabase(queryService: QueryService) extends StockDatabase {
     "h",  // Days High
     "g",  // Days Low
     "p2", // Change in Percent
-    "d"   // Dividend per Share
+    "d",  // Dividend per Share
+    "b",  // Bid
+    "a"   // Ask
   )
 
   def getQuotes(stocks: Iterable[Stock]): Iterable[Quote] = {
@@ -60,7 +62,9 @@ class YahooCSVStockDatabase(queryService: QueryService) extends StockDatabase {
               tryParseNumber(stuff(8)),
               tryParseNumber(stuff(7)),
               tryParseNumber(stuff(10))
-            )
+            ),
+            Price(stuff(11)),
+            Price(stuff(12))
           )
 //List("MSFT", "NasdaqNM", 26.915, "10/28/2011", "2:35pm", "Microsoft Corpora", 27.10, 27.19, 26.79, "-1.23%", 0.64)
       }

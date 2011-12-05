@@ -30,13 +30,30 @@ trait StockSchema {
         extends KL
         with StockAssetOps
 
+    case class BuyLimitOrder(
+            id:     Key = nextID,
+            ticker: String,
+            shares: Shares,
+            owner:  Link[Portfolio],
+            limit:  Price
+        )
+        extends KL
+        
+    case class SellLimitOrder(
+            id:     Key = nextID,
+            ticker: String,
+            shares: Shares,
+            owner:  Link[Portfolio],
+            limit:  Price
+        )
+        extends KL
+        
+    // Operations
+    
     case class StockPurchase(
             shares:  Shares,
-            dollars: Dollars,
-            asset: Key
+            dollars: Dollars
         )
-    
-    // Operations
     
     // This is used to show all assets with the same ticker lumped together
     case class GroupedStockAsset(
@@ -97,35 +114,62 @@ trait StockSchema {
         
         def userSellAll(ticker: String) = editDB(sellAll(ticker))
         
-        // Buy a stock in shares
-        private[model] def buyStock(ticker: String, shares: Shares): Transaction[StockPurchase] = {
-            val price = Stocks.stockPrice(ticker)
-            buyStock(ticker, price * shares, shares, price)
-        }
-        
         // Buy a stock in dollars
         private[model] def buyStock(ticker: String, dollars: Dollars): Transaction[StockPurchase] = {
-            val price = Stocks.stockPrice(ticker)
+            val price = Stocks.lastTradePrice(ticker)
             buyStock(ticker, dollars, dollars /-/ price, price)
         }
         
-        private[model] def buyStock(
-                ticker: String, dollars: Dollars, shares: Shares, price: Price) =
-        {
-            if (cash <= dollars) throw NotEnoughCash(have=cash, need=dollars)
+        // Buy a stock in shares
+        private[model] def buyStock(ticker: String, shares: Shares): Transaction[StockPurchase] = {
+            def addStockAsset(shares: Shares, price: Price) =
+                StockAsset(ticker=ticker, shares=shares, owner=this,
+                    purchasePrice=price, notifiedPrice=price, purchaseDate=new DateTime,
+                    lastDividendDate=new DateTime, totalDividends=Dollars(0)).insert
             
-            for {
-                asset <- StockAsset(ticker=ticker, shares=shares, owner=this,
-                        purchasePrice=price, notifiedPrice=price, purchaseDate=new DateTime,
-                        lastDividendDate=new DateTime, totalDividends=Dollars(0)
-                    ).insert
-                
-                _ <- this update (t => t copy (cash=t.cash-dollars))
-                
-                // Report the event
-                _  <- Bought(this, ticker, shares, dollars, price).report
+            // This is a recursive monadic function I'M SORRY
+            def processSellables
+                (sellables: List[Sellable], sharesRemaining: Shares, dollarsSpent: Dollars)
+                : Transaction[Dollars] =
+            {
+                if (remaining <= Shares(0)) {
+                    Transaction.pure(dollarsSpent)
+                }
+                else sellables match {
+                    // Maybe we should queue this as some kind of order?
+                    // There are reasons I don't want to do that.
+                    case Nil => throw NoBidders
+                    case sellable :: rest =>
+                        if (sellable.available > sharesRemaining)
+                            for {
+                                dollars <- sellable.satisfyPartially(sharesRemaining)
+                                _ <- addStockAsset(sharesRemaining, sellable.askPrice)
+                            }
+                            yield {
+                                dollarsSpent + dollars
+                            }
+                        else
+                            for {
+                                dollars <- sellable.satisfyCompletely
+                                _ <- addStockAsset(sellable.available, sellable.askPrice)
+                                s <- processSellables(rest, sharesRemaining-sellable.available, dollarsSpent+dollars)
+                            }
+                            yield {
+                                s
+                            }
+                }
             }
-            yield StockPurchase(shares, dollars, asset.id)
+            
+            val sellables = sellablesFor(ticker) orderBy (_.askPrice)
+            for {
+                spent <- processSellables(sellables, shares, Dollars(0))
+                _ <- this update (t => t copy(cash=t.cash-spent))
+                _ <- Bought(this, ticker, shares, spent, spent/shares).report
+            }
+            yield {
+                if (spent > cash) throw NotEnoughCash(have=cash, need=spent)
+                StockPurchase(shares, spent)
+            }
         }
         
         // Sell a stock in shares
@@ -214,7 +258,19 @@ object DividendSource extends CachedDividendDatabase(
 object Stocks {
     var syntheticDividends: List[Dividend] = List()
     
-    def stockPrice(ticker: String): Price = {
+    def askPrice(ticker: String): Price = {
+        val stock = Stock(ticker)
+        val quote = StockPriceSource.getQuotes(Seq(stock)).head
+        quote.askPrice
+    }
+    
+    def bidPrice(ticker: String): Price = {
+        val stock = Stock(ticker)
+        val quote = StockPriceSource.getQuotes(Seq(stock)).head
+        quote.bidPrice
+    }
+    
+    def lastTradePrice(ticker: String): Price = {
         val stock = Stock(ticker)
         val quote = StockPriceSource.getQuotes(Seq(stock)).head
         quote.price

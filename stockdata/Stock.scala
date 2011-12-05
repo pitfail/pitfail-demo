@@ -13,13 +13,15 @@ case class Quote(stock: Stock,
                  company: String,
                  price: Price,
                  updateTime: DateTime,
-                 info: QuoteInfo) {
+                 info: QuoteInfo,
+                 bidPrice: Price,
+                 askPrice: Price) {
   override val toString = "%s=%s".format(stock.toString, price.toString)
 
   // TODO: Need to put some thought into this...
   override def equals(that: Any): Boolean =
     that match {
-      case Quote(thatStock, thatExchange, _, thatPrice, thatTime, _) => (
+      case Quote(thatStock, thatExchange, _, thatPrice, thatTime, _, _, _) => (
            stock == thatStock
         && exchange == thatExchange
         && price == thatPrice
