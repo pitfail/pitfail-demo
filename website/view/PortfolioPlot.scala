@@ -8,7 +8,7 @@ import net.liftweb.http.js.JsCmds._
 import net.liftweb.widgets.flot._
 
 class PortfolioPlot {
-    def plot(xhtml: NodeSeq) = {
+    def plot(): NodeSeq = {
         val data_values: List[(Double,Double)] = for (i <- List.range (0, 140, 5))
         yield (i / 10.0, Math.sin(i / 10.0) ) 
 
@@ -16,7 +16,8 @@ class PortfolioPlot {
             override val data = data_values
         }
 
-        Flot.render ( "graph_area", List(data_to_plot), new FlotOptions {}, Flot.script(xhtml))
+        val node = <div/>
+        node ++ Flot.render ( "graph_area", List(data_to_plot), new FlotOptions {}, Flot.script(node))
     }
 }
 
