@@ -67,8 +67,7 @@ class Boot extends Loggable {
             Menu.i("5") / "new-portfolio",
             Menu.i("6") / "my-portfolio",
             Menu.i("7") / "portfolio",
-            Menu.i("8") / "leaderboard",
-            Menu.i("9") / "plot"
+            Menu.i("8") / "leaderboard"
         )
         setSiteMap(SiteMap(entries:_*))
 

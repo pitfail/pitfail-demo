@@ -179,6 +179,18 @@ trait UserSchema {
         def byLeague(league: League) = portfolios filter (_.league.id==league.id)
 
     }
+
+    object PortfolioValues {
+        def history(portfolio: Portfolio, begin: DateTime, end: DateTime) = readDB {
+            import org.scala_tools.time.Imports._
+
+            portfolioValues filter { pv =>
+                portfolio~~pv.portfolio && begin <= pv.dateTime && pv.dateTime <= end
+            } map { pv =>
+                (pv.dateTime, pv.dollars)
+            }
+        }
+    }
     
     sealed trait IsNewUser
     case class NewUser(user: User)
