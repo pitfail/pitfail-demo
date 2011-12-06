@@ -53,6 +53,7 @@ libraryDependencies ++= Seq(
     "net.liftweb"      % "lift-webkit_2.9.1"         % "2.4-M4",
     "net.liftweb"      % "lift-openid_2.9.1"         % "2.4-M4",
     "net.liftweb"      % "lift-json-ext_2.9.1"       % "2.4-M4",
+    "net.liftweb"      % "lift-widgets_2.9.1"        % "2.4-M4" % "compile->default",
     "org.mortbay.jetty" % "jetty"             % "6.1.22" % "jetty",
     "org.slf4j"        % "slf4j-log4j12"         % "1.6.1",
     "com.h2database"   % "h2"                   % "1.3.159",

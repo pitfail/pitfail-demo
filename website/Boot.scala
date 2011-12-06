@@ -15,6 +15,8 @@ import code.control._
 import model.PeriodicPortfolioEvaluator
 
 import net.liftweb.actor.LiftActor
+import net.liftweb.widgets.flot._
+
 
 class Boot extends Loggable {
 
@@ -25,6 +27,8 @@ class Boot extends Loggable {
         System.err.println
         System.err.println("\033[42m--------------------------------------------------------\033[0m")
         System.err.println
+
+        Flot.init
 
         /* Start the twitter server */
         // I'm sorry I take this out for testing
@@ -63,7 +67,8 @@ class Boot extends Loggable {
             Menu.i("5") / "new-portfolio",
             Menu.i("6") / "my-portfolio",
             Menu.i("7") / "portfolio",
-            Menu.i("8") / "leaderboard"
+            Menu.i("8") / "leaderboard",
+            Menu.i("9") / "plot"
         )
         setSiteMap(SiteMap(entries:_*))
 
