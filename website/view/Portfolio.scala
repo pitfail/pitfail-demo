@@ -15,6 +15,7 @@ object portfolio {
 def apply(port: Portfolio, currentUser: Option[User], modifiable: Boolean) =
     <div>
         {tChart(port, modifiable=modifiable, currentUser=currentUser)}
+        {stockPlot(port)}
         {stockChart(port, modifiable)}
         {dividendChart(port, modifiable)}
     </div>

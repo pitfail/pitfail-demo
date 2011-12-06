@@ -48,24 +48,25 @@ class LeaderPage extends Page with Loggable {
         } yield p
 
         val n : NodeSeq = for {
-            (p, c) <- p1 zip (start to last)
+            p <- p1
         } yield {
             <tr>
-                <tc>{c}</tc>
-                <tc>{p.name}</tc>
-                <tc>{p.cash.$}</tc>
+                <td>{p.rank}</td>
+                <td>{p.name}</td>
+                <td>{p.cash.$}</td>
             </tr>
         }
 
         val stuff = ml match {
             case Some(l) =>
-            <h2>Portfolios in league "{l.name}"
+            if (l.name == League.defaultName)
+            <h2>Ranked Portfolios in League "{l.name}"
                 {if (start != 0)
                     <span> ({start} to {last})</span>
                 }
             </h2>
             <table>
-                <th><tc>Rank</tc><tc>Portfolio</tc><tc>Cash</tc></th>
+                <tr><th>Rank</th><th>Portfolio</th><th>Cash</th></tr>
                 {n}
             </table>
             case None =>
