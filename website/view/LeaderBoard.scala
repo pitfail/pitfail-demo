@@ -59,13 +59,18 @@ class LeaderPage extends Page with Loggable {
 
         val stuff = ml match {
             case Some(l) =>
-            if (l.name == League.defaultName)
-            <h2>Ranked Portfolios in League "{l.name}"
+            val league_ref = if (l ~~ League.default) {
+                "the Default League"
+            } else {
+                "League " + l.name
+            }
+
+            <h2>Ranked Portfolios in {league_ref}
                 {if (start != 0)
-                    <span> ({start} to {last})</span>
+                    Text(start toString + " to " + last)
                 }
             </h2>
-            <table>
+            <table class="boxy">
                 <tr><th>Rank</th><th>Portfolio</th><th>Cash</th></tr>
                 {n}
             </table>
