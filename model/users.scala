@@ -1,6 +1,8 @@
 
 package model
 
+import org.joda.time.DateTime
+
 trait UserSchema {
     self: StockSchema
         with DerivativeSchema with AuctionSchema with CommentSchema
@@ -12,6 +14,7 @@ trait UserSchema {
     implicit val portfolios       = table[Portfolio]
     implicit val ownerships       = table[Ownership]
     implicit val portfolioInvites = table[PortfolioInvite]
+    implicit val portfolioValues  = table[PortfolioValue]
     
     // Model tables
     
@@ -38,6 +41,14 @@ trait UserSchema {
         with PortfolioWithAuctions
         with PortfolioWithVotes
         with PortfolioWithAutoTrades
+
+    case class PortfolioValue(
+            id:        Key = nextID,
+            dateTime:  DateTime,
+            portfolio: Portfolio,
+            dollars:   Dollars
+        )
+        extends KL
         
     case class Ownership(
             id:        Key = nextID,

@@ -48,7 +48,6 @@ libraryDependencies ++= Seq(
     "org.joda"         %  "joda-convert"        % "1.0",
     "net.databinder"   % "dispatch-core_2.9.1"       % "0.8.5",
     "net.databinder"   % "dispatch-http-json_2.9.1"  % "0.8.5",
-    //"net.databinder"   % "dispatch-lift-json_2.9.1"  % "0.8.5",
     "net.databinder"   % "dispatch-oauth_2.9.1"      % "0.8.5",
     "net.databinder"   % "dispatch-nio_2.9.1"        % "0.8.5",
     "net.liftweb"      % "lift-webkit_2.9.1"         % "2.4-M4",
@@ -63,7 +62,8 @@ libraryDependencies ++= Seq(
     "org.scala-tools.testing" % "specs_2.9.1"      % "1.6.9"  % "test->default",
     "org.scalatest"    % "scalatest_2.9.1"           % "1.6.1"  % "test",
     "javax.servlet"    %  "servlet-api"        % "2.4",
-    "com.google.code.gson" % "gson"             % "1.7.1"
+    "com.google.code.gson" % "gson"             % "1.7.1",
+    "org.scala-tools.time" % "time_2.9.1" % "0.5"
 )
 
 // For the Jetty server

@@ -170,18 +170,6 @@ trait StockSchema {
     }
 }
 
-// -------------------------------------------------------------------------
-// Price fetching
-
-object StockPriceSource extends CachedStockDatabase(
-    new FailoverStockDatabase(List(
-      new YahooCSVStockDatabase(new HttpQueryService("GET")),
-      new YahooStockDatabase(new HttpQueryService("GET"))
-    )),
-    // TODO: This timeout should be moved to a configuration file.
-    new Duration(1000 * 60 * 5)
-)
-
 object Stocks {
     def stockPrice(ticker: String): Price = {
         val stock = Stock(ticker)

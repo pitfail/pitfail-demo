@@ -11,6 +11,10 @@ import sitemap._
 import Loc._
 
 import code.control
+import code.control._
+import model.PeriodicPortfolioEvaluator
+
+import net.liftweb.actor.LiftActor
 
 class Boot extends Loggable {
 
@@ -25,6 +29,7 @@ class Boot extends Loggable {
         /* Start the twitter server */
         // I'm sorry I take this out for testing
         // texttrading.twit.run()
+        PeriodicPortfolioEvaluator.run()
 
         val lr = LiftRules.realInstance
         import lr.{
