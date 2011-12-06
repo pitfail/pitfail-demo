@@ -7,6 +7,7 @@ import org.joda.time.DateTime
 import org.joda.time.Duration
 
 import scala.collection.JavaConversions._
+import scalaz.Scalaz._
 
 trait StockSchema {
     schema: UserSchema with DBMagic with SchemaErrors with NewsSchema =>
@@ -21,7 +22,10 @@ trait StockSchema {
             shares: Shares,
             owner:  Link[Portfolio],
             purchasePrice: Price,
-            notifiedPrice: Price
+            notifiedPrice: Price,
+            purchaseDate:     DateTime,
+            lastDividendDate: DateTime,
+            totalDividends:   Dollars
         )
         extends KL
         with StockAssetOps
@@ -33,6 +37,14 @@ trait StockSchema {
         )
     
     // Operations
+    
+    // This is used to show all assets with the same ticker lumped together
+    case class GroupedStockAsset(
+            ticker: String,
+            shares: Shares,
+            owner: Link[Portfolio],
+            purchasePrice: Price
+        )
     
     trait StockAssetOps {
         self: StockAsset =>
@@ -46,11 +58,26 @@ trait StockSchema {
         
         def myStockAssets = stockAssets filter (_.owner ~~ self) toList
         
+        def myStockAssetsGrouped: Seq[GroupedStockAsset] =
+            myStockAssets groupBy (_.ticker) map { case (ticker, assets) =>
+                GroupedStockAsset(
+                    ticker = ticker,
+                    shares = Shares((assets map (_.shares.shares)).sum),
+                    owner  = this,
+                    purchasePrice = {
+                        val dollars = assets map (a => a.shares*a.purchasePrice)
+                        val shares = assets map (_.shares)
+                        dollars.reduceLeft(_+_) / shares.reduceLeft(_+_)
+                    }
+                )
+            } toList
+        
         // Java interop
         def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
         def howManyShares(ticker: String) = readDB {
-            haveTicker(ticker) map (_.shares) getOrElse Shares(0)
+            val s = (myStockAssets filter (_.ticker==ticker) map (_.shares.shares)).sum
+            Shares(s)
         }
         
         def howManyDollars(ticker: String) =
@@ -79,16 +106,7 @@ trait StockSchema {
         // Buy a stock in dollars
         private[model] def buyStock(ticker: String, dollars: Dollars): Transaction[StockPurchase] = {
             val price = Stocks.stockPrice(ticker)
-            try {
-                buyStock(ticker, dollars, dollars /-/ price, price)
-            }
-            catch {
-                case e: ArithmeticException =>
-                    logger.info("Failed to buy because the price is zero")
-                    logger.info("%s %s" format (ticker.toString, price.toString))
-                    // TODO: This is not good
-                    buyStock(ticker, Dollars(1), Shares(1), Price(1))
-            }
+            buyStock(ticker, dollars, dollars /-/ price, price)
         }
         
         private[model] def buyStock(
@@ -97,25 +115,17 @@ trait StockSchema {
             if (cash <= dollars) throw NotEnoughCash(have=cash, need=dollars)
             
             for {
-                asset <- ensureAsset(ticker)
-                _ <- asset update (a => a copy (
-                    shares = a.shares + shares,
-                    purchasePrice = (a.purchasePrice*a.shares + price*shares) / (a.shares+shares)
-                ))
+                asset <- StockAsset(ticker=ticker, shares=shares, owner=this,
+                        purchasePrice=price, notifiedPrice=price, purchaseDate=new DateTime,
+                        lastDividendDate=new DateTime, totalDividends=Dollars(0)
+                    ).insert
+                
                 _ <- this update (t => t copy (cash=t.cash-dollars))
                 
                 // Report the event
                 _  <- Bought(this, ticker, shares, dollars, price).report
             }
             yield StockPurchase(shares, dollars, asset.id)
-        }
-        
-        // Create this stock asset if it does not already exist
-        private[model] def ensureAsset(ticker: String) = haveTicker(ticker) match {
-            case Some(asset) => Transaction(asset)
-            case None        =>
-                StockAsset(ticker=ticker,shares=Shares(0),owner=this,
-                    purchasePrice=Price(0),notifiedPrice=Price(0)).insert
         }
         
         // Sell a stock in shares
@@ -133,15 +143,31 @@ trait StockSchema {
         private[model] def sellStock
                 (ticker: String, dollars: Dollars, shares: Shares, price: Price) =
         {
-            val asset = haveTicker(ticker) getOrElse (throw DontOwnStock(ticker))
-            if (asset.shares < shares) throw NotEnoughShares(have=asset.shares, need=shares)
+            val allAssets = myStockAssets filter (_.ticker==ticker) sortBy (_.shares.shares)
             
-            val assetChange =
-                if (asset.shares > shares) asset update (a => a copy (shares=a.shares-shares))
-                else asset.delete
+            def processAssets(soFar: Shares, assets: List[StockAsset]): Transaction[Unit] = {
+                assets match {
+                    case Nil =>
+                        if (allAssets.isEmpty) throw DontOwnStock(ticker)
+                        else throw NotEnoughShares(soFar, shares)
+                        
+                    case asset::restAssets =>
+                        if (asset.shares+soFar == shares)
+                            asset.delete map (_ => ())
+                        
+                        else if (asset.shares+soFar >= shares) {
+                            val remaining = shares - soFar
+                            asset update (a => a copy (shares=a.shares-remaining))
+                        }
+                        else
+                            asset.delete flatMap (_ =>
+                                processAssets(soFar-asset.shares, restAssets)
+                            )
+                }
+            }
             
             for {
-                _ <- assetChange
+                _ <- processAssets(Shares(0), allAssets toList)
                 _ <- this update (t => t copy (cash=t.cash+dollars))
                 
                 // Report it to the news!
@@ -152,29 +178,35 @@ trait StockSchema {
         
         // Sell all of a single stock
         private[model] def sellAll(ticker: String): Transaction[Unit] = {
-            val asset = haveTicker(ticker) getOrElse (throw DontOwnStock(ticker))
+            val assets = myStockAssets filter (_.ticker==ticker)
+            
+            val delete = (assets map (_.delete)).sequence
+            val totalShares = Shares((assets map (_.shares.shares)).sum)
             val price = Stocks.stockPrice(ticker)
-            val dollars = asset.shares * price
+            val dollars = totalShares * price
             
             for {
-                _ <- asset.delete
+                _ <- delete
                 _ <- this update (t => t copy (cash=t.cash+dollars))
-                _ <- Sold(this, ticker, asset.shares, dollars, price).report
+                _ <- Sold(this, ticker, totalShares, dollars, price).report
             }
             yield ()
         }
-        
-        // Get a stock asset if we have it
-        def haveTicker(ticker: String): Option[StockAsset] =
-            schema.stockAssets filter (a => a.owner~~self && a.ticker~~ticker) headOption
     }
 }
 
 object Stocks {
+    var syntheticDividends: List[Dividend] = List()
+    
     def stockPrice(ticker: String): Price = {
         val stock = Stock(ticker)
         val quote = StockPriceSource.getQuotes(Seq(stock)).head
         quote.price
+    }
+    
+    def recentDividends(ticker: String): Seq[Dividend] = {
+        val actual = DividendSource recentDividends Stock(ticker)
+        actual ++ (syntheticDividends filter (_.ticker==ticker))
     }
 }
 

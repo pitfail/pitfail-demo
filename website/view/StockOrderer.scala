@@ -113,8 +113,6 @@ class StockOrderer extends Page with Loggable
             currentPortfolio.userBuyStock(quote.stock.symbol, shares)
             currentQuote = None
 
-            comet.Portfolio ! comet.Refresh
-            comet.News      ! comet.Refresh
             notifyAndRefresh(BuyShares(quote, dollars))
         } else {
             throw BadInput("You must buy a minimum of one share.")

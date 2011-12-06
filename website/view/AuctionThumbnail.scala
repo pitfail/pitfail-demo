@@ -19,7 +19,7 @@ import model.schema._
 class AuctionThumbnail extends Refreshable
     with Loggable
 {
-    def registerWith = News
+    def registerWith = auctionOffers
 
     def render = (in: NodeSeq) => readDB {
         val auctions = recentAuctions(5)
@@ -40,6 +40,4 @@ class AuctionThumbnail extends Refreshable
         }
     }
 }
-
-object AuctionThumbnail extends RefreshHub
 

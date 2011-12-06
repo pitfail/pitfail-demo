@@ -33,7 +33,7 @@ class PortfolioPage extends Page with Loggable {
         
         curUser match {
             case Some(user) if port.isOwnedBy(user) =>
-                myPage(user)
+                myPage()
                 
             case _ =>
                 theirPortfolio(port)

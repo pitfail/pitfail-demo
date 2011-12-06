@@ -5,14 +5,22 @@ import errors._
 import scala.collection.mutable.ArrayBuffer
 import net.liftweb.common.Loggable
 
+import net.liftweb.actor
+import actor._
+import net.liftweb.http._
+
 import scalaz._
 import scalaz.Scalaz._
 
 // This is very very temporary and should be replaced soon!
-class Table[R <: KL] extends ArrayBuffer[R] with Loggable {
+class Table[R <: KL] extends ArrayBuffer[R]
+    with RefreshHub
+    with Loggable
+{
     def lookup(k: Key) = {
         this filter (_.id == k) headOption
     }
+
     def insert(r: R) {
         logger.info("(Inserting) " + r)
         this += r
@@ -29,7 +37,13 @@ class Table[R <: KL] extends ArrayBuffer[R] with Loggable {
 }
     
 trait DBMagic extends Transactions {
-    def table[R <: KL] = new Table[R]()
+    var tables: Seq[Table[_]] = Seq()
+    
+    def table[R <: KL] = {
+        val t = new Table[R]()
+        tables = tables :+ t
+        t
+    }
 }
 
 trait KL extends {
@@ -73,6 +87,8 @@ trait Transactions extends Links with Loggable {
     private[model] def editDB[A](trans: => Transaction[A]) = {
         val Transaction(result, ops) = trans
         ops foreach (_.perform)
+        val tables = ops flatMap (_.affectedTables)
+        tables foreach (_ ! Refresh)
         result
     }
     
@@ -109,6 +125,7 @@ trait Transactions extends Links with Loggable {
     
     sealed trait EditOp {
         def perform(): Unit
+        val affectedTables: Seq[Table[_]]
     }
     
     case class Insert[R<:KL](rec: R, table: Table[R]) extends EditOp {
@@ -116,6 +133,7 @@ trait Transactions extends Links with Loggable {
             logger.info("Inserting " + rec)
             table.insert(rec)
         }
+        val affectedTables = Seq(table)
     }
     
     case class Update[R<:KL](rec: R, by: R=>R, table: Table[R]) extends EditOp {
@@ -130,15 +148,17 @@ trait Transactions extends Links with Loggable {
                 next
             }
         }
+        val affectedTables = Seq(table)
     }
-    
+
     case class Delete[R<:KL](rec: R, table: Table[R]) extends EditOp {
         def perform() = {
             logger.info("Deleting " + rec)
             table.delete(rec)
         }
+        val affectedTables = Seq(table)
     }
-    
+
     implicit def toOps[R<:KL](rec: R) = new {
         def insert(implicit table: Table[R]) = Transaction(rec, Insert(rec, table) :: Nil)
         def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(rec, by, table) :: Nil)
@@ -155,8 +175,32 @@ trait Transactions extends Links with Loggable {
                 trans
             }
     }
-    
+
+    implicit def toOrCreateOpt[R](already: => Option[R]) = new {
+        def orCreate(trans: => Transaction[R]) =
+            already match {
+                case Some(r) => Transaction(r, Nil)
+                case None    => trans
+            }
+    }
+
     def mutually[A](op: (Key, Key) => A) = op(nextID, nextID)
     def mutually[A](op: (Key, Key, Key) => A) = op(nextID, nextID, nextID)
 }
+
+trait RefreshHub extends LiftActor
+    with ListenerManager
+    with Loggable
+{
+    def createUpdate = Refresh
+    
+    override def lowPriority = {
+        case Refresh =>
+            updateListeners()
+    }
+    
+    def apply() { this ! Refresh }
+}
+
+case object Refresh
 

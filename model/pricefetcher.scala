@@ -43,3 +43,7 @@ object StockPriceSource extends CachedStockDatabase(
     new Duration(1000 * 60 * 5)
 )
 
+object DividendSource extends CachedDividendDatabase(
+    new YahooDividendDatabase(new HttpQueryService("GET"))
+)
+

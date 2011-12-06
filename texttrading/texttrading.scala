@@ -70,5 +70,14 @@ object TextTrader {
             case Error(_, _)   => Seq(huh)
         }
     }
+    
+    def looksLikeCommand(text: String) = {
+        import parser._
+        
+        parseAction(text) match {
+            case Success(_, _) => true
+            case _             => false
+        }
+    }
 }
 
