@@ -23,8 +23,6 @@ object PeriodicPortfolioEvaluator extends Loggable {
             portfolio => editDB {
                 import org.scala_tools.time.Imports._
 
-                logger info "History = %d".format(schema.portfolioValues.size)
-
                 PortfolioValue(
                     dateTime  = DateTime.now,
                     portfolio = portfolio,
