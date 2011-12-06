@@ -16,7 +16,7 @@ object parser extends JavaTokenParsers {
         case _ ~ action ~ _ => action
     }
 
-    lazy val getSAInfo = ( "how" ~ ("much" | "many" ~ opt("shares") ~ "of" )) ~ ticker ^^ {
+    lazy val getSAInfo = ( "how" ~ ("much" | "many" ~ opt("shares?"r) ~ "of" )) ~ ticker ^^ {
         case _ ~ ticker => GetInfo(ticker)
     }
 
@@ -37,11 +37,11 @@ object parser extends JavaTokenParsers {
     }
 
     lazy val stockAsset = stockShares | stockVolume
-    lazy val stockShares = amount ~ ("shares" ~ opt("of")) ~ ticker ^^ {
+    lazy val stockShares = amount ~ (("shares?"r) ~ opt("of")) ~ ticker ^^ {
         case shares ~ _ ~ ticker => StockShares(ticker, Shares(shares))
     }
 
-    lazy val stockVolume = dollarAmount ~ (opt("dollars") ~ "of") ~ ticker ^^ {
+    lazy val stockVolume = dollarAmount ~ (opt("dollars?"r) ~ "of") ~ ticker ^^ {
         case dollars ~ _ ~ ticker => StockDollars(ticker, Dollars(dollars))
     }
 

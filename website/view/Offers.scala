@@ -22,7 +22,7 @@ import model.schema._
 
 class Offers extends Refreshable with Loggable
 {
-    def registerWith = Offers
+    def registerWith = auctionOffers
     
     def render = (in: NodeSeq) => readDB {
         import control.LoginManager._
@@ -100,9 +100,7 @@ class Offers extends Refreshable with Loggable
         
         try {
             currentPortfolio userAcceptOffer offerID
-            
-            comet.Offers ! Refresh
-            comet.Portfolio ! Refresh
+            Noop
         }
         catch {
             case NotLoggedIn =>
@@ -119,8 +117,7 @@ class Offers extends Refreshable with Loggable
         
         try {
             currentPortfolio.userDeclineOffer(offerID)
-            comet.Offers ! Refresh
-            comet.Portfolio ! Refresh
+            Noop
         }
         catch {
             case NotLoggedIn =>
@@ -131,6 +128,4 @@ class Offers extends Refreshable with Loggable
         }
     }
 }
-
-object Offers extends RefreshHub
 

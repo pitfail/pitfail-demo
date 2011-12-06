@@ -15,7 +15,7 @@ import model.schema._
 
 class OutgoingOffers extends Refreshable with Loggable {
     
-    def registerWith = OutgoingOffers
+    def registerWith = auctionOffers
     
     def render = readDB {
         import control.LoginManager._
@@ -63,10 +63,6 @@ class OutgoingOffers extends Refreshable with Loggable {
                 
                 lazy val closeButton = FormSubmit("Close") {
                     offer.userClose()
-                    
-                    OutgoingOffers   ! Refresh
-                    Portfolio        ! Refresh
-                    AuctionThumbnail ! Refresh
                 }
                 
                 all
@@ -80,6 +76,4 @@ class OutgoingOffers extends Refreshable with Loggable {
         }
     }
 }
-
-object OutgoingOffers extends RefreshHub
 

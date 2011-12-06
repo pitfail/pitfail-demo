@@ -40,7 +40,6 @@ class PortfolioInvites extends Page with Loggable {
         val list = invites map { invite =>
             val accept = FormSubmit.rendered("Accept") {
                 user.userAcceptInvite(invite)
-                comet.Portfolio ! comet.Refresh
                 refreshable.refresh
             }
             

@@ -78,7 +78,31 @@ lazy val api = Map(
     "howManyDollarsDoIOwn" -> func("ticker") { result =>
         val ticker = result("ticker")
         Num(me.howManyDollars(ticker).dollars)
-    }
+    },
+    
+    "news" -> func() { result => JsArray {
+        recentEvents(10) flatMap { ev =>
+            ev.action match {
+                case Bought(buyer, stock, shares, dollars, price) =>
+                    Some(JsObj("action"->"bought", "trader"->buyer.name,
+                        "ticker"->stock, "shares"->shares.double,
+                        "dollars"->dollars.double, "price"->price.double))
+                    
+                case Sold(seller, stock, shares, dollars, price) =>
+                    Some(JsObj("action"->"sold", "trader"->seller.name, "ticker"->stock,
+                        "shares"->shares.double, "dollars"->dollars.double,
+                        "price"->price.double))
+                    
+                case Offered(from, to, derivative, price) => None
+                case Accepted(from, to, derivative, price, _, _) => None
+                case Declined(from, to, derivative, price) => None
+                case Auctioned(from, derivative, price) => None
+                case Bid(from, on, price) => None
+                case Closed(port, offer) => None
+                case Exercised(port, derivative) => None
+            }
+        }
+    }}
 )
 
 def me = control.PortfolioSwitcher.currentPortfolio
@@ -92,20 +116,21 @@ lazy val setup = ("$(function () {\n"
 )
 
 lazy val otherLibs =
-    """|
-       | self.runAutoTrade = (function(key) {
-       |    var code = $("#code-"+key).val()
-       |    var outplace = $("#output-"+key)
-       |    outplace.text("")
-       |    try {
-       |        eval(code)
-       |    }
-       |    catch (e) {
-       |        outplace.text(outplace.text() + e + "\n")
-       |    }
-       | })
-       |
-       |""".stripMargin
+     """|
+        | self.runAutoTrade = (function(key) {
+        |    var code = $("#code-"+key).val()
+        |    var outplace = $("#output-"+key)
+        |    outplace.text("")
+        |    fullCode = "key = '"+key+"'; output = $('#pane-'+key); {\n" + code + "\n}"
+        |    try {
+        |        eval(fullCode)
+        |    }
+        |    catch (e) {
+        |        outplace.text(outplace.text() + e + "\n")
+        |    }
+        | })
+        |
+        |""".stripMargin
 
 def func(args: String*)(callback: Map[String,String]=>JsCmd) = {
     def opFunc(arg: Any) = {
@@ -121,7 +146,7 @@ def func(args: String*)(callback: Map[String,String]=>JsCmd) = {
     }
     
     val catchList = args map (name => "'"+name+"':"+name+"+''") mkString ","
-    val argList = (args mkString ", ") + ", callback"
+    val argList = (args:+"callback") mkString ", "
     val (id, stuff) = SHtml.jsonCall(JsRaw("{"+catchList+"}"), opFunc _)
     
     val js = ("liftAjax.lift_ajaxHandler("

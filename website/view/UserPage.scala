@@ -31,7 +31,7 @@ class UserPage extends Page with Loggable {
             try Some(currentUser)
             catch { case NotLoggedIn => None }
         
-        if (curUser map (_ ~~ user) getOrElse false) myPage(user)
+        if (curUser map (_ ~~ user) getOrElse false) myPage()
         else theirPage(user)
     }
     catch {
@@ -39,11 +39,16 @@ class UserPage extends Page with Loggable {
     }
 }
 
+class MyPage {
+    def render = myPage()
+}
+
 object myPage {
 //
-def apply(user: User) =
-    <lift:comet type="Offers"/> ++
-    <lift:comet type="Portfolio"/> ++
+def apply() =
+    <lift:PortfolioInvites/>
+    <lift:comet type="Offers"/>
+    <lift:comet type="Dashboard"/>
     <lift:comet type="OutgoingOffers"/>
     
 //
@@ -79,11 +84,7 @@ def apply(user: User) = {
 
 object theirPortfolio {
 //
-def apply(port: Portfolio): NodeSeq =
-    <div id="user-page" class="block">
-        <h2>Portfolio: {port.name}</h2>
-        {tChart(port, modifiable=false)}
-    </div>
+def apply(port: Portfolio): NodeSeq = portfolio(port, None, false)
 //
 }
 

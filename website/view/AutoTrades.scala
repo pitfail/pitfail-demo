@@ -87,7 +87,9 @@ class AutoTrades extends Page with Loggable {
         }
         
         lazy val outputPane = {
-            <pre id={"output-"+key} class="auto-trade-output">Stuff goes here</pre>
+            <div id={"pane-"+key} class="auto-trade-output">
+                <pre id={"output-"+key} class="auto-trade-output">Stuff goes here</pre>
+            </div>
         }
         
         <div class="auto-trade">

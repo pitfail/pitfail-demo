@@ -19,11 +19,6 @@ object Logout {
         
         LoginManager.logout()
         
-        Portfolio        ! Refresh
-        News             ! Refresh
-        AuctionThumbnail ! Refresh
-        Offers           ! Refresh
-        
         Full(RedirectResponse(S.referer openOr "/"))
     }
 }

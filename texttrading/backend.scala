@@ -81,12 +81,11 @@ case class WithUser(user: User) {
             (( user.lastPortfolio.myStockAssets map (_.ticker) ) mkString (", "))
         )
 
-    def stockInfo(ticker: String) = StringResponse(
-        user.lastPortfolio.haveTicker(ticker) match {
-            case Some(a) => "Have " + a
-            case None    => "You don't have any " + ticker + "."
-        }
-    )
+    def stockInfo(ticker: String) = StringResponse {
+        val shares = user.lastPortfolio howManyShares ticker
+        if (shares == 0) "You don't have any " + ticker
+        else "You have " + shares.###() + " shares of " + ticker
+    }
 
     def sellAll(ticker: String) =
         try {
