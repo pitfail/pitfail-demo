@@ -91,6 +91,7 @@ trait SchemaErrors {
     case object NoSuchEvent extends BadUser
     case object NoSuchComment extends BadUser
     case object NameInUse extends BadUser
+    case object NoBidders extends BadUser
 }
 
 case object NotFound extends BadUser

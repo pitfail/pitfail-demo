@@ -18,7 +18,7 @@ trait NewsSchema {
     type BSA = DerivativeBuyerSetAside
     type SSA = DerivativeSellerSetAside
     
-    case class Bought(buyer: P, stock: String, shares: Shares,
+    case class Bought(buyer :P, stock: String, shares: Shares,
         dollars: Dollars, price: Price) extends Action
     case class Sold(seller: P, stock: String, shares: Shares,
         dollars: Dollars, price: Price) extends Action
@@ -32,6 +32,8 @@ trait NewsSchema {
         sellerAside: Link[SSA]) extends Action
     case class Closed(offerer: P, offer: AuctionOffer) extends Action
     case class Exercised(user: P, derivative: Derivative) extends Action
+    case class BuyOrdered(buyer: P, stock: String, shares: Shares, limit: Price) extends Action
+    case class SellOrdered(seller :P, stock: String, shares: Shares, limit: Price) extends Action
     
     case class NewsEvent(
             id:     Key = nextID,

@@ -1,6 +1,7 @@
 
 package texttrading
 
+import errors._
 import formats._
 import scalaz.Scalaz._
 
@@ -41,7 +42,7 @@ class PitFailBackend extends Backend {
 case class WithUser(user: User) {
 
     def failed: PartialFunction[Any,Failed] = {
-        case e => Failed(e.toString())
+        case e: BadUser => Failed(standardMessage(e))
     }
 
     // TODO: buy & sell look very similar, condense.
@@ -56,7 +57,7 @@ case class WithUser(user: User) {
                     (ticker, user.lastPortfolio.userBuyStock(ticker, dollars))
             }
             |> {
-                case (ticker, StockPurchase(shares, dollars, _)) =>
+                case (ticker, StockPurchase(shares, dollars)) =>
                     TransactionResponse(ticker, dollars, shares)
             }
         )

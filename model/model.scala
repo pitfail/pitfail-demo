@@ -30,11 +30,37 @@ implicit def bigDecimalOps(b: BigDecimal) = new {
         round(2, RoundingMode.FLOOR)
 }
 
+implicit def whyDidTheyMakeTheSameMistakeAsHaskell[A]
+        (s: TraversableOnce[A])(implicit add: Add[A]) = new
+{
+    def summ: A = s.foldLeft(add.zero)(add.add _)
+}
+
+implicit val addDollars: Add[Dollars] = new Add[Dollars] {
+    val zero = Dollars(0)
+    def add(d1: Dollars, d2: Dollars) = d1 + d2
+}
+
+implicit val addShares: Add[Shares] = new Add[Shares] {
+    val zero = Shares(0)
+    def add(s1: Shares, s2: Shares) = s1 + s2
+}
+
+implicit val addPrice: Add[Price] = new Add[Price] {
+    val zero = Price(0)
+    def add(p1: Price, p2: Price) = p1 + p2
+}
+
 //
 }
 
 package model {
 //
+
+trait Add[A] {
+    val zero: A
+    def add(a1: A, a2: A): A
+}
 
 case class Dollars(dollars: BigDecimal)
     extends Ordered[Dollars]
@@ -101,6 +127,7 @@ case class Price(price: BigDecimal) extends Ordered[Price] {
     def -(other: Price)   = Price(price - other.price)
     def *(shares: Shares) = Dollars(shares.shares * price)
     def *(scale: Scale)   = Price(scale.scale * price)
+    def unary_- = copy(price = -price)
 
     def compare(other: Price) = price.compare(other.price)
 

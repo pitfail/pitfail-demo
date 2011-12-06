@@ -21,6 +21,7 @@ def standardMessage(error: Any) = {
         case NotEnoughShares(have, need)  => "You have %s shares you need %s" format (have.###(), need.###())
         case NoSuchOffer                  => "This offer doesn't exist"
         case NotExecutable                => "You can't exercise this derivative early"
+        case NoBidders                    => "Not enough available to be traded"
         
         case e =>
             new Logger { error("An internal error occurred: " + e) }

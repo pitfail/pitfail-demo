@@ -188,7 +188,7 @@ case class SecStock(
     def *(scale: Scale) = SecStock(ticker, shares*scale)
     
     def spotValue = 
-        try Stocks.stockPrice(ticker) * shares
+        try Stocks.lastTradePrice(ticker) * shares
         catch {
             // TODO: This is clearly not right
             case _: stockdata.DatabaseException => Dollars(0)
@@ -241,7 +241,7 @@ case class CompSecStock(
         ticker: String
     ) extends ComparableSecurity
 {
-    def toPrice = Stocks.stockPrice(ticker)
+    def toPrice = Stocks.lastTradePrice(ticker)
 }
 
 case class CompSecDollar(

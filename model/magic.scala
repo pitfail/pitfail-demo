@@ -123,7 +123,7 @@ trait Transactions extends Links with Loggable {
         def bind[A,B](a: Transaction[A], f: A => Transaction[B]) = a flatMap f
     }
     
-    sealed trait EditOp {
+    trait EditOp {
         def perform(): Unit
         val affectedTables: Seq[Table[_]]
     }

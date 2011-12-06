@@ -35,8 +35,9 @@ lazy val refreshable = Refreshable(doRender)
 def render = refreshable.render
     
 def doRender: NodeSeq = {
-    val myStockAssets           = port.myStockAssetsGrouped
+    val myStockAssets           = port.myStockAssets
     val myCashAmount            = port.cash
+    val myMarginAmount          = port.margin
     val myDerivativeAssets      = port.myDerivativeAssets
     val myDerivativeLiabilities = port.myDerivativeLiabilities
     
@@ -97,6 +98,12 @@ def doRender: NodeSeq = {
                 <td/>
                 <td/>
                 <td class="tchart-dollars">{myCashAmount.$}</td>
+            </tr>
+            <tr class="tchart-section">
+                <td>Margin</td>
+                <td/>
+                <td/>
+                <td class="tchart-dollars">{myMarginAmount.$}</td>
             </tr>
 
             <tr class="tchart-section">
@@ -243,18 +250,18 @@ def execDerivative(da: DerivativeAsset) = FormSubmit.rendered("Exercise") {
     }
 }
 
-def mehDollars(asset: GroupedStockAsset): String =
+def mehDollars(asset: StockAsset): String =
     stockDollars(asset) map (_.$) getOrElse "???"
 
-def stockDollars(asset: GroupedStockAsset): Option[Dollars] =
+def stockDollars(asset: StockAsset): Option[Dollars] =
     stockPrice(asset) map (_ * asset.shares)
 
-def mehPrice(asset: GroupedStockAsset): String =
+def mehPrice(asset: StockAsset): String =
     stockPrice(asset) map (_.$) getOrElse "???"
 
-def stockPrice(asset: GroupedStockAsset): Option[Price] = {
+def stockPrice(asset: StockAsset): Option[Price] = {
     try {
-        Some(model.Stocks stockPrice asset.ticker)
+        Some(model.Stocks lastTradePrice asset.ticker)
     }
     catch {
         case e: NoSuchStockException =>

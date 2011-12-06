@@ -7,9 +7,11 @@ import java.net.URL
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
-import model.{Dollars, Shares, Price}
+import model.{Dollars, Shares, Price, Scale}
 
-class YahooCSVStockDatabase(queryService: QueryService) extends StockDatabase {
+import net.liftweb.common.Loggable
+
+class YahooCSVStockDatabase(queryService: QueryService) extends StockDatabase with Loggable {
   private val flags = List(
     "s",  // Symbol
     "x",  // StockExchange
@@ -50,11 +52,19 @@ class YahooCSVStockDatabase(queryService: QueryService) extends StockDatabase {
                     highPrice, lowPrice, percentChange,
                     dividendPerShare) =>
           */
+         val price = Price(stuff(2))
+         val bidPrice = try Price(stuff(11)) catch {
+             case e: NumberFormatException => price * Scale("0.95")
+         }
+         val askPrice = try Price(stuff(12)) catch {
+             case e: NumberFormatException => price * Scale("1.05")
+         }
+         
           Quote(
             Stock(parseQuotedString(stuff(0))),
             parseQuotedString(stuff(1)),
             parseQuotedString(stuff(5)),
-            Price(BigDecimal(stuff(2))),
+            price,
             new DateTime(),
             QuoteInfo(
               tryParsePercent(stuff(9)),
@@ -63,13 +73,14 @@ class YahooCSVStockDatabase(queryService: QueryService) extends StockDatabase {
               tryParseNumber(stuff(7)),
               tryParseNumber(stuff(10))
             ),
-            Price(stuff(11)),
-            Price(stuff(12))
+            bidPrice,
+            askPrice
           )
 //List("MSFT", "NasdaqNM", 26.915, "10/28/2011", "2:35pm", "Microsoft Corpora", 27.10, 27.19, 26.79, "-1.23%", 0.64)
       }
     } catch {
         case ex: Throwable =>
+          logger.error("CSV Query Failed", ex)
           throw new DatabaseException("Yahoo Finance CSV query failed.", ex)
     }
   }

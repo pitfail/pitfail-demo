@@ -28,7 +28,7 @@ class FailoverStockDatabase(databases: List[StockDatabase]) extends StockDatabas
           return quotes
 
         case ResponseError(ex) => {
-          logger.error("Database Query failed with error.")
+          logger.error("Database Query failed with error.", ex)
           error = ex
         }
       }

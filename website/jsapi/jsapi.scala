@@ -67,7 +67,7 @@ lazy val api = Map(
     
     "stockPrice" -> func("ticker") { result =>
         val ticker = result("ticker")
-        Num(Stocks.stockPrice(ticker).price.doubleValue)
+        Num(Stocks.lastTradePrice(ticker).price.doubleValue)
     },
     
     "howManySharesDoIOwn" -> func("ticker") { result =>

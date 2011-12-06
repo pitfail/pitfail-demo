@@ -73,6 +73,14 @@ object News extends Loggable {
             case Exercised(port, derivative) =>
                 <span>{PortfolioLink(port)} {alink("exercised")} a derivative</span>
                 
+            case BuyOrdered(port, ticker, shares, limit) =>
+                <span>{PortfolioLink(port)} {alink("ordered")} {shares.###()}
+                    shares of {ticker} at {price.$}/sh</span>
+                    
+            case SellOrdered(port, ticker, shares, limit) =>
+                <span>{PortfolioLink(port)} {alink("offered")} {shares.###()}
+                    shares of {ticker} at {price.$}/sh</span>
+                
             case other =>
                 logger warn ("Don't know the event " + other)
                 Nil

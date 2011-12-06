@@ -33,36 +33,66 @@ lazy val main =
     <div class="block">
         <h2>Stocks</h2>
         {stockTable}
+        {seller.render}
     </div>
 
 lazy val stockTable =
     <table>
         <tr>
-            <td colspan="2"/>
-            <td colspan="2">Purchased</td>
-            <td colspan="2"/>
-        </tr>
-        <tr>
             <td>Ticker</td>
+            <td/>
             <td>Shares</td>
-            <td>on</td>
-            <td>at</td>
-            <td>Price</td>
+            <td>Last Price</td>
             <td>Dividends</td>
+            <td/>
         </tr>
         {tableRows}
     </table>
 
 lazy val tableRows = port.myStockAssets map { asset =>
-    <tr>
-        <td>{asset.ticker}</td>
-        <td>{asset.shares.###()}</td>
-        <td>{asset.purchaseDate.toNearbyString}</td>
-        <td>{asset.purchasePrice.$}</td>
-        <td>{Stocks.stockPrice(asset.ticker).$}</td>
-        <td>{asset.totalDividends.$}</td>
-    </tr>
+    val price = Stocks.lastTradePrice(asset.ticker)
+    
+    val sellButton = FormSubmit.rendered("Sell...") {
+        seller.activate(asset.ticker, asset.shares * price)
+    }
+    
+    val top = (
+        <tr class="stock-chart-stock">
+            <td>{asset.ticker}</td>
+            <td/>
+            <td>{asset.shares.###()}</td>
+            <td>{price.$}</td>
+            <td>{asset.totalDividends.$}</td>
+            <td>{sellButton}</td>
+        </tr>
+    )
+    
+    val bought = asset.buyHistories map { hist =>
+        <tr class="stock-history">
+            <td/>
+            <td class="stock-history-action">bought</td>
+            <td>{hist.shares.###()}</td>
+            <td>{hist.buyPrice.$}</td>
+            <td>{hist.buyDate.toNearbyString}</td>
+            <td/>
+        </tr>
+    }
+    
+    val sold = asset.sellHistories map { hist =>
+        <tr class="stock-history">
+            <td/>
+            <td class="stock-history-action">sold</td>
+            <td>{hist.shares.###()}</td>
+            <td>{hist.sellPrice.$}</td>
+            <td>{hist.sellDate.toNearbyString}</td>
+            <td/>
+        </tr>
+    }
+    
+    top ++ bought ++ sold ++ <tr><td/><td/><td/><td/><td/><td/></tr>
 }
+
+lazy val seller = StockSeller()
 
 main
 }

@@ -34,6 +34,8 @@ case class AddToDerivative(quote: Quote, shares: Shares) extends StockOrder
 
 class StockOrderer extends Page with Loggable
 {
+    import StockOrderer._
+    
     private var currentQuote: Option[Quote] = None;
     private var listeners: List[StockOrder => JsCmd] = Nil;
 
@@ -45,21 +47,31 @@ class StockOrderer extends Page with Loggable
     )
     
     def purchaseForm(quote: Quote): NodeSeq = {
-        lazy val form: Form[Dollars] = Form(
-            identity[Dollars],
+        lazy val form: Form[Order] = Form(
+            Order,
             (
-                volumeField: Field[Dollars]
+                volumeField: Field[Dollars],
+                limitField: Field[Option[Price]]
             ),
             <div class="block" id="search-buy">
                 <h2>Choose Volume</h2>
-                <p>Enter the amount you would like to purchase in dollars. This will be
-                converted to shares and will be added to your portfolio.</p>
+                <p>Enter the amount you would like to purchase in dollars.</p>
 
-                <p class="price-input">
-                    ${volumeField.main & <input id="search-quantity" class="blank"/>}
-                    <span class="error">{submitBuy.errors}{submitAdd.errors}</span>
-                </p>
+                <div>
+                    <div style="float:left;">
+                        <p class="price-input">
+                            ${volumeField.main & <input id="search-quantity" class="blank"/>}
+                            <span class="error">{submitBuy.errors}{submitAdd.errors}</span>
+                        </p>
+                    </div>
+                    <div style="float:left;">
+                        {availableSellers(quote.symbol)}
+                    </div>
+                    <div style="clear:both;"><p> </p></div>
+                </div>
 
+                {limitField.main}
+                
                 <div class="buttons">
                     {submitBuy.main & <input/>} 
                     {submitAdd.main & <input/>} 
@@ -67,14 +79,33 @@ class StockOrderer extends Page with Loggable
                 </div>
             </div>
         )
+    
+        lazy val limitField = new Field[Option[Price]] with FieldRender {
+            lazy val useField   = BooleanField()
+            lazy val limitField = PriceField()
+            
+            def produce() = useField.process flatMap { use =>
+                if (use) limitField.process map {p => OK(Some(p))}
+                else Some(OK(None))
+            } getOrElse ChildError
+            
+            def reset() { useField.reset(); limitField.reset() }
+            
+            def main =
+                <p>{useField.main} Keep the order alive, at a limit
+                    of {limitField.main} {limitField.errors}</p>
+        }
 
         lazy val volumeField = new DollarsField("1000") with FieldErrorRender
     
-        lazy val submitBuy = Submit(form, "Buy Shares") { volume =>
+        lazy val submitBuy = Submit(form, "Buy Shares") { case Order(dollars, limit) =>
             import control.LoginManager._
 
             try {
-                buyStock(quote, volume)
+                limit match {
+                    case None        => buyStock(quote, dollars)
+                    case Some(price) => makeLimitOrder(quote, dollars, price)
+                }
             } catch {
                 case NegativeVolume => throw BadFieldInput(volumeField,
                     "You must buy more than $0.00 of a stock"
@@ -83,6 +114,10 @@ class StockOrderer extends Page with Loggable
                 case NotEnoughCash(have, need) => throw BadFieldInput(volumeField,
                     "You need at least %s you only have %s" format (need.$, have.$)
                 )
+                
+                case NoBidders => throw BadFieldInput(volumeField,
+                    "There are not enough traders to satisfy that order"
+                )
 
                 /* TODO: change to redirect to the login and then redirect back */
                 case NotLoggedIn =>
@@ -90,11 +125,11 @@ class StockOrderer extends Page with Loggable
             }
         }
         
-        lazy val submitAdd = Submit(form, "Add to Derivative") { v =>
+        lazy val submitAdd = Submit(form, "Add to Derivative") { case Order(v, _) =>
             addStockToDerivative(quote, v /-/ quote.price)
         }
 
-        lazy val submitCancel = Submit(form, "Cancel") { v =>
+        lazy val submitCancel = Submit(form, "Cancel") { case Order(v, _) =>
             notifyAndRefresh(NoOrder())
         }
         
@@ -105,8 +140,6 @@ class StockOrderer extends Page with Loggable
         import control.LoginManager._
         import control.PortfolioSwitcher._
         
-        this.logger.info("Buying %s of %s" format(dollars, quote))
-
         val shares = dollars /-/ quote.price
 
         if (shares > Shares(0)) {
@@ -117,6 +150,23 @@ class StockOrderer extends Page with Loggable
         } else {
             throw BadInput("You must buy a minimum of one share.")
         }
+    }
+    
+    private def makeLimitOrder(quote: Quote, dollars: Dollars, limit: Price): JsCmd = {
+        import control.LoginManager._
+        import control.PortfolioSwitcher._
+        
+        val shares = dollars /-/ quote.price
+
+        if (shares > Shares(0)) {
+            currentPortfolio.userMakeBuyLimitOrder(quote.stock.symbol, shares, limit)
+            currentQuote = None
+
+            notifyAndRefresh(BuyShares(quote, dollars))
+        } else {
+            throw BadInput("You must buy a minimum of one share.")
+        }
+        
     }
 
     private def addStockToDerivative(quote: Quote, shares: Shares) = {
@@ -150,4 +200,8 @@ class StockOrderer extends Page with Loggable
 
     override def render = refreshable.render
 }
+object StockOrderer {
+    case class Order(dollars: Dollars, limit: Option[Price])
+}
+
 

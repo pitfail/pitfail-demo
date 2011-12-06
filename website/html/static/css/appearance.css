@@ -182,6 +182,10 @@ h1 a {
     background: #EEE;
 }
 
+.stock-order {
+    position: relative;
+}
+
 /* */
 .block {
     background: #D8CBC4;
@@ -211,7 +215,8 @@ form.block {
 }
 
 .buttons {
-    text-align: center;
+    /*text-align: center;*/
+    padding-left: 2em;
 }
 
 /* Instructions */
@@ -311,8 +316,12 @@ form.block {
 
 /* Buy/Add Option */
 p.price-input {
-    margin: 1em 5em;
+    margin: 1em 2em;
     font-size: 16pt;
+}
+
+.available-sellers {
+    padding-top: 1em;
 }
 
 /* Derivative Builder */
@@ -446,7 +455,7 @@ table.tchart {
 
 table.tchart .buttons {
     text-align: right;
-    padding-left: 0.5em;
+    padding-left: 2em;
 }
 
 tr.tchart-top,
