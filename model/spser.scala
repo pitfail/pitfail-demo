@@ -32,8 +32,6 @@ def a[T]: T = sys.error("This got called")
 
 def as[T](a: Any) = a.asInstanceOf[T]
 
-case object Impossible extends RuntimeException
-
 trait SQLType[A] {
     type CT
     val typeName: String
@@ -222,6 +220,17 @@ trait Schema {
             ))
         }
         
+        def createIfNecessary() {
+            inTransaction {
+                try {
+                    headOption
+                }
+                catch { case _: SQLException =>
+                    create_!
+                }
+            }
+        }
+        
         def insert(a: A) = {
             val pre = prepareStatement("insert into `%s` values (%s)" format (table.name,
                 Iterator.fill(table.parammer.length)("?") mkString ","
@@ -233,6 +242,7 @@ trait Schema {
         def where(wh: Where) = Query(wh::Nil)
         
         def toList = Query(Nil).toList
+        def headOption = Query(Nil).headOption
         
         def lookup(id: String) = this where ('id ~=~ id) headOption
         
@@ -319,6 +329,8 @@ trait Schema {
     def table[A](implicit table: SQLTable[A]) = new Table(table)
     
     def create_!() { tables foreach (_.create_!) }
+    
+    def createIfNecessary() { tables foreach (_.createIfNecessary) }
 }
 
 trait Backend extends Schema {

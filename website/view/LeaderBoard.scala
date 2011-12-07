@@ -66,9 +66,9 @@ class LeaderPage extends Page with Loggable {
             }
 
             import stockdata.{HttpQueryService => HQS}
-            val base = Map("count" -> count, "league" -> league_n)
-            val next_link = HQS.buildQuery(Map("start" -> last + 1) + base, "UTF-8")
-            val prev_link = HQS.buildQuery(Map("start" -> start - count) + base, "UTF-8")
+            val base = Map("count" -> count.toString, "league" -> league_n.toString)
+            val next_link = HQS.buildQuery(Map("start" -> (last + 1).toString) ++ base, "UTF-8")
+            val prev_link = HQS.buildQuery(Map("start" -> (start - count).toString) ++ base, "UTF-8")
 
             <h2>Ranked Portfolios in {league_ref}
                 {if (start != 0)

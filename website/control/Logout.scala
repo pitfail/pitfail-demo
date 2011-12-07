@@ -7,7 +7,7 @@ import common._
 import util._
 import http._
 
-object Logout {
+object Logout extends Loggable {
 
     def dispatchPF: LiftRules.DispatchPF =
         NamedPF("Twitter login callback") {
@@ -19,6 +19,7 @@ object Logout {
         
         LoginManager.logout()
         
+        logger.info("Redirecting to " + S.referer)
         Full(RedirectResponse(S.referer openOr "/"))
     }
 }

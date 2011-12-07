@@ -23,9 +23,9 @@ class SwitchPortfolio extends Page with Loggable {
         import control.LoginManager._
         import control.PortfolioSwitcher._
  
-        val user = currentUser
-        
         try {
+            val user = currentUser
+            
             nameParam match {
                 case Full(key) => switchPortfolio(key)
                 case _ => ()
@@ -34,7 +34,7 @@ class SwitchPortfolio extends Page with Loggable {
             myPage()
         }
         catch {
-            case NotLoggedIn => <p>You don't seemed to be logged in. How sad ;(;(;(</p>
+            case NotLoggedIn => S.redirectTo("/")
         }
     }
 }
