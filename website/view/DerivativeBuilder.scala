@@ -294,7 +294,7 @@ class DerivativeBuilder extends Page with Loggable
                     b <- bField.process
                 } yield OK(CondGreater(b, a))
             else
-                Some(OK(CondAlways))
+                Some(OK(CondAlways()))
         } getOrElse ChildError
         
         def reset() {

@@ -9,15 +9,25 @@ import org.joda.time.Duration
 import scala.collection.JavaConversions._
 import scalaz.Scalaz._
 import scala.collection.mutable.{Map => MMap}
+import spser._
 
-trait StockSchema {
+trait StockSchema extends Schema {
     schema: UserSchema with DBMagic with SchemaErrors with NewsSchema =>
     
+    implicit val saCon = StockAsset.apply _
+    implicit val sbhCon = StockBuyHistory.apply _
+    implicit val sshCon = StockSellHistory.apply _
+    implicit val bloCon = BuyLimitOrder.apply _
+    implicit val sloCon = SellLimitOrder.apply _
+        
     implicit val stockAssets: Table[StockAsset] = table[StockAsset]
     implicit val stockBuyHistories: Table[StockBuyHistory] = table[StockBuyHistory]
     implicit val stockSellHistories: Table[StockSellHistory] = table[StockSellHistory]
     implicit val buyLimitOrders: Table[BuyLimitOrder] = table[BuyLimitOrder]
     implicit val sellLimitOrders: Table[SellLimitOrder] = table[SellLimitOrder]
+    
+    abstract override def tables = (stockAssets :: stockBuyHistories ::
+        stockSellHistories :: buyLimitOrders :: sellLimitOrders :: super.tables)
     
     // Model Tables
     
@@ -87,11 +97,11 @@ trait StockSchema {
         def price: Price = Stocks.lastTradePrice(ticker)
         def dollars: Dollars = shares * price
         
-        def buyHistories = stockBuyHistories filter
-            (h => h.ticker==ticker && h.owner~~owner)
+        def buyHistories = (stockBuyHistories where
+            ('ticker ~=~ ticker) where ('owner ~=~ owner)) toList
             
-        def sellHistories = stockSellHistories filter
-            (s => s.ticker==ticker && s.owner~~owner)
+        def sellHistories = (stockSellHistories where
+            ('ticker ~=~ ticker) where ('owner ~=~ owner) toList)
         
         def averagePurchasePrice = readDB {
             val hists = buyHistories
@@ -106,17 +116,19 @@ trait StockSchema {
     trait PortfolioWithStocks {
         self: Portfolio =>
         
-        def myStockAssets = stockAssets filter (_.owner ~~ self) toList
+        def myStockAssets = stockAssets where ('owner ~=~ self) toList
         
         def haveTicker(ticker: String): Option[StockAsset] =
-            myStockAssets filter (_.ticker == ticker) headOption
+            stockAssets where ('owner ~=~ this) where ('ticker ~=~ ticker) headOption
         
         // Java interop
         def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
         def howManyShares(ticker: String) = readDB {
-            val s = (myStockAssets filter (_.ticker==ticker) map (_.shares.shares)).sum
-            Shares(s)
+            haveTicker(ticker) match {
+                case Some(a) => a.shares
+                case None    => Shares(0)
+            }
         }
         
         def howManyDollars(ticker: String) =
@@ -144,9 +156,9 @@ trait StockSchema {
             makeSellLimitOrder(ticker, shares, limit)
         }
         
-        def myBuyLimitOrders = buyLimitOrders filter (_.owner ~~ this)
+        def myBuyLimitOrders = buyLimitOrders where ('owner ~=~ this) toList
         
-        def mySellLimitOrders = sellLimitOrdes filter (_.owner ~~ this)
+        def mySellLimitOrders = sellLimitOrders where ('owner ~=~ this) toList
         
         // There could be multiple sources of margin. Right now we have only this one
         def margin: Dollars = myBuyLimitOrders map (_.setAside) summ
@@ -293,6 +305,7 @@ trait StockSchema {
         private[model] def makeBuyLimitOrder(ticker: String, shares: Shares, limit: Price) = {
             // First see if anyone already wants to sell
             val sellers = sellersFor(ticker) filter (_.price <= limit)
+            val assets = haveTicker(ticker).toList
             
             val availableShares = (sellers map (_.available)).summ
             if (availableShares >= shares) {
@@ -391,15 +404,21 @@ trait StockSchema {
     var automaticSellers = MMap[String,List[AutomaticTrader]]()
     var automaticBuyers  = MMap[String,List[AutomaticTrader]]()
     
-    def initAutomaticTraders(ticker: String, buyer: Boolean) = List(
-        new AutomaticTrader(ticker, Scale("1.00"), Dollars(20000), "Des. Market Maker #3", buyer),
-        new AutomaticTrader(ticker, Scale("1.05"), Dollars(13000), "Des. Market Maker #7", buyer),
-        new AutomaticTrader(ticker, Scale("1.13"), Dollars( 8000), "Des. Market Maker #12", buyer)
+    def initAutomaticBuyers(ticker: String) = List(
+        new AutomaticTrader(ticker, Scale("1.00"), Dollars(20000), "Des. Market Maker #3", true),
+        new AutomaticTrader(ticker, Scale(".97"), Dollars(13000), "Des. Market Maker #7", true),
+        new AutomaticTrader(ticker, Scale(".93"), Dollars( 8000), "Des. Market Maker #12", true)
+    )
+    
+    def initAutomaticSellers(ticker: String) = List(
+        new AutomaticTrader(ticker, Scale("1.00"), Dollars(20000), "Des. Market Maker #3", true),
+        new AutomaticTrader(ticker, Scale("1.04"), Dollars(13000), "Des. Market Maker #7", true),
+        new AutomaticTrader(ticker, Scale("1.07"), Dollars( 8000), "Des. Market Maker #12", true)
     )
     
     def sellersFor(ticker: String): List[Tradeable] = {
         val auto = automaticSellers.getOrElseUpdate(ticker, {
-            initAutomaticTraders(ticker, false)
+            initAutomaticSellers(ticker)
         })
         
         // TODO: Other sellers
@@ -408,7 +427,7 @@ trait StockSchema {
     
     def buyersFor(ticker: String): List[Tradeable] = {
         val auto = automaticBuyers.getOrElseUpdate(ticker,
-            initAutomaticTraders(ticker, true))
+            initAutomaticBuyers(ticker))
         
         // TODO: Other buyers
         auto map (_.makeTradeable) sortBy (- _.price)
@@ -418,22 +437,6 @@ trait StockSchema {
         val price = dollars / shares
     }
 }
-
-// -------------------------------------------------------------------------
-// Price fetching
-
-object StockPriceSource extends CachedStockDatabase(
-    new FailoverStockDatabase(List(
-      new YahooCSVStockDatabase(new HttpQueryService("GET")),
-      new YahooStockDatabase(new HttpQueryService("GET"))
-    )),
-    // TODO: This timeout should be moved to a configuration file.
-    new Duration(1000 * 60 * 5)
-)
-
-object DividendSource extends CachedDividendDatabase(
-    new YahooDividendDatabase(new HttpQueryService("GET"))
-)
 
 object Stocks {
     var syntheticDividends: List[Dividend] = List()

@@ -19,7 +19,7 @@ import model.schema._
 class News extends Refreshable
     with Loggable
 {
-    def registerWith = newsEvents
+    def registerWith = newsHub
     
     def render = (in: NodeSeq) => readDB {
         <ul class="news"> {
@@ -75,11 +75,11 @@ object News extends Loggable {
                 
             case BuyOrdered(port, ticker, shares, limit) =>
                 <span>{PortfolioLink(port)} {alink("ordered")} {shares.###()}
-                    shares of {ticker} at {price.$}/sh</span>
+                    shares of {ticker} at {limit.$}/sh</span>
                     
             case SellOrdered(port, ticker, shares, limit) =>
                 <span>{PortfolioLink(port)} {alink("offered")} {shares.###()}
-                    shares of {ticker} at {price.$}/sh</span>
+                    shares of {ticker} at {limit.$}/sh</span>
                 
             case other =>
                 logger warn ("Don't know the event " + other)

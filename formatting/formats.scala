@@ -88,7 +88,7 @@ case class FormattedCondition(
     condition: Condition
 ) {
     def toHumanString = condition match {
-        case CondAlways        => "-"
+        case CondAlways()      => "-"
         case CondGreater(a, b) => "%s > %s" format (a toHumanString, b toHumanString)
     }
 }

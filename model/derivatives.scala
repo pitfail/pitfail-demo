@@ -4,16 +4,24 @@ package model
 // Joda time
 import org.joda.time.DateTime
 import formats._
+import spser._
 
 import net.liftweb.common.Loggable
 
-trait DerivativeSchema {
+trait DerivativeSchema extends Schema {
     schema: UserSchema with DBMagic with NewsSchema
         with AuctionSchema with SchemaErrors with VotingSchema =>
     
-    implicit val derivativeAssets      = table[DerivativeAsset]
-    implicit val derivativeLiabilities = table[DerivativeLiability]
-    implicit val derivativeOffers      = table[DerivativeOffer]
+    implicit val daCon = DerivativeAsset.apply _
+    implicit val dlCon = DerivativeLiability.apply _
+    implicit val doCon = DerivativeOffer.apply _
+    
+    implicit val derivativeAssets: Table[DerivativeAsset] = table[DerivativeAsset]
+    implicit val derivativeLiabilities: Table[DerivativeLiability] = table[DerivativeLiability]
+    implicit val derivativeOffers: Table[DerivativeOffer] = table[DerivativeOffer]
+    
+    abstract override def tables = ( derivativeAssets :: derivativeLiabilities
+        :: derivativeOffers :: super.tables )
     
     // Model tables
     
@@ -65,18 +73,16 @@ trait DerivativeSchema {
     }
     
     object DerivativeLiability {
-        def byName(name: String) = derivativeLiabilities
-            .filter(_.name == name)
-            .headOption
-            .getOrElse(throw NoSuchDerivativeLiability)
+        def byName(name: String) = ( (derivativeLiabilities where ('name ~=~ name)).headOption
+            getOrElse(throw NoSuchDerivativeLiability) )
     }
     
     trait PortfolioWithDerivatives {
         self: Portfolio =>
         
-        def myDerivativeAssets = schema.derivativeAssets filter (_.owner ~~ this) toList
-        def myDerivativeLiabilities = schema.derivativeLiabilities filter (_.owner ~~ this) toList
-        def myDerivativeOffers = schema.derivativeOffers filter (_.to ~~ this) toList
+        def myDerivativeAssets = derivativeAssets where ('owner ~=~ this) toList
+        def myDerivativeLiabilities = derivativeLiabilities where ('owner ~=~ this) toList
+        def myDerivativeOffers = derivativeOffers where ('to ~=~ this) toList
         
         def userOfferDerivativeTo(recip: Portfolio, deriv: Derivative, price: Dollars) =
             editDB {
@@ -144,13 +150,31 @@ trait DerivativeSchema {
             }
             yield (buyerAside, sellerAside)
     }
+    
+    implicit def sqlDerivative: SQLType[Derivative] = new StringType[Derivative] {
+        import java.io._
+        import org.apache.commons.codec.binary.Base64
+        
+        def sencode(d: Derivative) = {
+            val bo = new ByteArrayOutputStream
+            val oo = new ObjectOutputStream(bo)
+            oo.writeObject(d)
+            oo.close()
+            Base64.encodeBase64String(bo.toByteArray)
+        }
+        def sdecode(s: String) = {
+            val bi = new ByteArrayInputStream(Base64.decodeBase64(s))
+            val oi = new ObjectInputStream(bi)
+            oi.readObject.asInstanceOf[Derivative]
+        }
+    }
 }
 
 // --------------------------------------------------------------------
 // The data types
 
 case class Derivative(
-    securities: Seq[Security],
+    securities: List[Security],
     exec:       DateTime,
     condition:  Condition,
     early:      Boolean
@@ -218,7 +242,7 @@ sealed abstract class Condition {
     def isTrue: Boolean
 }
 
-case object CondAlways extends Condition {
+case class CondAlways() extends Condition {
     def isTrue = true
 }
 

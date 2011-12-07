@@ -3,6 +3,7 @@ package model
 
 import errors._
 import org.joda.time.DateTime
+import spser._
 
 /*
 
@@ -61,7 +62,8 @@ because that way you won't drop operations.
 */
 
 object schema
-    extends DummySchema
+    extends Schema
+    with Backend
     with DBMagic  // Updates, selects, etc
     with SchemaErrors
     with UserSchema

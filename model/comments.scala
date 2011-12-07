@@ -2,25 +2,31 @@
 package model
 
 import org.joda.time.DateTime
+import spser._
 
-trait CommentSchema {
+trait CommentSchema extends Schema {
     self: NewsSchema with UserSchema with DBMagic with SchemaErrors =>
     
-    implicit val eventComments = table[EventComment]
+    implicit val ecCon = EventComment.apply _
+        
+    implicit val eventComments: Table[EventComment] = table[EventComment]
+    
+    abstract override def tables = eventComments :: super.tables
         
     // Model tables
     
     case class EventComment(
             id:    Key = nextID,
-            event: NewsEvent,
-            by:    User,
+            event: Link[NewsEvent],
+            by:    Link[User],
             text:  String,
             when:  DateTime
         )
         extends KL
     
     object EventComment {
-        def byID(id: Key) = eventComments lookup id getOrElse (throw NoSuchComment)
+        def byID(id: Key) = ((eventComments where ('id~=~id)).headOption
+            getOrElse (throw NoSuchComment))
     }
         
     trait UserWithComments {
@@ -35,7 +41,7 @@ trait CommentSchema {
     trait NewsEventWithComments {
         self: NewsEvent =>
         
-        def comments = eventComments filter (_.event ~~ this)
+        def comments = eventComments where ('event ~=~ this) toList
         def numComments = comments.length
         
         def userPostAnonymously(text: String) = editDB {

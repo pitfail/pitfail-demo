@@ -1,15 +1,24 @@
 
 package model
+import spser._
 
-trait VotingSchema {
+trait VotingSchema extends Schema {
     self: DBMagic with UserSchema with DerivativeSchema with NewsSchema =>
     
     val setAsideFraction = Scale("0.03")
     
-    implicit val derivativeBuyerSetAsides = table[DerivativeBuyerSetAside]
-    implicit val derivativeSellerSetAsides = table[DerivativeSellerSetAside]
-    implicit val derivativeBuyerVotes = table[DerivativeBuyerVote]
-    implicit val derivativeSellerVotes = table[DerivativeSellerVote]
+    implicit val dbsaCon = DerivativeBuyerSetAside.apply _
+    implicit val dssaCon = DerivativeSellerSetAside.apply _
+    implicit val dbvCon = DerivativeBuyerVote.apply _
+    implicit val dsvCon = DerivativeSellerVote.apply _
+    
+    implicit val derivativeBuyerSetAsides: Table[DerivativeBuyerSetAside] = table[DerivativeBuyerSetAside]
+    implicit val derivativeSellerSetAsides: Table[DerivativeSellerSetAside] = table[DerivativeSellerSetAside]
+    implicit val derivativeBuyerVotes: Table[DerivativeBuyerVote] = table[DerivativeBuyerVote]
+    implicit val derivativeSellerVotes: Table[DerivativeSellerVote] = table[DerivativeSellerVote]
+    
+    abstract override def tables = (derivativeBuyerSetAsides :: derivativeSellerSetAsides ::
+        derivativeBuyerVotes :: derivativeSellerVotes :: super.tables)
     
     case class DerivativeBuyerSetAside(
             id:         Key = nextID,
@@ -104,13 +113,13 @@ trait VotingSchema {
             
         def asVotable: Option[(DerivativeBuyerSetAside,DerivativeSellerSetAside)] =
             action match {
-                case Accepted(_, _, _, _, b, s) => Some((b, s))
-                case Won(_, _, _, b, s)         => Some((b, s))
+                case Accepted(_, _, _, _, b, s) => Some((b.extract, s.extract))
+                case Won(_, _, _, b, s)         => Some((b.extract, s.extract))
                 case _  => None
             }
         
-        def buyerVotes  = derivativeBuyerVotes  filter (_.event ~~ this)
-        def sellerVotes = derivativeSellerVotes filter (_.event ~~ this)
+        def buyerVotes  = derivativeBuyerVotes  where ('event ~=~ this) toList
+        def sellerVotes = derivativeSellerVotes where ('event ~=~ this) toList
         
         def buyerTally = buyerVotes.length
         def sellerTally = sellerVotes.length
