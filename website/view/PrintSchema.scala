@@ -17,7 +17,7 @@ object PrintSchema
     import model.schema._
     
     def render = readDB {
-        <pre>{schemaDDL}</pre>
+        <pre>We have not this</pre>
     }
 }
 

@@ -1,14 +1,20 @@
 
 package model
 
-trait AutoTradeSchema {
+import spser._
+
+trait AutoTradeSchema extends Schema {
     self: DBMagic with UserSchema =>
     
-    implicit val autoTrades = table[AutoTrade]
+    implicit val atCon = AutoTrade.apply _
+        
+    implicit val autoTrades: Table[AutoTrade] = table[AutoTrade]
+    
+    abstract override def tables = autoTrades :: super.tables
     
     case class AutoTrade(
             id:    Key = nextID,
-            owner: Portfolio,
+            owner: Link[Portfolio],
             title: String,
             code:  String
         )
@@ -20,7 +26,7 @@ trait AutoTradeSchema {
     
         def userMakeNewAutoTrade() = editDB(makeNewAutoTrade)
         
-        def myAutoTrades = autoTrades filter (_.owner~~this) toList
+        def myAutoTrades = autoTrades where ('owner ~=~ this) toList
         
         private[model] def makeNewAutoTrade =
             AutoTrade(owner=this, title="", code="").insert

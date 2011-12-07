@@ -5,6 +5,8 @@ import java.math.{MathContext,RoundingMode}
 import org.squeryl
 import squeryl.customtypes.{BigDecimalField,IntField}
 import net.liftweb.common.Logger
+import model.spser._
+import net.liftweb.json._
 
 package object model {
 //
@@ -28,6 +30,34 @@ implicit def bigDecimalOps(b: BigDecimal) = new {
     
     def evenCents: BigDecimal =
         round(2, RoundingMode.FLOOR)
+}
+
+implicit def sqlDollars: SQLType[Dollars] = new SQLType[Dollars] {
+    type CT = String
+    val typeName = "VARCHAR"
+    def encode(d: Dollars) = d.dollars.toString
+    def decode(b: String) = Dollars(b)
+}
+
+implicit def sqlShares: SQLType[Shares] = new SQLType[Shares] {
+    type CT = String
+    val typeName = "VARCHAR"
+    def encode(d: Shares) = d.shares.toString
+    def decode(b: String) = Shares(b)
+}
+
+implicit def sqlPrice: SQLType[Price] = new SQLType[Price] {
+    type CT = String
+    val typeName = "VARCHAR"
+    def encode(d: Price) = d.price.toString
+    def decode(b: String) = Price(b)
+}
+
+implicit def sqlScale: SQLType[Scale] = new SQLType[Scale] {
+    type CT = String
+    val typeName = "VARCHAR"
+    def encode(d: Scale) = d.scale.toString
+    def decode(b: String) = Scale(b)
 }
 
 //

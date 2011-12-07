@@ -16,6 +16,11 @@ object insertTestData {
 //
 
 def apply() {
+    /*
+    readDB {
+        create_!
+    }
+    
     val ellburU = (User userEnsure "ellbur_k_a")
     val pitfailU = (User userEnsure "pitfail")
     
@@ -23,7 +28,7 @@ def apply() {
     val pitfail = pitfailU.lastPortfolio
     
     val deriv = Derivative(SecStock("MSFT", Shares(30))::Nil,
-        DateTime.now.plusDays(7), CondAlways, true)
+        DateTime.now.plusDays(7), CondAlways(), true)
     
     val offer = pitfail.userOfferDerivativeTo(ellbur, deriv, Dollars(1000))
     
@@ -66,6 +71,7 @@ def apply() {
     
     systemRecalculateRankings()
     systemCheckForDividends()
+    */
 }
 
 }

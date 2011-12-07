@@ -18,8 +18,8 @@ object PeriodicPortfolioEvaluator extends Loggable {
         }
     }
 
-    def poll() =
-        schema.portfolios map {
+    def poll() = readDB {
+        schema.portfolios.toList map {
             portfolio => editDB {
                 import org.scala_tools.time.Imports._
 
@@ -30,6 +30,7 @@ object PeriodicPortfolioEvaluator extends Loggable {
                 ).insert
             }
         }
+    }
 }
 
 object StockPriceSource extends CachedStockDatabase(

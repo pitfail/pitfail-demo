@@ -4,12 +4,17 @@ package model
 // Joda time
 import org.joda.time.DateTime
 import scalaz.Scalaz._
+import spser._
 
-trait DividendSchema {
+trait DividendSchema extends Schema {
     schema: DBMagic with UserSchema with StockSchema
         with SchemaErrors with NewsSchema =>
     
-    implicit val dividendPayments = table[DividendPayment]
+    implicit val dpCon = DividendPayment.apply _
+            
+    implicit val dividendPayments: Table[DividendPayment] = table[DividendPayment]
+    
+    abstract override def tables = dividendPayments :: super.tables
             
     // Record when dividends are payed out so that we
     // can inform the user
@@ -28,7 +33,7 @@ trait DividendSchema {
         {
             val now = new DateTime
             
-            stockAssets map { asset =>
+            stockAssets.toList map { asset =>
                 val dividends = Stocks.recentDividends(asset.ticker)
                 val newDividends = dividends filter ( d =>
                        (d.date isAfter asset.lastDividendDate)

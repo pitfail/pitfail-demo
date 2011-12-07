@@ -8,11 +8,16 @@ import org.joda.time.Duration
 
 import scala.collection.JavaConversions._
 import scalaz.Scalaz._
+import spser._
 
-trait StockSchema {
+trait StockSchema extends Schema {
     schema: UserSchema with DBMagic with SchemaErrors with NewsSchema =>
     
+    implicit val saCon = StockAsset.apply _
+        
     implicit val stockAssets: Table[StockAsset] = table[StockAsset]
+    
+    abstract override def tables = stockAssets :: super.tables
     
     // Model Tables
     
@@ -56,7 +61,7 @@ trait StockSchema {
     trait PortfolioWithStocks {
         self: Portfolio =>
         
-        def myStockAssets = stockAssets filter (_.owner ~~ self) toList
+        def myStockAssets = stockAssets where ('owner ~=~ self) toList
         
         def myStockAssetsGrouped: Seq[GroupedStockAsset] =
             myStockAssets groupBy (_.ticker) map { case (ticker, assets) =>
@@ -75,8 +80,11 @@ trait StockSchema {
         // Java interop
         def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
+        def myAssetsForTicker(ticker: String) = (stockAssets
+            where ('owner ~=~ self) where ('ticker ~=~ ticker)).toList
+        
         def howManyShares(ticker: String) = readDB {
-            val s = (myStockAssets filter (_.ticker==ticker) map (_.shares.shares)).sum
+            val s = (myAssetsForTicker(ticker) map (_.shares.shares)).sum
             Shares(s)
         }
         
@@ -143,7 +151,7 @@ trait StockSchema {
         private[model] def sellStock
                 (ticker: String, dollars: Dollars, shares: Shares, price: Price) =
         {
-            val allAssets = myStockAssets filter (_.ticker==ticker) sortBy (_.shares.shares)
+            val allAssets = myAssetsForTicker(ticker) sortBy (_.shares.shares)
             
             def processAssets(soFar: Shares, assets: List[StockAsset]): Transaction[Unit] = {
                 assets match {
@@ -178,7 +186,7 @@ trait StockSchema {
         
         // Sell all of a single stock
         private[model] def sellAll(ticker: String): Transaction[Unit] = {
-            val assets = myStockAssets filter (_.ticker==ticker)
+            val assets = myAssetsForTicker(ticker)
             
             val delete = (assets map (_.delete)).sequence
             val totalShares = Shares((assets map (_.shares.shares)).sum)

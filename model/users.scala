@@ -2,18 +2,29 @@
 package model
 
 import org.joda.time.DateTime
+import spser._
 
-trait UserSchema {
-    self: StockSchema
-        with DerivativeSchema with AuctionSchema with CommentSchema
+trait UserSchema extends Schema {
+    self: StockSchema with DerivativeSchema with AuctionSchema with CommentSchema
         with DBMagic with SchemaErrors with VotingSchema with AutoTradeSchema =>
 
-    implicit val users            = table[User]
-    implicit val portfolios       = table[Portfolio]
-    implicit val ownerships       = table[Ownership]
-    implicit val portfolioInvites = table[PortfolioInvite]
-    implicit val portfolioValues  = table[PortfolioValue]
-    implicit val leagues	  = table[League]
+    implicit val uCon = User.apply _
+    implicit val pCon = Portfolio.apply _
+    implicit val oCon = Ownership.apply _
+    implicit val piCon = PortfolioInvite.apply _
+    implicit val pvCon = PortfolioValue.apply _
+    implicit val lCon = League.apply _
+            
+    implicit val users: Table[User] = table[User]
+    implicit val portfolios: Table[Portfolio] = table[Portfolio]
+    implicit val ownerships: Table[Ownership] = table[Ownership]
+    implicit val portfolioInvites: Table[PortfolioInvite] = table[PortfolioInvite]
+    implicit val portfolioValues: Table[PortfolioValue] = table[PortfolioValue]
+    implicit val leagues: Table[League] = table[League]
+    
+    abstract override def tables = (
+           users :: portfolios :: ownerships :: portfolioInvites
+        :: portfolioValues :: leagues :: super.tables )
     
     // Model tables
 
@@ -27,12 +38,12 @@ trait UserSchema {
         with UserWithComments
 
     case class Portfolio(
-            id:    Key = nextID,
+            id:     Key = nextID,
             league: Link[League],
-            name:  String,
-            cash:  Dollars,
-            loan:  Dollars,
-            rank:  Int
+            name:   String,
+            cash:   Dollars,
+            loan:   Dollars,
+            rank:   Int
         )
         extends KL
         with PortfolioOps
@@ -45,28 +56,28 @@ trait UserSchema {
     case class PortfolioValue(
             id:        Key = nextID,
             dateTime:  DateTime,
-            portfolio: Portfolio,
+            portfolio: Link[Portfolio],
             dollars:   Dollars
         )
         extends KL
         
     case class Ownership(
             id:        Key = nextID,
-            user:      User,
-            portfolio: Portfolio
+            user:      Link[User],
+            portfolio: Link[Portfolio]
         )
         extends KL
         
     case class PortfolioInvite(
             id:   Key = nextID,
-            from: Portfolio,
-            to:   User
+            from: Link[Portfolio],
+            to:   Link[User]
         )
         extends KL
 
     case class League(
-            id: Key = nextID,
-            name: String,
+            id:           Key = nextID,
+            name:         String,
             startingCash: Dollars
         )
         extends KL
@@ -77,20 +88,19 @@ trait UserSchema {
         self: User =>
         
         def myPortfolios: List[Portfolio] = readDB {
-            ownerships filter (_.user ~~ this) map (_.portfolio) toList
+            (ownerships where ('user ~=~ this)).toList map (_.portfolio.extract) toList
         }
         
         def userCreatePortfolio(name: String): Portfolio = editDB(createPortfolio(name))
         
         def portfolioByName(name: String) = readDB (
-            (ownerships filter (_.user ~~ this) map (_.portfolio)
-                filter (_.name == name)).headOption getOrElse (throw NoSuchPortfolio)
+            (myPortfolios filter (_.name == name)).headOption getOrElse (throw NoSuchPortfolio)
         )
         
         def userSwitchPortfolio(port: Portfolio) = editDB(switchPortfolio(port))
         
         def myPortfolioInvites: List[PortfolioInvite] = readDB {
-            portfolioInvites filter (_.to ~~ this) toList
+            portfolioInvites where ('to ~=~ this) toList
         }
         
         def userAcceptInvite(invite: PortfolioInvite) = editDB(acceptInvite(invite))
@@ -98,7 +108,7 @@ trait UserSchema {
         def userDeclineInvite(invite: PortfolioInvite) = editDB(declineInvite(invite))
         
         private[model] def createPortfolio(name: String) = {
-            if (portfolios exists (_.name == name)) throw NameInUse
+            if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
 
             val league = League.default
             val cash = league.startingCash
@@ -126,8 +136,8 @@ trait UserSchema {
     }
     
     object User {
-        def byName(name: String) = {
-            val u = (users filter (_.username == name)).headOption
+        def byName(name: String) = readDB {
+            val u = (users where ('username ~=~ name)).headOption
             u getOrElse (throw NoSuchUser)
         }
         
@@ -172,19 +182,18 @@ trait UserSchema {
             portfolios lookup id getOrElse (throw NoSuchPortfolio)
         
         def byName(name: String) : Portfolio =
-            (portfolios filter (_.name==name)).headOption getOrElse {
+            (portfolios where ('name ~=~ name)).headOption getOrElse {
                 throw NoSuchPortfolio
             }
 
-        def byLeague(league: League) = portfolios filter (_.league.id==league.id)
-
+        def byLeague(league: League) = portfolios where ('league ~=~ league) toList
     }
 
     object PortfolioValues {
         def history(portfolio: Portfolio, begin: DateTime, end: DateTime) = readDB {
             import org.scala_tools.time.Imports._
 
-            portfolioValues filter { pv =>
+            portfolioValues.toList filter { pv =>
                 portfolio~~pv.portfolio && begin <= pv.dateTime && pv.dateTime <= end
             } map { pv =>
                 (pv.dateTime, pv.dollars)
@@ -208,7 +217,7 @@ trait UserSchema {
         def userInviteUser(user: User) = editDB(inviteUser(user))
 
         def owners: List[User] = readDB {
-            ownerships filter (_.portfolio~~this) map (_.user) toList
+            (ownerships where ('portfolio ~=~ this)).toList map (_.user.extract)
         }
 
         def isOwnedBy(user: User): Boolean = owners exists (_ ~~ user)
@@ -236,8 +245,8 @@ trait UserSchema {
          */
         def default() = leagueEnsure(defaultName)
 
-        def byName(name: String) = (leagues filter (_.name==name)).headOption
-        def byID(id: Key) = leagues lookup id
+        def byName(name: String) = leagues where ('name ~=~ name) headOption
+        def byID(id: Key) = leagues where ('id ~=~ id) headOption
     }
 }
 

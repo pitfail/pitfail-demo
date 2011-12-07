@@ -19,7 +19,7 @@ import model.schema._
 class News extends Refreshable
     with Loggable
 {
-    def registerWith = newsEvents
+    def registerWith = newsHub
     
     def render = (in: NodeSeq) => readDB {
         <ul class="news"> {

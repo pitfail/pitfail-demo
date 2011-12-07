@@ -3,12 +3,19 @@ package model
 
 import org.joda.time.DateTime
 import scalaz.Scalaz._
+import spser._
 
-trait AuctionSchema {
-    schema: UserSchema with DerivativeSchema with SchemaErrors with DBMagic with NewsSchema =>
+trait AuctionSchema extends Schema {
+    schema: UserSchema with DerivativeSchema
+        with SchemaErrors with DBMagic with NewsSchema with VotingSchema =>
     
-    implicit val auctionOffers = table[AuctionOffer]
-    implicit val auctionBids   = table[AuctionBid]
+    implicit val aoCon = AuctionOffer.apply _
+    implicit val abCon = AuctionBid.apply _
+            
+    implicit val auctionOffers: Table[AuctionOffer] = table[AuctionOffer]
+    implicit val auctionBids: Table[AuctionBid] = table[AuctionBid]
+    
+    abstract override def tables = auctionOffers :: auctionBids :: super.tables
     
     // Model tables
     
@@ -36,7 +43,7 @@ trait AuctionSchema {
     trait AuctionOfferOps {
         self: AuctionOffer =>
         
-        def bids: Seq[AuctionBid] = auctionBids filter (_.offer ~~ this) toList
+        def bids: Seq[AuctionBid] = auctionBids where ('offer ~=~ this) toList
         
         def goingPrice =
             if (bids isEmpty) self.price
@@ -78,8 +85,8 @@ trait AuctionSchema {
     trait PortfolioWithAuctions {
         self: Portfolio =>
         
-        def auctionOffers: Seq[AuctionOffer] = schema.auctionOffers filter
-            (_.offerer ~~ this) toList
+        def auctionOffers: Seq[AuctionOffer] = schema.auctionOffers where
+            ('offerer ~=~ this) toList
             
         def userCastBid(auction: AuctionOffer, price: Dollars) = editDB {
             if (price <= auction.goingPrice)
@@ -93,6 +100,6 @@ trait AuctionSchema {
     }
     
     def recentAuctions(n: Int): Seq[AuctionOffer] =
-        auctionOffers sortBy (- _.when.getMillis) take n toList
+        auctionOffers.toList sortBy (- _.when.getMillis) take n toList
 }
 

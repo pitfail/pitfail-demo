@@ -37,7 +37,8 @@ traceLevel in Compile := 0
 
 scalacOptions ++= Seq(
     "-deprecation",
-    "-unchecked"
+    "-unchecked",
+    "-Xexperimental"
 )
 
 // For scalaz
