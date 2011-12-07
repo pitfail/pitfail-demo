@@ -59,16 +59,30 @@ class LeaderPage extends Page with Loggable {
 
         val stuff = ml match {
             case Some(l) =>
-            if (l.name == League.defaultName)
-            <h2>Ranked Portfolios in League "{l.name}"
+            val league_ref = if (l ~~ League.default) {
+                "the Default League"
+            } else {
+                "League " + l.name
+            }
+
+            import stockdata.{HttpQueryService => HQS}
+            val base = Map("count" -> count, "league" -> league_n)
+            val next_link = HQS.buildQuery(Map("start" -> last + 1) + base, "UTF-8")
+            val prev_link = HQS.buildQuery(Map("start" -> start - count) + base, "UTF-8")
+
+            <h2>Ranked Portfolios in {league_ref}
                 {if (start != 0)
-                    <span> ({start} to {last})</span>
+                    Text("(" + start + " to " + last + ")")
                 }
             </h2>
-            <table>
+            <table class="boxy">
                 <tr><th>Rank</th><th>Portfolio</th><th>Cash</th></tr>
                 {n}
             </table>
+            <p>
+                <a href={prev_link} rel="prev">prev</a>
+                <a href={next_link} rel="next">next</a>
+            </p>
             case None =>
             <p>No such league {league_n}</p>
         }
