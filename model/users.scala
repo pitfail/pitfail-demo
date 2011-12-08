@@ -3,6 +3,7 @@ package model
 
 import org.joda.time.DateTime
 import spser._
+import scala.collection.JavaConversions._
 
 trait UserSchema extends Schema {
     self: StockSchema with DerivativeSchema with AuctionSchema with CommentSchema
@@ -81,6 +82,7 @@ trait UserSchema extends Schema {
             startingCash: Dollars
         )
         extends KL
+        with LeagueOps
 
     // Detailed Operations
 
@@ -90,6 +92,11 @@ trait UserSchema extends Schema {
         def myPortfolios: List[Portfolio] = readDB {
             (ownerships where ('user ~=~ this)).toList map (_.portfolio.extract) toList
         }
+        
+        // Java inter-op
+        def getPortfolios: java.util.List[Portfolio] = myPortfolios
+        
+        def getCurrentPortfolio: Portfolio = lastPortfolio
         
         def userCreatePortfolio(name: String): Portfolio = editDB(createPortfolio(name))
         
@@ -207,6 +214,9 @@ trait UserSchema extends Schema {
     trait PortfolioOps {
         self: Portfolio with PortfolioWithStocks with PortfolioWithDerivatives =>
 
+        // Java inter-op
+        def getLeague: League = readDB { league }
+            
         def spotValue: Dollars = (
               cash
             + (myStockAssets map (_.dollars)).foldLeft(Dollars(0))(_+_)
@@ -246,6 +256,15 @@ trait UserSchema extends Schema {
 
         def byName(name: String) = leagues where ('name ~=~ name) headOption
         def byID(id: Key) = leagues where ('id ~=~ id) headOption
+    }
+    
+    trait LeagueOps {
+        self: League =>
+        
+        // Java inter-op
+        def getLeaders(n: Int): java.util.List[Portfolio] = readDB {
+            (portfolios where ('league ~=~ this)).toList sortBy (_.rank) take n
+        }
     }
 }
 

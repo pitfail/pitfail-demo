@@ -27,6 +27,14 @@ object operations
     def getUserPortfolio(username: String): Portfolio = editDB {
         User ensureP username
     }
+    
+    def getUser(username: String): User = editDB {
+        User ensure username
+    }
+    
+    def getDefaultLeague(): League = readDB {
+        League.default
+    }
 }
 
 
