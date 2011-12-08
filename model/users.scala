@@ -15,6 +15,7 @@ trait UserSchema extends Schema {
     implicit val piCon = PortfolioInvite.apply _
     implicit val pvCon = PortfolioValue.apply _
     implicit val lCon = League.apply _
+    implicit val aCon = Administration.apply _
             
     implicit val users: Table[User] = table[User]
     implicit val portfolios: Table[Portfolio] = table[Portfolio]
@@ -22,10 +23,11 @@ trait UserSchema extends Schema {
     implicit val portfolioInvites: Table[PortfolioInvite] = table[PortfolioInvite]
     implicit val portfolioValues: Table[PortfolioValue] = table[PortfolioValue]
     implicit val leagues: Table[League] = table[League]
+    implicit val administrations: Table[Administration] = table[Administration]
     
     abstract override def tables = (
            users :: portfolios :: ownerships :: portfolioInvites
-        :: portfolioValues :: leagues :: super.tables )
+        :: portfolioValues :: leagues :: administrations :: super.tables )
     
     // Model tables
 
@@ -83,6 +85,14 @@ trait UserSchema extends Schema {
         )
         extends KL
         with LeagueOps
+        
+    // Ownership of a league
+    case class Administration(
+            id:     Key = nextID,
+            user:   Link[User],
+            league: Link[League]
+        )
+        extends KL
 
     // Detailed Operations
 
@@ -114,6 +124,15 @@ trait UserSchema extends Schema {
         
         def userDeclineInvite(invite: PortfolioInvite) = editDB(declineInvite(invite))
         
+        def userCreateLeague(name: String, startingCash: Dollars) =
+            editDB(createLeague(name, startingCash))
+        
+        def leaguesIAdminister: List[League] = ((administrations where ('user ~=~ this)).toList
+            map (_.league.extract))
+        
+        def doIAdminister(league: League) = !(administrations where ('user ~=~ this)
+            where ('league ~=~ league)).headOption.isEmpty
+        
         private[model] def createPortfolio(name: String) = {
             if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
 
@@ -140,6 +159,18 @@ trait UserSchema extends Schema {
             
         private [model] def declineInvite(invite: PortfolioInvite) =
             invite.delete
+            
+        private[model] def createLeague(name: String, startingCash: Dollars) = {
+            League byName name match {
+                case Some(_) => throw NameInUse
+                case None =>
+            }
+            for {
+                league <- League(name=name, startingCash=startingCash).insert
+                _ <- Administration(user=this, league=league).insert
+            }
+            yield league
+        }
     }
     
     object User {
@@ -224,6 +255,7 @@ trait UserSchema extends Schema {
         )
 
         def userInviteUser(user: User) = editDB(inviteUser(user))
+        def userInviteUser(name: String) = editDB(inviteUser(name))
 
         def owners: List[User] = readDB {
             (ownerships where ('portfolio ~=~ this)).toList map (_.user.extract)
@@ -233,6 +265,9 @@ trait UserSchema extends Schema {
 
         private[model] def inviteUser(user: User) =
             PortfolioInvite(from=this, to=user).insert
+        
+        private[model] def inviteUser(name: String) =
+            PortfolioInvite(from=this, to=(User byName name)).insert
     }
 
     object League {

@@ -67,6 +67,30 @@ public class LeagueTestServlet extends HttpServlet {
             // Get the "default" league
             UserSchema.League defaultLeague = operations.getDefaultLeague();
             out.printf("Default league is %s\n", defaultLeague.name());
+            
+            // Create a new portfolio (team)
+            try {
+                UserSchema.Portfolio newPort = user.userCreatePortfolio("kmfe");
+                
+                // Invite someone to it
+                try {
+                    newPort.userInviteUser("sonu_pillai");
+                }
+                catch (SchemaErrors$NoSuchUser$ e) {
+                    out.printf("No user named sonu_pillai\n");
+                }
+            }
+            catch (SchemaErrors$NameInUse$ e) {
+                out.printf("Name kmfe is already in use\n");
+            }
+            
+            // Create a new league
+            try {
+                user.userCreateLeague("6203", new Dollars("500000"));
+            }
+            catch (SchemaErrors$NameInUse$ e) {
+                out.printf("Name 6203 is already taken\n");
+            }
         }
         catch (RuntimeException e) {
             e.printStackTrace();
