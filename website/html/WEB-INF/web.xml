@@ -57,6 +57,17 @@ PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
     </servlet-mapping>
 
 
+	<servlet>
+        <servlet-name>LeaderBoard</servlet-name>
+        <servlet-class>servlets.LeaderBoard</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>LeaderBoard</servlet-name>
+        <url-pattern>/servlet/leaderboard</url-pattern>
+    </servlet-mapping>
+
+
 	<filter>
         <filter-name>LiftFilter</filter-name>
         <display-name>Lift Filter</display-name>
