@@ -107,7 +107,15 @@ case class Dollars(dollars: BigDecimal)
     
     def ~/~(price: Price) = Shares(dollars / price.price)
     def /-/(price: Price) = Shares((dollars / price.price).floor)
-    def /(shares: Shares) = Price(dollars/shares.shares)
+    def /(shares: Shares) = Price {
+        try
+            dollars/shares.shares
+        catch {
+            case e: Exception =>
+                new Logger { info("Can't dived %s by %s" format (dollars, shares.shares)) }
+                throw e
+        }
+    }
 
     def compare(other: Dollars) = dollars.compare(other.dollars)
 

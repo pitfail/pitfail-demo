@@ -34,7 +34,11 @@ class SwitchPortfolio extends Page with Loggable {
             myPage()
         }
         catch {
-            case NotLoggedIn => S.redirectTo("/")
+            case NotLoggedIn     => S.redirectTo("/")
+            case NoSuchPortfolio => 
+                <div class="block page-error">
+                    <p>This portfolio does not exist</p>
+                </div>
         }
     }
 }

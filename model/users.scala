@@ -160,12 +160,11 @@ trait UserSchema extends Schema {
         // Create a new user
         // XXX: this duplicates logic in createPortfolio
         private[model] def newUserAll(name: String) = {
-
             val league = League.default
             val cash = league.startingCash
             for {
                 port  <- Portfolio(name=name, league=League.default, cash=cash, loan=cash, rank=0).insert
-                user  <- User(username=name, lastPortfolio=port).insert
+                user  <- User(username=name, lastPortfolio=port).insertFor('username ~=~ name)
                 _     <- Ownership(user=user, portfolio=port).insert
             }
             yield (user, port)

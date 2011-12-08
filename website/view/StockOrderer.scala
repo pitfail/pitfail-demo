@@ -93,12 +93,12 @@ class StockOrderer extends Page with Loggable
             
             def main =
                 <p>{useField.main} Keep the order alive, at a limit
-                    of {limitField.main} {limitField.errors}</p>
+                    of ${limitField.main & <input class="blank"/>}/sh {limitField.errors}</p>
         }
 
         lazy val volumeField = new DollarsField("1000") with FieldErrorRender
     
-        lazy val submitBuy = Submit(form, "Buy Shares") { case Order(dollars, limit) =>
+        lazy val submitBuy = Submit(form, "Place Order") { case Order(dollars, limit) =>
             import control.LoginManager._
 
             try {

@@ -18,6 +18,7 @@ def apply(port: Portfolio, currentUser: Option[User], modifiable: Boolean) =
         {stockPlot(port)}
         {stockChart(port, modifiable)}
         {dividendChart(port, modifiable)}
+        {ordersChart(port, modifiable)}
     </div>
 
 //

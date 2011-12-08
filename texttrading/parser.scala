@@ -38,11 +38,11 @@ object parser extends JavaTokenParsers {
 
     lazy val stockAsset = stockShares | stockVolume
     lazy val stockShares = amount ~ (("shares?"r) ~ opt("of")) ~ ticker ^^ {
-        case shares ~ _ ~ ticker => StockShares(ticker, Shares(shares))
+        case shares ~ _ ~ ticker => StockShares(ticker.toUpperCase, Shares(shares))
     }
 
     lazy val stockVolume = dollarAmount ~ (opt("dollars?"r) ~ "of") ~ ticker ^^ {
-        case dollars ~ _ ~ ticker => StockDollars(ticker, Dollars(dollars))
+        case dollars ~ _ ~ ticker => StockDollars(ticker.toUpperCase, Dollars(dollars))
     }
 
     lazy val showPortfolio =

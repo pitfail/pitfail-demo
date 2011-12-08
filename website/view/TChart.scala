@@ -34,7 +34,7 @@ var showHidden = false
 lazy val refreshable = Refreshable(doRender)
 def render = refreshable.render
     
-def doRender: NodeSeq = {
+def doRender: NodeSeq = readDB {
     val myStockAssets           = port.myStockAssets
     val myCashAmount            = port.cash
     val myMarginAmount          = port.margin

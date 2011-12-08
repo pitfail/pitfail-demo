@@ -214,6 +214,10 @@ form.block {
     margin: 0;
 }
 
+.page-error {
+    background: #dd8;
+}
+
 .buttons {
     /*text-align: center;*/
     padding-left: 2em;
