@@ -347,6 +347,29 @@ trait StockSchema extends Schema {
             }
         }
         
+        private[model] def buyAsMuchAsYouCan(ticker: String, shares: Shares, limit: Price) = {
+            val sellers = sellersFor(ticker) filter (_.price <= limit)
+            val availableShares = (sellers map (_.available)).summ
+            
+            if (availableShares >= shares)
+                for {
+                    _ <- buyStock(ticker, shares)
+                }
+                yield Shares(0)
+            else {
+                val buy =
+                    if (availableShares > Shares(0)) buyStock(ticker, availableShares)
+                    else Transaction(())
+                    
+                val remaining = shares - availableShares
+                
+                for {
+                    _ <- buy
+                }
+                yield shares - availableShares
+            }
+        }
+        
         private[model] def makeSellLimitOrder(ticker: String, shares: Shares, limit: Price) = {
             val asset = haveTicker(ticker) match {
                 case None => throw DontOwnStock(ticker)
@@ -386,6 +409,17 @@ trait StockSchema extends Schema {
                     notifiedPrice=Price(0), lastDividendDate=new DateTime, totalDividends=Dollars(0)).insert
                 case Some(asset) =>
                     asset update (a => a copy (shares=a.shares+shares))
+            }
+        }
+        
+        private[model] def debitShares(ticker: String, shares: Shares) = {
+            haveTicker(ticker) match {
+                case None =>
+                    // Let's just pretend this never happened
+                    Transaction(())
+                case Some(asset) =>
+                    if (shares >= asset.shares) asset.delete
+                    else asset update (a => a copy (shares=a.shares-shares))
             }
         }
     }

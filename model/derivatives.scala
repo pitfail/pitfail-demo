@@ -5,12 +5,13 @@ package model
 import org.joda.time.DateTime
 import formats._
 import spser._
+import scalaz.Scalaz._
 
 import net.liftweb.common.Loggable
 
 trait DerivativeSchema extends Schema {
     schema: UserSchema with DBMagic with NewsSchema
-        with AuctionSchema with SchemaErrors with VotingSchema =>
+        with AuctionSchema with SchemaErrors with VotingSchema with StockSchema =>
     
     implicit val daCon = DerivativeAsset.apply _
     implicit val dlCon = DerivativeLiability.apply _
@@ -67,9 +68,125 @@ trait DerivativeSchema extends Schema {
         
         // When a user wants to exercise a derivative early.
         // Not all derivatives can be exercised early.
-        def userExecuteManually() { sys.error("Not implemented") }
+        def userExecuteManually() { editDB(executeManually) }
+        def systemExecuteOnSchedule() { editDB(executeOnSchedule) }
             
         def spotValue: Dollars = derivative.spotValue * scale
+        
+        private[model] def executeManually =
+            if (derivative.early) execute
+            else throw NotExecutable
+            
+        private[model] def executeOnSchedule = execute
+        
+        private[model] def execute = {
+            // This part is really hellish
+            val peer: DerivativeLiability = this.peer
+            val deriv = peer.derivative * this.scale
+            
+            // First we must check the condition. Luckily that seems
+            // to have survived the model overhaul
+            for {
+                _ <- {
+                    if (deriv.condition.isTrue) actuallyExecute(deriv)
+                    else Transaction(())
+                }
+                _ <- this.delete
+                _ <- {
+                    if (peer.remaining <= scale) peer.delete
+                    else peer update (l => l copy (remaining=l.remaining-scale))
+                }
+            }
+            yield ()
+        }
+        
+        private[model] def actuallyExecute(deriv: Derivative) = {
+            val seller: Portfolio = peer.owner
+            
+            val dollars = deriv.securities collect {
+                case SecDollar(dollars) => dollars
+            } summ
+            
+            val stocks = deriv.securities collect {
+                case x: SecStock => x
+            }
+            
+            val derivatives = deriv.securities collect {
+                case x: SecDerivative => x
+            }
+            
+            for {
+                _ <- owner.transferCash(seller, dollars)
+                _ <- (stocks map (s => owner.transferStock(seller, s.ticker, s.shares))).sequence
+                _ <- (derivatives map (s => owner.transferDerivative(seller, s.name, s.scale))).sequence
+            }
+            yield ()
+        }
+    }
+    
+    trait ExerciseOfDoom {
+        self: Portfolio with PortfolioWithDerivatives =>
+            
+        // --------------------------------------------------
+        // The direction switches
+            
+        private[model] def transferCash(seller: Portfolio, dollars: Dollars) = {
+            logger.info("Transfering %s" format dollars)
+            if (dollars.isNegative) seller.takeCash(this, -dollars)
+            else takeCash(seller, dollars)
+        }
+        
+        private[model] def transferStock(seller: Portfolio, ticker: String, shares: Shares) = {
+            if (shares.isNegative) seller.takeStock(this, ticker, -shares)
+            else takeStock(seller, ticker, shares)
+        }
+        
+        private[model] def transferDerivative(seller: Portfolio, name: String, scale: Scale) = {
+            if (scale.isNegative) seller.takeDerivative(this, name, -scale)
+            else takeDerivative(seller, name, scale)
+        }
+        
+        // --------------------------------------------------
+        // Moving stuff around
+        
+        private[model] def takeCash(seller: Portfolio, dollars: Dollars) = {
+            // TODO: This is obviously wrong.
+            val actual = if (dollars > seller.cash) seller.cash else dollars
+            
+            for {
+                _ <- this   update (p => p copy (cash=p.cash+actual))
+                _ <- seller update (p => p copy (cash=p.cash-actual))
+            }
+            yield ()
+        }
+        
+        private[model] def takeStock(seller: Portfolio, ticker: String, shares: Shares) = {
+            val have = seller.howManyShares(ticker)
+            val remaining = shares - have
+            
+            val price = Stocks.lastTradePrice(ticker)
+            val premium = price * Scale("1.15")
+            
+            // Hack
+            val stillRemaining = editDB {
+                seller.buyAsMuchAsYouCan(ticker, remaining, premium)
+            }
+            // Pay the rest in cash
+            val cashToMove = stillRemaining * premium
+            
+            for {
+                _ <- takeCash(seller, cashToMove)
+                _ <- creditShares(ticker, shares-stillRemaining)
+                _ <- seller.debitShares(ticker, shares-stillRemaining)
+            }
+            yield ()
+        }
+        
+        private[model] def takeDerivative(seller: Portfolio, name: String, scale: Scale) = {
+            // Until the user can actually create derivatives that refer to derivatives,
+            // I'm not implementing this
+            sys.error("Not implemented"): Transaction[Unit]
+        }
     }
     
     object DerivativeLiability {
@@ -77,7 +194,7 @@ trait DerivativeSchema extends Schema {
             getOrElse(throw NoSuchDerivativeLiability) )
     }
     
-    trait PortfolioWithDerivatives {
+    trait PortfolioWithDerivatives extends ExerciseOfDoom {
         self: Portfolio =>
         
         def myDerivativeAssets = derivativeAssets where ('owner ~=~ this) toList
