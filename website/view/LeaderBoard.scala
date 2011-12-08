@@ -52,8 +52,8 @@ class LeaderPage extends Page with Loggable {
         } yield {
             <tr>
                 <td>{p.rank}</td>
-                <td>{p.name}</td>
-                <td>{p.cash.$}</td>
+                <td>{PortfolioLink(p)}</td>
+                <td>{p.spotValue.$}</td>
             </tr>
         }
 

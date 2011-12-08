@@ -8,7 +8,7 @@ import net.liftweb.json._
 
 package object spser {
 //
-    
+
 sealed trait HProd
 case class HTimes[+H,+T<:HProd](head: H, tail: T) extends HProd
 case class HOne() extends HProd

@@ -39,21 +39,30 @@ class StockSeller extends Loggable {
         lazy val sellForm: Form[Order] = Form(
             Order,
             (
-                dollarsField
+                dollarsField,
+                limitField
             ),
-            <p>Sell {dollarsField.main}$ {dollarsField.errors}
+            <p>Sell ${dollarsField.main & <input class="blank"/>} {dollarsField.errors}
                 {submit.main} {submit.errors}
             </p>
+            <p>{limitField.main}</p>
         )
         
         lazy val dollarsField = DollarsField(defaultDollars.no$)
+        lazy val limitField = LimitField()
         
-        lazy val submit = Submit(sellForm, "Sell") { case Order(dollars) =>
+        lazy val submit = Submit(sellForm, "Sell") { case Order(dollars, limit) =>
             import control.LoginManager._
             import control.PortfolioSwitcher._
             
             try {
-                currentPortfolio.userSellStock(ticker, dollars)
+                limit match {
+                    case Some(price) =>
+                        currentPortfolio.userMakeSellLimitOrder(
+                            ticker, dollars/-/Stocks.lastTradePrice(ticker), price)
+                    case None =>
+                        currentPortfolio.userSellStock(ticker, dollars)
+                }
                 state = Idle
                 refreshable.refresh
             }
@@ -86,7 +95,7 @@ object StockSeller {
     case object Idle extends State
     case class Selling(ticker: String) extends State
 
-    case class Order(dollars: Dollars)
+    case class Order(dollars: Dollars, limit: Option[Price])
 
 }
 
