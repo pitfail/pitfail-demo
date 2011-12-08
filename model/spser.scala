@@ -247,7 +247,6 @@ trait Schema {
         def lookup(id: String) = this where ('id ~=~ id) headOption
         
         private def prepareStatement(s: String) = {
-            logger.info(s)
             con.prepareStatement(s)
         }
         

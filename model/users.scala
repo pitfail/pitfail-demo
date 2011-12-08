@@ -3,6 +3,7 @@ package model
 
 import org.joda.time.DateTime
 import spser._
+import scala.collection.JavaConversions._
 
 trait UserSchema extends Schema {
     self: StockSchema with DerivativeSchema with AuctionSchema with CommentSchema
@@ -14,6 +15,7 @@ trait UserSchema extends Schema {
     implicit val piCon = PortfolioInvite.apply _
     implicit val pvCon = PortfolioValue.apply _
     implicit val lCon = League.apply _
+    implicit val aCon = Administration.apply _
             
     implicit val users: Table[User] = table[User]
     implicit val portfolios: Table[Portfolio] = table[Portfolio]
@@ -21,10 +23,11 @@ trait UserSchema extends Schema {
     implicit val portfolioInvites: Table[PortfolioInvite] = table[PortfolioInvite]
     implicit val portfolioValues: Table[PortfolioValue] = table[PortfolioValue]
     implicit val leagues: Table[League] = table[League]
+    implicit val administrations: Table[Administration] = table[Administration]
     
     abstract override def tables = (
            users :: portfolios :: ownerships :: portfolioInvites
-        :: portfolioValues :: leagues :: super.tables )
+        :: portfolioValues :: leagues :: administrations :: super.tables )
     
     // Model tables
 
@@ -81,6 +84,15 @@ trait UserSchema extends Schema {
             startingCash: Dollars
         )
         extends KL
+        with LeagueOps
+        
+    // Ownership of a league
+    case class Administration(
+            id:     Key = nextID,
+            user:   Link[User],
+            league: Link[League]
+        )
+        extends KL
 
     // Detailed Operations
 
@@ -90,6 +102,11 @@ trait UserSchema extends Schema {
         def myPortfolios: List[Portfolio] = readDB {
             (ownerships where ('user ~=~ this)).toList map (_.portfolio.extract) toList
         }
+        
+        // Java inter-op
+        def getPortfolios: java.util.List[Portfolio] = myPortfolios
+        
+        def getCurrentPortfolio: Portfolio = lastPortfolio
         
         def userCreatePortfolio(name: String): Portfolio = editDB(createPortfolio(name))
         
@@ -106,6 +123,15 @@ trait UserSchema extends Schema {
         def userAcceptInvite(invite: PortfolioInvite) = editDB(acceptInvite(invite))
         
         def userDeclineInvite(invite: PortfolioInvite) = editDB(declineInvite(invite))
+        
+        def userCreateLeague(name: String, startingCash: Dollars) =
+            editDB(createLeague(name, startingCash))
+        
+        def leaguesIAdminister: List[League] = ((administrations where ('user ~=~ this)).toList
+            map (_.league.extract))
+        
+        def doIAdminister(league: League) = !(administrations where ('user ~=~ this)
+            where ('league ~=~ league)).headOption.isEmpty
         
         private[model] def createPortfolio(name: String) = {
             if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
@@ -133,6 +159,18 @@ trait UserSchema extends Schema {
             
         private [model] def declineInvite(invite: PortfolioInvite) =
             invite.delete
+            
+        private[model] def createLeague(name: String, startingCash: Dollars) = {
+            League byName name match {
+                case Some(_) => throw NameInUse
+                case None =>
+            }
+            for {
+                league <- League(name=name, startingCash=startingCash).insert
+                _ <- Administration(user=this, league=league).insert
+            }
+            yield league
+        }
     }
     
     object User {
@@ -207,6 +245,9 @@ trait UserSchema extends Schema {
     trait PortfolioOps {
         self: Portfolio with PortfolioWithStocks with PortfolioWithDerivatives =>
 
+        // Java inter-op
+        def getLeague: League = readDB { league }
+            
         def spotValue: Dollars = (
               cash
             + (myStockAssets map (_.dollars)).foldLeft(Dollars(0))(_+_)
@@ -214,6 +255,7 @@ trait UserSchema extends Schema {
         )
 
         def userInviteUser(user: User) = editDB(inviteUser(user))
+        def userInviteUser(name: String) = editDB(inviteUser(name))
 
         def owners: List[User] = readDB {
             (ownerships where ('portfolio ~=~ this)).toList map (_.user.extract)
@@ -223,6 +265,9 @@ trait UserSchema extends Schema {
 
         private[model] def inviteUser(user: User) =
             PortfolioInvite(from=this, to=user).insert
+        
+        private[model] def inviteUser(name: String) =
+            PortfolioInvite(from=this, to=(User byName name)).insert
     }
 
     object League {
@@ -246,6 +291,15 @@ trait UserSchema extends Schema {
 
         def byName(name: String) = leagues where ('name ~=~ name) headOption
         def byID(id: Key) = leagues where ('id ~=~ id) headOption
+    }
+    
+    trait LeagueOps {
+        self: League =>
+        
+        // Java inter-op
+        def getLeaders(n: Int): java.util.List[Portfolio] = readDB {
+            (portfolios where ('league ~=~ this)).toList sortBy (_.rank) take n
+        }
     }
 }
 
