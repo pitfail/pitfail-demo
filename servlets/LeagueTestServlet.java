@@ -39,7 +39,7 @@ public class LeagueTestServlet extends HttpServlet {
             PrintWriter out = response.getWriter();
             
             // Get a user
-            UserSchema.User user = operations.getUser("ellbur_k_a");
+            UserSchema.User user = operations.getUser("sonu_pillai");
             
             // List the portfolios (teams) a user belongs to
             List<UserSchema.Portfolio> portfolios = user.getPortfolios();

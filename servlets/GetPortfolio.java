@@ -16,10 +16,20 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import scala.math.*;
 
+import model.schema;
+import static model.schema.*;
 import model.*;
+import scala.collection.*;
+import static scala.collection.JavaConversions.*;
+import java.util.*;
 import scala.math.BigDecimal;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.sql.DriverManager;
+import scala.math.*;
+import com.google.gson.*;
+
 
 /**
  * <code>HttpServlet</code> responsible for buying stocks.
@@ -38,7 +48,6 @@ public class GetPortfolio extends HttpServlet {
 		PrintWriter out = response.getWriter();			
 		
 		String userId = request.getParameter("userid");
-		System.out.println("###############"+userId+"##################");
 		BigDecimal shares;
 		BigDecimal price;
 		BigDecimal dollars;
@@ -56,9 +65,20 @@ public class GetPortfolio extends HttpServlet {
                         purchasePrice = asset.averagePurchasePrice().price();
 						myportfolio = myportfolio.concat(","+asset.ticker()+":"+dollars.doubleValue());
 				}
+				UserSchema.User user = operations.getUser(userId);
+				//Get the current portfolio
+				UserSchema.Portfolio current = user.getCurrentPortfolio();
+				//Get the league the portfolio belongs to
+				UserSchema.League league = current.getLeague();
+				// Get the 5 highest portfolios for the league
+				myportfolio = myportfolio.concat("-");
+				List<UserSchema.Portfolio> leaders = league.getLeaders(5);
+				for(UserSchema.Portfolio p : leaders){
+					myportfolio = myportfolio.concat(p.rank()+":"+p.name()+",");
+					System.out.printf("#%d %s\n", p.rank(), p.name());
+				}
 				out.printf("%s",myportfolio);
 
-				System.out.println("*********************************************"+myportfolio);
 
 
 
