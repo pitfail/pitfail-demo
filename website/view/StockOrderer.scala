@@ -80,22 +80,8 @@ class StockOrderer extends Page with Loggable
             </div>
         )
     
-        lazy val limitField = new Field[Option[Price]] with FieldRender {
-            lazy val useField   = BooleanField()
-            lazy val limitField = PriceField()
-            
-            def produce() = useField.process flatMap { use =>
-                if (use) limitField.process map {p => OK(Some(p))}
-                else Some(OK(None))
-            } getOrElse ChildError
-            
-            def reset() { useField.reset(); limitField.reset() }
-            
-            def main =
-                <p>{useField.main} Keep the order alive, at a limit
-                    of ${limitField.main & <input class="blank"/>}/sh {limitField.errors}</p>
-        }
-
+        lazy val limitField = LimitField()
+    
         lazy val volumeField = new DollarsField("1000") with FieldErrorRender
     
         lazy val submitBuy = Submit(form, "Place Order") { case Order(dollars, limit) =>
