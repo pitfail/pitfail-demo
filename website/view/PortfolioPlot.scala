@@ -11,7 +11,7 @@ import model.schema._
 
 object stockPlot {
 
-def apply(portfolio: Portfolio): NodeSeq = {
+def apply(portfolio: Portfolio): NodeSeq = readDB {
     import scala.math.{ceil,floor}
     import scala.xml.NodeSeq
     import net.liftweb.http.js.JsCmds._

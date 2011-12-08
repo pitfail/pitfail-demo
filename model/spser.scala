@@ -32,8 +32,6 @@ def a[T]: T = sys.error("This got called")
 
 def as[T](a: Any) = a.asInstanceOf[T]
 
-case object Impossible extends RuntimeException
-
 trait SQLType[A] {
     type CT
     val typeName: String
@@ -208,7 +206,7 @@ trait Schema {
     }
     
     private def con = threadLocalCon.get getOrElse {
-        sys.error("Not in a transaction! (Use editDB or readDB)")
+        sys.error("Not in a transaction (use readDB)")
     }
     
     class Table[A](table: SQLTable[A]) extends RefreshHub {
@@ -222,6 +220,17 @@ trait Schema {
             ))
         }
         
+        def createIfNecessary() {
+            inTransaction {
+                try {
+                    headOption
+                }
+                catch { case _: SQLException =>
+                    create_!
+                }
+            }
+        }
+        
         def insert(a: A) = {
             val pre = prepareStatement("insert into `%s` values (%s)" format (table.name,
                 Iterator.fill(table.parammer.length)("?") mkString ","
@@ -233,11 +242,11 @@ trait Schema {
         def where(wh: Where) = Query(wh::Nil)
         
         def toList = Query(Nil).toList
+        def headOption = Query(Nil).headOption
         
         def lookup(id: String) = this where ('id ~=~ id) headOption
         
         private def prepareStatement(s: String) = {
-            logger.info(s)
             con.prepareStatement(s)
         }
         
@@ -246,7 +255,7 @@ trait Schema {
             
             def toList: List[A] = {
                 inTransaction {
-                    val rs = executeQuery
+                    val rs = executeQuery()
                     var rows = List[A]()
                     
                     while (rs.next) rows ::= table.getRow(rs)
@@ -256,7 +265,7 @@ trait Schema {
             
             def headOption: Option[A] = {
                 inTransaction {
-                    val rs = executeQuery
+                    val rs = executeQuery(limit = Some(1))
                     val end =
                         if (rs.next) Some(table.getRow(rs))
                         else None
@@ -301,9 +310,10 @@ trait Schema {
                 pre.executeUpdate
             }
             
-            private def executeQuery: ResultSet = {
+            private def executeQuery(limit: Option[Int]=None): ResultSet = {
+                val limitText = limit map ("limit " + _) getOrElse ""
                 val whereTexts = (wheres map (_.text)) :+ "1"
-                val pre = prepareStatement("select * from `%s` where %s "
+                val pre = prepareStatement("select * from `%s` where %s " + limitText
                     format (table.name, whereTexts mkString " AND ")
                 )
                 val indices = 1 to wheres.length
@@ -319,6 +329,12 @@ trait Schema {
     def table[A](implicit table: SQLTable[A]) = new Table(table)
     
     def create_!() { tables foreach (_.create_!) }
+    
+    def createIfNecessary() { 
+        inTransaction {
+            tables foreach (_.createIfNecessary)
+        }
+    }
 }
 
 trait Backend extends Schema {
@@ -346,13 +362,13 @@ implicit def caseProd1[A<:Product,X1]
     def extract(a: A) = a.productIterator.toList match {
         case x1::Nil =>
             as[X1](x1):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:HOne() =>
             con(x1)
     }
 }
-
 
 implicit def caseProd2[A<:Product,X1,X2]
         (implicit con: (X1,X2) => A) = new Equivalence[A]
@@ -361,6 +377,7 @@ implicit def caseProd2[A<:Product,X1,X2]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::Nil =>
             as[X1](x1):+:as[X2](x2):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:HOne() =>
@@ -375,6 +392,7 @@ implicit def caseProd3[A<:Product,X1,X2,X3]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:HOne() =>
@@ -389,6 +407,7 @@ implicit def caseProd4[A<:Product,X1,X2,X3,X4]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::x4::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:as[X4](x4):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:x4:+:HOne() =>
@@ -403,6 +422,7 @@ implicit def caseProd5[A<:Product,X1,X2,X3,X4,X5]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::x4::x5::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:as[X4](x4):+:as[X5](x5):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:x4:+:x5:+:HOne() =>
@@ -417,6 +437,7 @@ implicit def caseProd6[A<:Product,X1,X2,X3,X4,X5,X6]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::x4::x5::x6::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:as[X4](x4):+:as[X5](x5):+:as[X6](x6):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:x4:+:x5:+:x6:+:HOne() =>
@@ -431,6 +452,7 @@ implicit def caseProd7[A<:Product,X1,X2,X3,X4,X5,X6,X7]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::x4::x5::x6::x7::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:as[X4](x4):+:as[X5](x5):+:as[X6](x6):+:as[X7](x7):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:x4:+:x5:+:x6:+:x7:+:HOne() =>
@@ -445,6 +467,7 @@ implicit def caseProd8[A<:Product,X1,X2,X3,X4,X5,X6,X7,X8]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::x4::x5::x6::x7::x8::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:as[X4](x4):+:as[X5](x5):+:as[X6](x6):+:as[X7](x7):+:as[X8](x8):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:x4:+:x5:+:x6:+:x7:+:x8:+:HOne() =>
@@ -459,6 +482,7 @@ implicit def caseProd9[A<:Product,X1,X2,X3,X4,X5,X6,X7,X8,X9]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::x4::x5::x6::x7::x8::x9::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:as[X4](x4):+:as[X5](x5):+:as[X6](x6):+:as[X7](x7):+:as[X8](x8):+:as[X9](x9):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:x4:+:x5:+:x6:+:x7:+:x8:+:x9:+:HOne() =>
@@ -473,6 +497,7 @@ implicit def caseProd10[A<:Product,X1,X2,X3,X4,X5,X6,X7,X8,X9,X10]
     def extract(a: A) = a.productIterator.toList match {
         case x1::x2::x3::x4::x5::x6::x7::x8::x9::x10::Nil =>
             as[X1](x1):+:as[X2](x2):+:as[X3](x3):+:as[X4](x4):+:as[X5](x5):+:as[X6](x6):+:as[X7](x7):+:as[X8](x8):+:as[X9](x9):+:as[X10](x10):+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case x1:+:x2:+:x3:+:x4:+:x5:+:x6:+:x7:+:x8:+:x9:+:x10:+:HOne() =>
@@ -493,6 +518,7 @@ implicit def caseProd%d[A<:Product,%s]
     def extract(a: A) = a.productIterator.toList match {
         case %s::Nil =>
             %s:+:HOne()
+        case _ => sys.error("Wrong product arity " + a)
     }
     def compose(b: B) = b match {
         case %s:+:HOne() =>
@@ -515,7 +541,7 @@ implicit def caseProd%d[A<:Product,%s]
 
 def generateCaseProds {
     (1 to 10) foreach { n =>
-        println(generateCaseProd(n))
+        print(generateCaseProd(n))
     }
 }
 

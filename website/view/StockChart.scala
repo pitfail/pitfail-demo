@@ -26,13 +26,16 @@ import model.schema._
 object stockChart extends Loggable {
 //
 
-def apply(port: Portfolio, modifiable: Boolean): NodeSeq = {
+def apply(port: Portfolio, modifiable: Boolean): NodeSeq = readDB {
 //
     
+val myStockAssets = port.myStockAssets
+val haveAny = !myStockAssets.isEmpty
+
 lazy val main =
     <div class="block">
         <h2>Stocks</h2>
-        {stockTable}
+        {if (haveAny) stockTable else <p class="none">You have no stocks</p>}
         {seller.render}
     </div>
 
@@ -63,7 +66,7 @@ lazy val tableRows = port.myStockAssets map { asset =>
             <td>{asset.shares.###()}</td>
             <td>{price.$}</td>
             <td>{asset.totalDividends.$}</td>
-            <td>{sellButton}</td>
+            <td>{if (modifiable) sellButton else Nil}</td>
         </tr>
     )
     

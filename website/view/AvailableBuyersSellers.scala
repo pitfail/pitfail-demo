@@ -31,6 +31,7 @@ def apply(ticker: String) = {
     val rows = sellers map { seller =>
         <tr>
             <td>{seller.price.$}</td>
+            <td>{(seller.available*seller.price).$}</td>
             <td>{seller.available.###()}</td>
             <td>{seller.name}</td>
         </tr>
@@ -39,7 +40,8 @@ def apply(ticker: String) = {
     <div class="available-sellers">
         <p>Available sellers for '{ticker}':</p>
         <table>
-            <tr><td>Asking Price</td> <td>Shares</td> <td>Name</td></tr>
+            <tr><td colspan="1"/><td colspan="2">Available</td> <td colspan="1"/></tr>
+            <tr><td>Asking Price</td> <td>Dollars</td> <td>Shares</td> <td>Name</td></tr>
             {rows}
         </table>
     </div>
@@ -56,6 +58,7 @@ def apply(ticker: String) = {
     val rows = buyers map { buyer =>
         <tr>
             <td>{buyer.price.$}</td>
+            <td>{(buyer.available*buyer.price).$}</td>
             <td>{buyer.available.###()}</td>
             <td>{buyer.name}</td>
         </tr>
@@ -64,7 +67,8 @@ def apply(ticker: String) = {
     <div class="available-buyers">
         <p>Available buyers for '{ticker}':</p>
         <table>
-            <tr><td>Bid Price</td> <td>Shares</td> <td>Name</td></tr>
+            <tr><td colspan="1"/><td colspan="2">Available</td> <td colspan="1"/></tr>
+            <tr><td>Bid Price</td> <td>Dollars</td> <td>Shares</td> <td>Name</td></tr>
             {rows}
         </table>
     </div>

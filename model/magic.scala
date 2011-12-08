@@ -111,29 +111,34 @@ trait DBMagic extends Loggable {
     
     case class Insert[R<:KL](rec: R, table: Table[R]) extends EditOp {
         def perform() = {
-            logger.info("Inserting " + rec)
+            table where ('id ~=~ rec.id) delete()
             table insert rec
         }
         val affectedTables = Seq(table)
     }
     
-    case class Update[R<:KL](rec: R, by: R=>R, table: Table[R]) extends EditOp {
+    case class InsertFor[R<:KL](rec: R, loc: Where, table: Table[R]) extends EditOp {
         def perform() = {
-            logger.info("Updating " + rec)
-            val old = (table where ('id ~=~ rec.id)).headOption getOrElse (throw NotFound)
-            logger.info("->Updating " + old)
+            table where loc delete()
+            table where ('id ~=~ rec.id) delete()
+            table insert rec
+        }
+        val affectedTables = table :: Nil
+    }
+    
+    case class Update[R<:KL](id: Key, by: R=>R, table: Table[R]) extends EditOp {
+        def perform() = {
+            val old = (table where ('id ~=~ id)).headOption getOrElse (throw NotFound)
             val next = by(old)
             assert(next.id == old.id, "You changed an object's ID")
-            logger.info("~>Updating " + next)
             
-            table where ('id ~=~ rec.id) set next
+            table where ('id ~=~ id) set next
         }
         val affectedTables = Seq(table)
     }
 
     case class Delete[R<:KL](rec: R, table: Table[R]) extends EditOp {
         def perform() = {
-            logger.info("Deleting " + rec)
             table where ('id ~=~ rec.id) delete()
         }
         val affectedTables = Seq(table)
@@ -141,10 +146,15 @@ trait DBMagic extends Loggable {
 
     implicit def toOps[R<:KL](rec: R) = new {
         def insert(implicit table: Table[R]) = Transaction(rec, Insert(rec, table) :: Nil)
-        def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(rec, by, table) :: Nil)
+        def insertFor(loc: Where)(implicit table: Table[R]) = Transaction(rec, InsertFor(rec, loc, table)::Nil)
+        def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(rec.id, by, table) :: Nil)
         def delete(implicit table: Table[R]) = Transaction(rec, Delete(rec, table) :: Nil)
         def refetch(implicit table: Table[R]) =
             (table where ('id ~=~ rec.id)).headOption getOrElse (throw NotFound)
+    }
+    
+    implicit def linkToOps[R<:KL](link: Link[R]) = new {
+        def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(link.id, by, table)::Nil)
     }
     
     implicit def toOrCreate[R](already: => R) = new {

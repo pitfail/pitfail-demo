@@ -71,18 +71,25 @@ trait StockSchema extends Schema {
             shares:   Shares,
             owner:    Link[Portfolio],
             limit:    Price,
+            // This is margin set aside for buying
             setAside: Dollars
         )
         extends KL
+        with BuyLimitOrderOps
+        with OrderAttrs
         
     case class SellLimitOrder(
             id:     Key = nextID,
             ticker: String,
+            // These shares have been set aside. Credit them
+            // back to the portfolio if the order is cancelled.
             shares: Shares,
             owner:  Link[Portfolio],
             limit:  Price
         )
         extends KL
+        with SellLimitOrderOps
+        with OrderAttrs
         
     // Operations
     
@@ -90,6 +97,14 @@ trait StockSchema extends Schema {
             shares:  Shares,
             dollars: Dollars
         )
+    
+    trait OrderAttrs {
+        val ticker: String
+        val shares: Shares
+        val limit: Price
+        
+        def userCancel()
+    }
     
     trait StockAssetOps {
         self: StockAsset =>
@@ -256,7 +271,7 @@ trait StockSchema extends Schema {
             yield ()
         }
         
-        def processTradeables
+        private def processTradeables
             (tradeables: List[Tradeable], shares: Shares)
             : Transaction[List[Trade]] =
         {
@@ -264,7 +279,7 @@ trait StockSchema extends Schema {
         }
         
         // This is a recursive monadic function I'M SORRY
-        def processTradeables
+        private def processTradeables
             (tradeables: List[Tradeable], sharesRemaining: Shares, trades: List[Trade])
             : Transaction[List[Trade]] =
         {
@@ -332,6 +347,29 @@ trait StockSchema extends Schema {
             }
         }
         
+        private[model] def buyAsMuchAsYouCan(ticker: String, shares: Shares, limit: Price) = {
+            val sellers = sellersFor(ticker) filter (_.price <= limit)
+            val availableShares = (sellers map (_.available)).summ
+            
+            if (availableShares >= shares)
+                for {
+                    _ <- buyStock(ticker, shares)
+                }
+                yield Shares(0)
+            else {
+                val buy =
+                    if (availableShares > Shares(0)) buyStock(ticker, availableShares)
+                    else Transaction(())
+                    
+                val remaining = shares - availableShares
+                
+                for {
+                    _ <- buy
+                }
+                yield shares - availableShares
+            }
+        }
+        
         private[model] def makeSellLimitOrder(ticker: String, shares: Shares, limit: Price) = {
             val asset = haveTicker(ticker) match {
                 case None => throw DontOwnStock(ticker)
@@ -364,6 +402,56 @@ trait StockSchema extends Schema {
                 yield ()
             }
         }
+        
+        private[model] def creditShares(ticker: String, shares: Shares) = {
+            haveTicker(ticker) match {
+                case None => StockAsset(ticker=ticker, shares=shares, owner=this,
+                    notifiedPrice=Price(0), lastDividendDate=new DateTime, totalDividends=Dollars(0)).insert
+                case Some(asset) =>
+                    asset update (a => a copy (shares=a.shares+shares))
+            }
+        }
+        
+        private[model] def debitShares(ticker: String, shares: Shares) = {
+            haveTicker(ticker) match {
+                case None =>
+                    // Let's just pretend this never happened
+                    Transaction(())
+                case Some(asset) =>
+                    if (shares >= asset.shares) asset.delete
+                    else asset update (a => a copy (shares=a.shares-shares))
+            }
+        }
+    }
+    
+    trait BuyLimitOrderOps {
+        self: BuyLimitOrder =>
+        
+        def userCancel() { editDB(this.refetch.cancel) }
+        
+        private[model] def cancel() =
+            for {
+                // Delete the order,
+                _ <- this.delete
+                // Refund their margin
+                _ <- this.owner update (p => p copy (cash=p.cash+setAside))
+            }
+            yield ()
+    }
+    
+    trait SellLimitOrderOps {
+        self: SellLimitOrder =>
+            
+        def userCancel() { editDB(this.refetch.cancel) }
+        
+        private[model] def cancel() =
+            for {
+                // Give the shares back
+                _ <- this.owner creditShares (ticker, shares)
+                // Delete the order
+                _ <- this.delete
+            }
+            yield ()
     }
     
     trait Tradeable {
@@ -371,11 +459,11 @@ trait StockSchema extends Schema {
         val available: Shares
         val price: Price
         
-        def satisfyPartially(shares: Shares): Transaction[Dollars]
-        def satisfyCompletely: Transaction[Dollars]
+        private[model] def satisfyPartially(shares: Shares): Transaction[Dollars]
+        private[model] def satisfyCompletely = satisfyPartially(available)
     }
     
-    class AutomaticTrader(ticker: String, premium: Scale, targetDollars: Dollars,
+    private class AutomaticTrader(ticker: String, premium: Scale, targetDollars: Dollars,
             name: String, buyer: Boolean)
     {
         self =>
@@ -396,21 +484,19 @@ trait StockSchema extends Schema {
                     }
                     val affectedTables = Nil
                 }))
-            
-            def satisfyCompletely = satisfyPartially(available)
         }
     }
     
-    var automaticSellers = MMap[String,List[AutomaticTrader]]()
-    var automaticBuyers  = MMap[String,List[AutomaticTrader]]()
+    private var automaticSellers = MMap[String,List[AutomaticTrader]]()
+    private var automaticBuyers  = MMap[String,List[AutomaticTrader]]()
     
-    def initAutomaticBuyers(ticker: String) = List(
+    private def initAutomaticBuyers(ticker: String) = List(
         new AutomaticTrader(ticker, Scale("1.00"), Dollars(20000), "Des. Market Maker #3", true),
         new AutomaticTrader(ticker, Scale(".97"), Dollars(13000), "Des. Market Maker #7", true),
         new AutomaticTrader(ticker, Scale(".93"), Dollars( 8000), "Des. Market Maker #12", true)
     )
     
-    def initAutomaticSellers(ticker: String) = List(
+    private def initAutomaticSellers(ticker: String) = List(
         new AutomaticTrader(ticker, Scale("1.00"), Dollars(20000), "Des. Market Maker #3", true),
         new AutomaticTrader(ticker, Scale("1.04"), Dollars(13000), "Des. Market Maker #7", true),
         new AutomaticTrader(ticker, Scale("1.07"), Dollars( 8000), "Des. Market Maker #12", true)
@@ -421,21 +507,75 @@ trait StockSchema extends Schema {
             initAutomaticSellers(ticker)
         })
         
-        // TODO: Other sellers
-        auto map (_.makeTradeable) sortBy (_.price)
+        (
+           (auto map (_.makeTradeable)) ++ userSellers(ticker)
+        ) filter (_.available>Shares(0)) sortBy (_.price)
     }
     
     def buyersFor(ticker: String): List[Tradeable] = {
         val auto = automaticBuyers.getOrElseUpdate(ticker,
             initAutomaticBuyers(ticker))
         
-        // TODO: Other buyers
-        auto map (_.makeTradeable) sortBy (- _.price)
+        (
+           (auto map (_.makeTradeable)) ++ userBuyers(ticker)
+        ) filter (_.available>Shares(0)) sortBy (- _.price)
     }
     
-    case class Trade(shares: Shares, dollars: Dollars) {
+    private case class Trade(shares: Shares, dollars: Dollars) {
         val price = dollars / shares
     }
+    
+    private def userSellers(ticker: String): List[Tradeable] =
+        (sellLimitOrders where ('ticker ~=~ ticker)).toList map { order =>
+            new Tradeable {
+                val name      = order.owner.name
+                val available = order.shares
+                val price     = order.limit
+                
+                def satisfyPartially(shares: Shares) = {
+                    val remove =
+                        if (shares >= order.shares) order.delete
+                        else order update (o => o copy (shares=o.shares-shares))
+                        
+                    val dollars = shares*price
+                        
+                    for {
+                        _ <- remove
+                        _ <- order.owner update (p => p copy (cash=p.cash+dollars))
+                    }
+                    yield dollars
+                }
+            }
+        }
+    
+    private def userBuyers(ticker: String): List[Tradeable] =
+        (buyLimitOrders where ('ticker ~=~ ticker)).toList map { order =>
+            new Tradeable {
+                val name      = order.owner.name
+                val available = order.shares
+                val price     = order.limit
+                
+                def satisfyPartially(shares: Shares) = {
+                    val dollars = shares*price
+                    val margin = order.setAside
+                    val nextMargin = margin - dollars
+                    
+                    if (shares >= order.shares)
+                        for {
+                            _ <- order.delete
+                            _ <- order.owner update (p => p copy (cash=p.cash+nextMargin))
+                        }
+                        yield dollars
+                        
+                    else
+                        for {
+                            _ <- order update (o => o copy (shares=o.shares-shares))
+                            _ <- order update (o => o copy (setAside=o.setAside-dollars))
+                        }
+                        yield dollars
+                }
+            }
+        }
 }
 
 object Stocks {
