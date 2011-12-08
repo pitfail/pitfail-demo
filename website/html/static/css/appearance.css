@@ -1,14 +1,6 @@
+
 /* ---------------------------------------------- */
 /* News */
-
-#right-container {
-    color: #D8CBC4;
-    background: #7F6152;
-}
-
-a {
-    color: #FFF;
-}
 
 /* ---------------------------------------------- */
 /* Forms */
@@ -32,19 +24,16 @@ span.input-error span.error {
     left: 110%;
     width: 250px;
     font-size: 10pt;
-    background: #FFEBE8;
     border: 1px solid #DD3C10;
     border-radius: 3px;
 }
 
 .inputError {
     font-size: small;
-    color: #900;
 }
 
 .inputSuccess {
     font-size: small;
-    color: #090;
 }
 
 .choices {
@@ -53,7 +42,6 @@ span.input-error span.error {
 
 .field-annotation {
     font-size: small;
-    color: #999;
     position: absolute;
     left: 0;
     top: 100%;
@@ -67,9 +55,7 @@ span.input-error span.error {
 
 /* General Style */
 html {
-    color: #000;
     font-family: 'Helvetica', 'Arial', sans-serif;
-    background: url('/static/images/woven.png') repeat;
 }
 
 body {
@@ -90,11 +76,8 @@ table.boxy {
     width: 90%;
     padding: 0;
     margin: 1em  5%;
-    background: #EEE;
-    background: #7F6152;
     border: 1px solid #000;
     border-collapse: separate;
-    border-radius: 6px;
 }
 
 table.boxy td {
@@ -113,16 +96,13 @@ table.boxy thead td {
 }
 
 table.boxy thead {
-    color: #FFF;
 }
 
 table.boxy tbody {
-    background: #D8CBC4;
 }
 
 table.boxy tfoot th,
 table.boxy tfoot td {
-    border-top: 1px solid #000;
 }
 
 /* Header */
@@ -136,7 +116,6 @@ h1 {
 h1 a {
     font-style: normal;
     font-weight: bold;
-    color: #FFF;
     text-decoration: none;
 }
 
@@ -144,7 +123,6 @@ h1 a {
     position: absolute;
     right: 2em;
     bottom: 1.5em;
-    color: #D8CBC4;
     font-size: 11pt;
 }
 
@@ -179,7 +157,6 @@ h1 a {
     right: 0;
     width: 50px;
     height: 50px;
-    background: #EEE;
 }
 
 .stock-order {
@@ -188,14 +165,12 @@ h1 a {
 
 /* */
 .block {
-    background: #D8CBC4;
     border-radius: 6px;
     padding: 0.5em;
     margin-top: 0.5em;
 }
 
 .block h2 {
-    color: #413129;
     font-size: 16pt;
     font-weight: bold;
     margin-bottom: 0.5em;
@@ -205,7 +180,6 @@ h1 a {
 .block a:active,
 .block a:hover,
 .block a:visited {
-    color: #000;
 }
 
 form.block {
@@ -215,7 +189,6 @@ form.block {
 }
 
 .page-error {
-    background: #dd8;
 }
 
 .buttons {
@@ -343,7 +316,6 @@ input.blank {
 }
  
 #search-derivative h3 {
-    color: #413129;
     font-weight: bold;
     font-size: 1.1em;
     margin-top: 1em;
@@ -409,7 +381,6 @@ td.search-list-shares input {
 /* Portfolio */
 
 .portfolio-block {
-    background: #fff;
     padding-left: 0;
     padding-right: 0;
 }
@@ -419,7 +390,7 @@ td.search-list-shares input {
 }
 
 table.tchart {
-    background:
+    background: transparent;
 }
 
 table#portfolio,
@@ -435,7 +406,6 @@ table#portfolio {
 }
 
 #portfolio a {
-    color: #000;
 }
 
 .tchart-half {
@@ -443,7 +413,6 @@ table#portfolio {
 }
 
 table.tchart th {
-    color: #000;
 }
 
 table.tchart {
@@ -498,7 +467,6 @@ td.tchart-half {
 
 .tchart-ticker {
     font-size: 0.95em;
-    font-color: #333;
 }
 
 .tchart-price {
@@ -507,14 +475,12 @@ td.tchart-half {
 }
 
 .tchart-dollars {
-    color: #090;
     font-size: 1.2em;
     font-family: monospace;
     text-align: right;
 }
 
 .tchart-section {
-    background-color: #eee;
 }
 
 .tchart-section {
@@ -567,8 +533,6 @@ tr.deriv-header {
 /* Sidebar */
 .sidebar {
     padding: 10px;
-    color: #D8CBC4;
-    background: #7F6152;
     border-radius: 6px;
 }
 
@@ -577,7 +541,6 @@ tr.deriv-header {
 }
 
 .sidebar h3 {
-    color: #FFF;
     font-weight: bold;
     font-size: 14pt;
 }
@@ -592,12 +555,9 @@ tr.deriv-header {
 
 /* Auction Table */
 .auction th {
-    color: #FFF;
     text-align: right;
 }
 .auction td {
-    color: #000;
-    background: #D8CBC4;
 }
 
 /* User links */
@@ -637,32 +597,28 @@ tr.deriv-header {
     text-align: left;
     vertical-align: top;
     position: relative;
-    background-color: #ddd;
 }
 
 /* Tab bar */
 
 .tab-bar {
+    margin-top: 1em;
     position: relative;
     clear: both;
 }
 
 .tab {
     float: left;
-    border: 1px solid #000;
     padding: 0.5em;
 }
 
 .active {
-    background-color: #fee;
 }
 
 .inactive {
-    background-color: #aaa;
 }
 
 .tab-pane {
     clear: both;
-    border: 1px solid #000;
 }
 

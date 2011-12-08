@@ -59,7 +59,13 @@ trait DerivativeSchema extends Schema {
     
     // Operations
         
-    def systemCheckForExercise() = logger.info("TODO: This")
+    def systemCheckForExercise() = editDB {
+        val now = new DateTime
+        derivativeAssets.toList map { asset =>
+            if (asset.peer.exec isBefore now) asset.executeOnSchedule
+            else Transaction(())
+        } sequence
+    }
     
     trait DerivativeAssetOps {
         self: DerivativeAsset =>
@@ -77,25 +83,36 @@ trait DerivativeSchema extends Schema {
             if (derivative.early) execute
             else throw NotExecutable
             
-        private[model] def executeOnSchedule = execute
+        // First we must check the condition. Luckily that seems
+        // to have survived the model overhaul
+        private[model] def executeOnSchedule = 
+            if (peer.derivative.condition.isTrue) execute
+            else cleanup
         
-        private[model] def execute = {
-            // This part is really hellish
+        private[model] def cleanup = {
             val peer: DerivativeLiability = this.peer
-            val deriv = peer.derivative * this.scale
             
-            // First we must check the condition. Luckily that seems
-            // to have survived the model overhaul
             for {
-                _ <- {
-                    if (deriv.condition.isTrue) actuallyExecute(deriv)
-                    else Transaction(())
-                }
                 _ <- this.delete
                 _ <- {
                     if (peer.remaining <= scale) peer.delete
                     else peer update (l => l copy (remaining=l.remaining-scale))
                 }
+            }
+            yield ()
+        }
+            
+        private[model] def execute = {
+            // This part is really hellish
+            val peer: DerivativeLiability = this.peer
+            val deriv = peer.derivative * this.scale
+            
+            for {
+                _ <- {
+                    if (deriv.condition.isTrue) actuallyExecute(deriv)
+                    else Transaction(())
+                }
+                _ <- cleanup
             }
             yield ()
         }
