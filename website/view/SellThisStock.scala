@@ -19,7 +19,7 @@ class SellThisStock(ticker: String)
     extends Renderable
     with Loggable
 {
-    def render = FormSubmit.rendered("Sell") {
+    def render = FormSubmit.rendered("Sell!") {
         import comet._
         
         userSellStock()
