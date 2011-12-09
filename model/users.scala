@@ -191,7 +191,7 @@ trait UserSchema extends Schema {
         def adminOf(league: League) = myAdministrations contains league
         def notAdminOf(league: League) : Boolean = (! adminOf(league))
 
-        def myMemberships = memberships where ('user ~=~ self) toList
+        def myMemberships = memberships.where('user ~=~ self).toList :+ Membership(user=self, league=League.default)
         def membershipIn(league: League) = myMemberships filter (_.league ~~ league) headOption
         def memberOf(league: League) = myMemberships contains league
         def notMemberOf(league: League) = (! memberOf(league))
@@ -334,6 +334,7 @@ trait UserSchema extends Schema {
                                 cash=cash, loan=cash, rank=0).insert
                             user   <- User(username=name, lastPortfolio=port).insert
                             _      <- Ownership(user=user, portfolio=port).insert
+                            _      <- Membership(user=user, league=league).insert
                         }
                         yield user
                     }
