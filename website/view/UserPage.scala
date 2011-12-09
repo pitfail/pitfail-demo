@@ -45,11 +45,16 @@ class MyPage {
 
 object myPage {
 //
+
+val dashboard = Dashboard()
+
 def apply() =
-    <lift:PortfolioInvites/>
-    <lift:comet type="Offers"/>
-    <lift:comet type="Dashboard"/>
-    <lift:comet type="OutgoingOffers"/>
+    <lift:children>
+        {PortfolioInvites().render}
+        <lift:comet type="Offers"/>
+        {dashboard.render}
+        <lift:comet type="OutgoingOffers"/>
+    </lift:children>
     
 //
 }
