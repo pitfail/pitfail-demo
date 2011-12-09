@@ -33,10 +33,15 @@ def render = {
         bootstrap.liftweb.insertTestData()
     }
     
+    val sendNewsletter = FormSubmit.rendered("Send Newsletter") {
+        Newsletter.runNewsletter()
+    }
+    
     <ul>
     {runChecks}
     {clearDatabase}
     {insertTestData}
+    {sendNewsletter}
     </ul>
 }
 

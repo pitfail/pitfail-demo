@@ -168,6 +168,8 @@ trait UserSchema extends Schema {
                 _ <- self delete
             } yield m
         }
+        
+        def decline() { editDB(self delete) }
 
         def toRecieverForm = readDB {
             /* XXX: allow accept & reject */
