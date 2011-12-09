@@ -12,15 +12,10 @@ class LeagueField(
     )
     extends TextField[League](initText)
 {
-    def produce() = {
-        val l = readDB (League byName text)
-        l match {
-            case Some(ll) => OK(ll)
-            case None     => Error("No league named \"" + text + "\"")
-        }
-    }
+    def produce() =
+        League byName text map (OK(_)) getOrElse Error("No league named " + text)
 }
-
 object LeagueField {
     def apply(i: String = "") = new LeagueField(i)
 }
+
