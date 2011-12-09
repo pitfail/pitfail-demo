@@ -258,7 +258,11 @@ trait UserSchema extends Schema {
             editDB(createPortfolio(name, league))
         def userCreatePortfolio(name: String, league: String): Portfolio =
             editDB(createPortfolio(name, league))
-        def userCreatePortfolio(name: String): Portfolio = editDB(createPortfolio(name))
+        def userCreatePortfolio(name: String): Portfolio = editDB {
+            val port = createPortfolio(name)
+            PeriodicPortfolioEvaluator.poll()
+            port
+        }
         
         def portfolioByName(name: String) = readDB (
             (myPortfolios filter (_.name == name)).headOption getOrElse (throw NoSuchPortfolio)
@@ -329,24 +333,27 @@ trait UserSchema extends Schema {
         }
         
         def userEnsure(name: String): User = readDB {
-            try {
-                byName(name)
-            }
-            catch {
-                case NoSuchUser =>
-                    val league = League.default
-                    val cash = league.startingCash
-                    editDB {
-                        for {
-                            port   <- Portfolio(name=name, league=league,
-                                cash=cash, loan=cash, rank=0).insert
-                            user   <- User(username=name, lastPortfolio=port).insert
-                            _      <- Ownership(user=user, portfolio=port).insert
-                            _      <- Membership(user=user, league=league).insert
+            val user =
+                try {
+                    byName(name)
+                }
+                catch {
+                    case NoSuchUser =>
+                        val league = League.default
+                        val cash = league.startingCash
+                        editDB {
+                            for {
+                                port   <- Portfolio(name=name, league=league,
+                                    cash=cash, loan=cash, rank=0).insert
+                                user   <- User(username=name, lastPortfolio=port).insert
+                                _      <- Ownership(user=user, portfolio=port).insert
+                                _      <- Membership(user=user, league=league).insert
+                            }
+                            yield user
                         }
-                        yield user
-                    }
-            }
+                }
+            PeriodicPortfolioEvaluator.poll()
+            user
         }
         
         def isNew(name: String) = {
@@ -444,6 +451,7 @@ trait UserSchema extends Schema {
         def toLink = readDB {
             /* XXX: link to the league data or something? */
             val l = self
+            <p>{l.name}</p>
             <a href={"/league-info?" + HQS.buildQuery(Map("league" -> l.name))}>
                 {l.name}
             </a>
