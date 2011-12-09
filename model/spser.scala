@@ -262,7 +262,7 @@ trait Schema {
                     rows
                 }
             }
-            
+
             def headOption: Option[A] = {
                 inTransaction {
                     val rs = executeQuery(limit = Some(1))
