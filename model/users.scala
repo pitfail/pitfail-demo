@@ -4,6 +4,7 @@ package model
 import org.joda.time.DateTime
 import spser._
 import scala.collection.JavaConversions._
+import stockdata.{HttpQueryService => HQS}
 
 trait UserSchema extends Schema {
     self: StockSchema with DerivativeSchema with AuctionSchema with CommentSchema
@@ -16,6 +17,8 @@ trait UserSchema extends Schema {
     implicit val pvCon = PortfolioValue.apply _
     implicit val lCon = League.apply _
     implicit val aCon = Administration.apply _
+    implicit val liCon = LeagueInvite.apply _
+    implicit val mCon = Membership.apply _
             
     implicit val users: Table[User] = table[User]
     implicit val portfolios: Table[Portfolio] = table[Portfolio]
@@ -24,10 +27,13 @@ trait UserSchema extends Schema {
     implicit val portfolioValues: Table[PortfolioValue] = table[PortfolioValue]
     implicit val leagues: Table[League] = table[League]
     implicit val administrations: Table[Administration] = table[Administration]
+    implicit val leagueInvites: Table[LeagueInvite] = table[LeagueInvite]
+    implicit val memberships: Table[Membership] = table[Membership]
     
     abstract override def tables = (
            users :: portfolios :: ownerships :: portfolioInvites
-        :: portfolioValues :: leagues :: administrations :: super.tables )
+        :: portfolioValues :: leagues :: administrations :: leagueInvites
+        :: memberships :: super.tables )
     
     // Model tables
 
@@ -96,11 +102,83 @@ trait UserSchema extends Schema {
             league: Link[League]
         )
         extends KL
+        with AdministrationOps
+
+    case class LeagueInvite(
+            id:     Key = nextID,
+            user:   Link[User],
+            league: Link[League],
+            sender: Link[User]
+        )
+        extends KL
+        with LeagueInviteOps
+
+    case class Membership(
+            id:     Key = nextID,
+            user:   Link[User],
+            league: Link[League]
+        )
+        extends KL
+        with MembershipOps
 
     // Detailed Operations
+    trait AdministrationOps {
+        self: Administration =>
+
+        def toLink = readDB {
+            val l = self.league
+            <a href={"/league-admin?" + HQS.buildQuery(Map("league" -> l.name))}>
+                {l.name}
+            </a>
+        }
+    }
+
+    trait MembershipOps {
+        self: Membership =>
+
+        /* XXX: allow leaving?? */
+        def toLink = self.league.toLink
+    }
+
+    trait LeagueInviteOps {
+        self: LeagueInvite =>
+
+        def accept() : Membership = editDB {
+            val user = self.user
+            val league = self.league
+
+            for {
+                m <- user membershipIn league orCreate (Membership(user=user, league=league) insert)
+                _ <- self delete
+            } yield m
+        }
+
+        def toRecieverForm = readDB {
+            /* XXX: allow accept & reject */
+            self.league.toLink
+        }
+
+        def toSenderForm = readDB {
+            /* XXX: allow withdrawing the invite */
+            self.league.toLink
+        }
+    }
 
     trait UserWithLeagues {
         self: User =>
+
+        def mySentInvites = leagueInvites where ('sender ~=~ self) toList
+        def myReceivedInvites = leagueInvites where ('user ~=~ self) toList
+        def invitedTo(league: League) = myReceivedInvites contains league
+
+        def myAdministrations = administrations where ('user ~=~ self) toList
+        def adminOf(league: League) = myAdministrations contains league
+        def notAdminOf(league: League) : Boolean = (! adminOf(league))
+
+        def myMemberships = memberships where ('user ~=~ self) toList
+        def membershipIn(league: League) = myMemberships filter (_.league ~~ league) headOption
+        def memberOf(league: League) = myMemberships contains league
+        def notMemberOf(league: League) = (! memberOf(league))
 
         def newLeague(name: String, cash: Dollars) : League = {
             if (cash <= Dollars(0))
@@ -113,12 +191,27 @@ trait UserSchema extends Schema {
                 League(name=name, startingCash=cash, owner=self) insert
             }
         }
+
+        def inviteToLeague(league: League, user: User) : LeagueInvite = editDB {
+            if (self notAdminOf league)
+                throw NotPermitted
+
+            if (user memberOf league)
+                throw AlreadyInLeague
+
+            if (user invitedTo league)
+                throw AlreadyInvited
+
+            LeagueInvite(league=league, user=user, sender=self) insert
+        }
     }
 
 
     trait UserOps {
         self: User =>
-        
+       
+        def name = username
+
         def myPortfolios: List[Portfolio] = readDB {
             (ownerships where ('user ~=~ this)).toList map (_.portfolio.extract) toList
         }
@@ -188,6 +281,7 @@ trait UserSchema extends Schema {
             for {
                 league <- League(name=name, startingCash=startingCash, owner=self).insert
                 _ <- Administration(user=this, league=league).insert
+                _ <- Membership(user=this, league=league).insert
             }
             yield league
         }
@@ -323,6 +417,14 @@ trait UserSchema extends Schema {
         // Java inter-op
         def getLeaders(n: Int): java.util.List[Portfolio] = readDB {
             (portfolios where ('league ~=~ this)).toList sortBy (_.rank) take n
+        }
+        
+        def toLink = readDB {
+            /* XXX: link to the league data or something? */
+            val l = self
+            <a href={"/league-info?" + HQS.buildQuery(Map("league" -> l.name))}>
+                {l.name}
+            </a>
         }
     }
 }

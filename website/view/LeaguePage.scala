@@ -21,11 +21,61 @@ import scala.xml._
 
 import stockdata.{HttpQueryService => HQS}
 
+class LeagueAdmin extends Page with Loggable
+{
+    def render = {
+        <div class="block">
+            <p>Lol ADMIN</p>
+        </div>
+    }
+}
 
 class LeagueManager extends Page with Loggable
 {
     def render = {
-        <p>LOL Management</p>
+        import control.LoginManager.currentUser
+
+        val user = currentUser
+
+        val (a, m, ri, si) = readDB {
+
+            val a = user.myAdministrations map { x =>
+                <li>{x.toLink}</li>
+            }
+
+            val m = user.myMemberships map { x =>
+                <li>{x.toLink}</li>
+            }
+
+            val ri = user.myReceivedInvites map { x =>
+                <li>{x.toRecieverForm}</li>
+            }
+
+            val si = user.mySentInvites map { x =>
+                <li>{x.toSenderForm}</li>
+            }
+
+            (a, m, ri, si)
+        }
+
+        <div class="block">
+            <ul>
+                <lh>{user.name}'s Administered Leagues</lh>
+                {a}
+            </ul>
+            <ul>
+                <lh>{user.name}'s Memberships in Leagues</lh>
+                {m}
+            </ul>
+            <ul>
+                <lh>{user.name}'s recieved invites to Leagues</lh>
+                {ri}
+            </ul>
+            <ul>
+                <lh>{user.name}'s sent invites for Leagues</lh>
+                {si}
+            </ul>
+        </div>
     }
 }
 
