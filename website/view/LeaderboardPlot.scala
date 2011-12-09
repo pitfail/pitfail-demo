@@ -48,8 +48,8 @@ def apply(portfolios: List[Portfolio]): NodeSeq = readDB {
 
     // List[List[(DateTime, Dollars)]]
     val getDollars = (x: List[(Any, Dollars)]) => x map (_._2)
-    val dollarsMin = MIN_SCALE * (histories map { getDollars(_).min }).min
-    val dollarsMax = MAX_SCALE * (histories map { getDollars(_).max }).max
+    val dollarsMin = MIN_SCALE * {try { (histories map { getDollars(_).min }).min } catch { case _ => Dollars(0) }}
+    val dollarsMax = MAX_SCALE * {try { (histories map { getDollars(_).max }).max } catch { case _ => Dollars(10) }}
 
     val options:FlotOptions = new FlotOptions () {
         override val series = Full(Map( 
@@ -97,18 +97,23 @@ def apply(portfolios: List[Portfolio]): NodeSeq = readDB {
 def getRange(prices: Seq[Dollars]): (Double, Double) = {
     import scala.math.{ceil,floor}
 
-    if (prices.isEmpty) {
-        (0.0, 10.0)
-    } else {
-        val min = prices.min.dollars.toDouble
-        val max = prices.max.dollars.toDouble
-        val range = max - min
-        val extra = (10.0 - range) / 2
+    try {
+        if (prices.isEmpty) {
+            (0.0, 10.0)
+        } else {
+            val min = prices.min.dollars.toDouble
+            val max = prices.max.dollars.toDouble
+            val range = max - min
+            val extra = (10.0 - range) / 2
 
-        if (max - min < 10.0)
-            (floor(min - extra), ceil(max + extra))
-        else
-            (floor(min), ceil(max))
+            if (max - min < 10.0)
+                (floor(min - extra), ceil(max + extra))
+            else
+                (floor(min), ceil(max))
+        }
+    } catch {
+        case e : Exception =>
+            (0, 10)
     }
 }
 
