@@ -48,6 +48,7 @@ public class GetPortfolio extends HttpServlet {
 		PrintWriter out = response.getWriter();			
 		
 		String userId = request.getParameter("userid");
+		String portfolioName = request.getParameter(portfolioname);
 		BigDecimal shares;
 		BigDecimal price;
 		BigDecimal dollars;
@@ -55,17 +56,30 @@ public class GetPortfolio extends HttpServlet {
 		String myportfolio = "";
        
 		try {
-			    UserSchema.Portfolio port = operations.getUserPortfolio(userId);
-				BigDecimal cash = port.cash().dollars();
+				// Get a user
+				
+				UserSchema.User user = operations.getUser(userId);
+				// List the portfolios (teams) a user belongs to
+				List<UserSchema.Portfolio> portfolios = user.getPortfolios();
+				for (UserSchema.Portfolio p : portfolios) {
+				myportfolio = myportfolio.concat(p.name()+":");
+			    }
+				
+				myportfolio = myportfolio.concat("-");
+			    
+				UserSchema.Portfolio port = operations.getUserPortfolio(userId);
+				BigDecimal cash = port.cash().dollars().doubleValue();
 				myportfolio = myportfolio.concat("Cash:"+cash);
 				                                         
+			
 				for (StockSchema.StockAsset asset : port.getMyStockAssets()){
 						shares = asset.shares().shares();
 						dollars = asset.dollars().dollars();
                         purchasePrice = asset.averagePurchasePrice().price();
 						myportfolio = myportfolio.concat(","+asset.ticker()+":"+dollars.doubleValue());
 				}
-				UserSchema.User user = operations.getUser(userId);
+				
+			
 				//Get the current portfolio
 				UserSchema.Portfolio current = user.getCurrentPortfolio();
 				//Get the league the portfolio belongs to
