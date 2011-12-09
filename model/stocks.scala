@@ -108,6 +108,13 @@ trait StockSchema extends Schema {
     
     case class StockHolding(ticker: String, shares: Shares, dollars: Dollars)
     
+    def leagueSH(league: League): List[StockHolding] = (stockAssets.toList
+        filter {sa: StockAsset => sa.owner.league ~~ league}
+        groupBy (_.ticker) map { case (ticker, assetGroup) =>
+            val shares = (assetGroup map (_.shares)).summ
+            StockHolding(ticker, shares, shares*Stocks.lastTradePrice(ticker))
+        } toList)
+
     def allStockHoldings: List[StockHolding] = (stockAssets.toList
         groupBy (_.ticker) map { case (ticker, assetGroup) =>
             val shares = (assetGroup map (_.shares)).summ

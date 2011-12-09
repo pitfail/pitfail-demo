@@ -41,19 +41,14 @@ class LeaderPage extends Page with Loggable {
 
         val last = start + count - 1
 
-        val (p1, ml) = readDB {
+        val (ml, p1, topPlayers) = readDB {
             val ml = League byName league_n
-            val p1 = for {
+            val i = for {
                 l <- ml.toList
-                p <- Portfolio.byLeague(l).sortBy(_.rank).drop(start).take(count)
-            } yield p
-            (p1, ml)
+                i <- Portfolio.byLeague(l).sortBy(_.rank)
+            } yield i
+            (ml, i.drop(start).take(count), i.take(5))
         }
-
-        val topPlayers = for {
-            l <- ml.toList
-            p <- Portfolio.byLeague(l).sortBy(_.rank).take(5)
-        } yield p
 
         val n : NodeSeq = for {
             p <- p1
@@ -90,7 +85,9 @@ class LeaderPage extends Page with Loggable {
             <p>
                 <a href={prev_link} rel="prev">prev</a>
                 <a href={next_link} rel="next">next</a>
-            </p>
+            </p> ++
+            {leaderboardPlot(topPlayers)} ++
+            {holdingsPlot(l)}
             case None =>
             <p>No such league {league_n}</p>
         }
@@ -99,10 +96,7 @@ class LeaderPage extends Page with Loggable {
             <div id="leader-page" class="block">
                 {stuff}
             </div>
-            {leaderboardPlot(topPlayers)}
-            {holdingsPlot()}
         </lift:children>
-
     } catch {
         case e => <p>Sorry, {standardMessage(e)}</p>
     }
