@@ -16,13 +16,15 @@ import model.schema._
 
 object holdingsPlot extends Loggable {
 
-def apply(): NodeSeq = readDB {
+def apply() : NodeSeq = apply(League.default)
+
+def apply(league: League): NodeSeq = readDB {
 //
     
 val maxShow = 8
 
 lazy val main = {
-    val holdings = allStockHoldings sortBy (- _.dollars) take maxShow
+    val holdings = leagueSH(league) sortBy (- _.dollars) take maxShow
     if (holdings.isEmpty) Nil
     else rest(holdings)
 }
