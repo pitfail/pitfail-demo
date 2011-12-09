@@ -14,6 +14,10 @@ import JE._
 
 import model._
 import model.schema._
+import stockdata._
+
+// Joda Time
+import org.joda.time.DateTime
 
 import control._
 
@@ -37,11 +41,21 @@ def render = {
         Newsletter.runNewsletter()
     }
     
+    val insertDividends = FormSubmit.rendered("Add Dividends") {
+        val now = new DateTime
+        for (offset <- 1 to 60) {
+            model.Stocks.syntheticDividends ++= List(
+                Dividend("MSFT", now plusMinutes offset, Price("0.30"))
+            )
+        }
+    }
+    
     <ul>
     {runChecks}
     {clearDatabase}
     {insertTestData}
     {sendNewsletter}
+    {insertDividends}
     </ul>
 }
 
