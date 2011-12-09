@@ -24,28 +24,32 @@ import model.*;
  * @author Roma, Sonu
  * 
  */
-public class BuyServlet extends HttpServlet {
+public class NewPortfolio extends HttpServlet {
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
-	System.out.println("*************Buy Called ******************");
-
-/*		String userId = "sonu_pillai";
-		String stockSymbol = "GOOG";
-		String volume = "2000";
-*/
+		
 
 		PrintWriter out = response.getWriter();
+		String newPortfolio = request.getParameter("portfolio");
+		String invite = request.getParameter("invite");
 		String userId = request.getParameter("userid");
-		String stockSymbol = request.getParameter("ticker");
-		String volume = request.getParameter("volume");
+		// Get a user
+		UserSchema.User user = operations.getUser(userId);
+
 
 		try {
-                operations.userBuyStock(userId, stockSymbol, new Dollars(volume));
-                        
+				 UserSchema.Portfolio newPort = user.userCreatePortfolio(newPortfolio);
+		        // Invite someone to it
+			    try {
+					     newPort.userInviteUser(invite);
+		            }
+			    catch (SchemaErrors$NoSuchUser$ e) {
+					    out.printf("No user named %s\n",invite);
+		     }
+
 				out.printf("success");
 				
 		} catch (Exception e) {

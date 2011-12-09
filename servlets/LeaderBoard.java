@@ -37,7 +37,7 @@ import com.google.gson.*;
  * @author Roma, Sonu
  * 
  */
-public class GetPortfolio extends HttpServlet {
+public class LeaderBoard extends HttpServlet {
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 
@@ -46,59 +46,37 @@ public class GetPortfolio extends HttpServlet {
 			throws ServletException, IOException {
 
 		PrintWriter out = response.getWriter();			
-
+		
 //		String userId = "sonu_pillai";
 		String userId = request.getParameter("userid");
-//		String portfolioName = request.getParameter("portfolioname");
-		BigDecimal shares;
-		BigDecimal price;
-		BigDecimal dollars;
-        BigDecimal purchasePrice;
-		String myportfolio = "";
+ 		String leaderBoard = "";
        
 		try {
 				// Get a user
 				
 				UserSchema.User user = operations.getUser(userId);
-				// List the portfolios (teams) a user belongs to
-				List<UserSchema.Portfolio> portfolios = user.getPortfolios();
-				for (UserSchema.Portfolio p : portfolios) {
-				myportfolio = myportfolio.concat(p.name()+":");
-			    }
-				
-				myportfolio = myportfolio.concat("-");
-			    
-				UserSchema.Portfolio port = operations.getUserPortfolio(userId);
-				BigDecimal cash = port.cash().dollars();
-				myportfolio = myportfolio.concat("Cash:"+cash);
-				                                         
-			
-				for (StockSchema.StockAsset asset : port.getMyStockAssets()){
-						shares = asset.shares().shares();
-						dollars = asset.dollars().dollars();
-                        purchasePrice = asset.averagePurchasePrice().price();
-						myportfolio = myportfolio.concat(","+asset.ticker()+":"+dollars.doubleValue());
-				}
-				
 			
 				//Get the current portfolio
-/*				UserSchema.Portfolio current = user.getCurrentPortfolio();
+				UserSchema.Portfolio current = user.getCurrentPortfolio();
 				//Get the league the portfolio belongs to
-				UserSchema.League league = current.getLeague();
+		//		UserSchema.League league = current.getLeague();
+		
+				 UserSchema.League league = operations.getDefaultLeague();
+	  //          out.printf("Default league is %s\n", league.name());
+
 				// Get the 5 highest portfolios for the league
-				myportfolio = myportfolio.concat("-");
-				List<UserSchema.Portfolio> leaders = league.getLeaders(5);
+				List<UserSchema.Portfolio> leaders = league.getLeaders(10);
 				for(UserSchema.Portfolio p : leaders){
-					myportfolio = myportfolio.concat(p.rank()+":"+p.name()+",");
-					System.out.printf("#%d %s\n", p.rank(), p.name());
+					leaderBoard = leaderBoard.concat(p.rank()+":"+p.name()+",");
 				}
-*/				out.printf("%s",myportfolio);
+				out.printf("%s",leaderBoard);
 
 
 
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			out.printf("failed");
 			
 		}
 

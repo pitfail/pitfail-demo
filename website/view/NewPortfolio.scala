@@ -14,6 +14,8 @@ import errors._
 
 import model.schema._
 
+
+
 class NewPortfolio extends Page with Loggable {
     def render = refreshable.render
     val refreshable = Refreshable(doRender)

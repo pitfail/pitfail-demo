@@ -32,6 +32,31 @@ import scala.math.*;
 import model.*;
 import scala.math.BigDecimal;
 
+
+import javax.servlet.*;
+import javax.servlet.http.*;
+import java.io.*;
+
+import model.schema;
+import static model.schema.*;
+import model.*;
+import scala.collection.*;
+import static scala.collection.JavaConversions.*;
+import java.util.*;
+import scala.math.BigDecimal;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.sql.DriverManager;
+import scala.math.*;
+import com.google.gson.*;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+
 /**
  * <code>HttpServlet</code> responsible for buying stocks.
  * 
@@ -49,13 +74,12 @@ public class StockUpdates extends HttpServlet {
 		PrintWriter out = response.getWriter();			
 		
 		String userId = request.getParameter("userid");
-		System.out.println("###############"+userId+"##################");
 		BigDecimal shares;
-//		BigDecimal price;
+		BigDecimal price;
 		BigDecimal dollars;
 		String updatedstocks = "";
 		String ticker = "";
-		String price = "60";
+//		String price = "60";
 		int update = 0;
        
 		try {
@@ -70,7 +94,7 @@ public class StockUpdates extends HttpServlet {
                                         
 				for (StockSchema.StockAsset asset : port.getMyStockAssets()){
 						ticker = asset.ticker();
-		//				price = mehPrice(asset);
+						price = asset.averagePurchasePrice().price();
 						
 
 						/*Check from Yahoo if stock price has changed*/
@@ -104,6 +128,23 @@ public class StockUpdates extends HttpServlet {
 				}
 				if(update == 0)
 						updatedstocks = "NULL";
+
+				 // Get a user
+				UserSchema.User user = operations.getUser("Test");
+
+
+				// Get my portfolio invites
+			   List<UserSchema.PortfolioInvite> portfolioInvites = user.getMyPortfolioInvites();
+			   for (UserSchema.PortfolioInvite invite : portfolioInvites) {
+			   // Accept or decline
+			   if (Math.random() < 0.5) {
+			   user.userAcceptInvite(invite);
+									}
+		     else {
+			      user.userDeclineInvite(invite);
+		       }
+        }
+
 
 				out.printf("%s",updatedstocks);
 				

@@ -191,3 +191,6 @@ class  LeagueCreator extends Page with Loggable
 object LeagueCreator {
     case class NewLeague(name: String, cash: Dollars)
 }
+
+
+
