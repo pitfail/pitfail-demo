@@ -34,21 +34,26 @@ val payments = port.myDividendPayments
 lazy val main =
     <div class="block">
         <h2>Dividend payments</h2>
+        {content}
     </div>
     
 lazy val content =
     if (payments.isEmpty) <p>None</p>
     else
-        <table>
-            <tr><td>Date</td><td>Stock</td><td>Amount</td></tr>
-            {rows}
+        <table class="boxy">
+            <thead>
+                <tr><th>Date</th><th>Stock</th><th>Amount</th></tr>
+            </thead>
+            <tbody>
+                {rows}
+            </tbody>
         </table>
 
-lazy val rows = payments map { pay =>
+lazy val rows = payments filter (_.dollars > Dollars(0)) map { pay =>
     <tr>
         <td>{pay.date.toNearbyString}</td>
         <td>{pay.ticker}</td>
-        <td>{pay.dollars}</td>
+        <td>{pay.dollars.$}</td>
     </tr>
 }
 
