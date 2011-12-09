@@ -91,6 +91,7 @@ trait SchemaErrors {
     case object NoSuchPortfolio extends BadUser
     case object NoSuchDerivativeAsset extends BadUser
     case object NoSuchDerivativeLiability extends BadUser
+    case object NoSuchLeague extends BadUser
     case object NoSuchEvent extends BadUser
     case object NoSuchComment extends BadUser
     case object NameInUse extends BadUser

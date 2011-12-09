@@ -195,26 +195,29 @@ trait UserSchema extends Schema {
         def adminOf(league: League) = myAdministrations contains league
         def notAdminOf(league: League) : Boolean = (! adminOf(league))
 
-        def myMemberships = memberships.where('user ~=~ self).toList :+ Membership(user=self, league=League.default)
+        def myMemberships = memberships.where('user ~=~ self).toList
         def membershipIn(league: League) = myMemberships filter (_.league ~~ league) headOption
         def memberOf(league: League) = myMemberships contains league
         def notMemberOf(league: League) = (! memberOf(league))
 
-        def newLeague(name: String, cash: Dollars) : League = {
-            if (cash <= Dollars(0))
+        def newLeague(name: String, cash: Dollars) : League = editDB {
+            createLeague(name, cash)
+        }
+
+        private[model] def createLeague(name: String, startingCash: Dollars) = {
+            if (startingCash <= Dollars(0))
                 throw NonPositiveDollars
 
-            editDB {
-                if (League byName name isDefined) {
-                    throw NameInUse
-                }
-                for {
-                    league <- League(name=name, startingCash=cash, owner=self).insert
-                    _ <- Administration(user=this, league=league).insert
-                    _ <- Membership(user=this, league=league).insert
-                }
-                yield league
+            League byName name match {
+                case Some(_) => throw NameInUse
+                case None =>
             }
+            for {
+                league <- League(name=name, startingCash=startingCash, owner=self).insert
+                _ <- Administration(user=this, league=league).insert
+                _ <- Membership(user=this, league=league).insert
+            }
+            yield league
         }
 
         def inviteToLeague(league: League, user: User) : LeagueInvite = editDB {
@@ -250,7 +253,11 @@ trait UserSchema extends Schema {
         def getPortfolios: java.util.List[Portfolio] = myPortfolios
         
         def getCurrentPortfolio: Portfolio = lastPortfolio
-        
+       
+        def userCreatePortfolio(name: String, league: League): Portfolio =
+            editDB(createPortfolio(name, league))
+        def userCreatePortfolio(name: String, league: String): Portfolio =
+            editDB(createPortfolio(name, league))
         def userCreatePortfolio(name: String): Portfolio = editDB(createPortfolio(name))
         
         def portfolioByName(name: String) = readDB (
@@ -283,14 +290,18 @@ trait UserSchema extends Schema {
             Subscription(user=this, email=email).insert
         }
         
-        private[model] def createPortfolio(name: String) = {
-            if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
+        private[model] def createPortfolio(name: String) : Transaction[Portfolio]=
+            createPortfolio(name, League.default)
 
-            val league = League.default
+        private[model] def createPortfolio(name: String, league: String) : Transaction[Portfolio] = {
+            createPortfolio(name, League byName league getOrElse(throw NoSuchLeague) )
+        }
+
+        private [model] def createPortfolio(name: String, league: League) :Transaction[Portfolio] = {
+            if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
             val cash = league.startingCash
 
             for {
-                /* XXX: change to a different league with param. */
                 port <- Portfolio(name=name, league=league, cash=cash, loan=cash, rank=1000).insert
                 _    <- Ownership(user=this, portfolio=port).insert
             }
@@ -309,19 +320,6 @@ trait UserSchema extends Schema {
             
         private [model] def declineInvite(invite: PortfolioInvite) =
             invite.delete
-            
-        private[model] def createLeague(name: String, startingCash: Dollars) = {
-            League byName name match {
-                case Some(_) => throw NameInUse
-                case None =>
-            }
-            for {
-                league <- League(name=name, startingCash=startingCash, owner=self).insert
-                _ <- Administration(user=this, league=league).insert
-                _ <- Membership(user=this, league=league).insert
-            }
-            yield league
-        }
     }
     
     object User {

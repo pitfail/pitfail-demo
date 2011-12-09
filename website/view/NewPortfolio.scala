@@ -65,7 +65,7 @@ class NewPortfolio extends Page with Loggable {
             val Stuff(name, invitees, league) = stuff
             
             try {
-                val port = currentUser.userCreatePortfolio(name)
+                val port = currentUser.userCreatePortfolio(name, league)
                 invitees map (port.userInviteUser(_))
                 redirectTo("/")
             }
