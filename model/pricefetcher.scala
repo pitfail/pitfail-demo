@@ -31,6 +31,10 @@ object PeriodicPortfolioEvaluator extends Loggable {
             }
         }
     }
+    
+    def makeSynthetic(port: Portfolio, when: org.joda.time.DateTime, value: Dollars) = editDB {
+        PortfolioValue(dateTime=when, portfolio=port, dollars=value).insert
+    }
 }
 
 object StockPriceSource extends CachedStockDatabase(

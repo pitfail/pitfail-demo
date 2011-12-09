@@ -58,13 +58,15 @@ public class LeagueTestServlet extends HttpServlet {
                 BigDecimal shares  = asset.shares().shares();
                 BigDecimal price   = asset.price().price();
                 BigDecimal dollars = asset.dollars().dollars();
+                BigDecimal boughtPrice = asset.averagePurchasePrice().price();
                 String ticker  = asset.ticker();
                 
-                out.printf("%d shares ($%.2f) of %s at $%.2f/sh\n",
+                out.printf("%d shares ($%.2f) of %s at $%.2f/sh bought at $%.2f/sh\n",
                     shares.intValue(),
                     dollars.doubleValue(),
                     ticker,
-                    price.doubleValue()
+                    price.doubleValue(),
+                    boughtPrice.doubleValue()
                 );
             }
             
