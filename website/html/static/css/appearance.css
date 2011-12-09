@@ -17,6 +17,11 @@ span.input-error {
     position: relative;
 }
 
+lh {
+    font-weight: bold;
+    font-size: 13pt;
+}
+
 span.input-error span.error {
     position: absolute;
     padding: 0.3em;
