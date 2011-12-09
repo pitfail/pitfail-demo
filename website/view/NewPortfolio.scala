@@ -31,14 +31,27 @@ class NewPortfolio extends Page with Loggable {
                 <p>{add}</p>
             }
         )
-        
+
+        /* Type works around scalac bug:
+        [error] /home/nyx/pf/website/view/NewPortfolio.scala:38: type mismatch;
+        [error]  found   : (intform.StringField, intform.Field[Seq[model.schema.User]] with intform.FieldRender, code.snippet.LeagueField with intform.FieldErrorRender)
+        [error]  required: up.KList[intform.Field,?]
+        [error]             (
+        [error]             ^
+        [error] one error found
+        Compilation failed
+        */
+        val league_f : intform.TextField[League] = new LeagueField("") with FieldErrorRender
+
         lazy val form: Form[Stuff] = Form(Stuff,
             (
                 nameField,
-                inviteesField
+                inviteesField,
+                league_f
             ),
             <div>
                 <p>Name: {nameField.main} {nameField.errors}</p>
+                <p>League: {league_f.main}</p>
                 <p>Invite users:</p>
                 {inviteesField.main}
                 <p>{createButton.main}</p>
@@ -49,7 +62,7 @@ class NewPortfolio extends Page with Loggable {
         lazy val createButton = Submit(form, "Create Portfolio") { stuff =>
             import control.LoginManager._
             
-            val Stuff(name, invitees) = stuff
+            val Stuff(name, invitees, league) = stuff
             
             try {
                 val port = currentUser.userCreatePortfolio(name)
@@ -71,7 +84,7 @@ class NewPortfolio extends Page with Loggable {
         </div>
     }
     
-    case class Stuff(name: String, invitees: Seq[User])
+    case class Stuff(name: String, invitees: Seq[User], league: League)
 }
 
 

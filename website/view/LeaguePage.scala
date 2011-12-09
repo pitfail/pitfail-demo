@@ -3,12 +3,12 @@ package snippet
 
 /* Lift stuff */
 import net.liftweb.{common,http,util}
-import http.S
+import http.{S,js}
 import util._
 import common._
-//import js._
-//import JsCmds._
-//import JE._
+import js._
+import JsCmds._
+import JE._
 
 /* Form code (custom) */
 import intform._
@@ -23,10 +23,52 @@ import stockdata.{HttpQueryService => HQS}
 
 class LeagueAdmin extends Page with Loggable
 {
-    def render = {
+    def render = refreshable.render
+    val refreshable = Refreshable(doRender)
+
+    def doRender = {
         <div class="block">
-            <p>Lol ADMIN</p>
+            {form.render}
         </div>
+    }
+
+    case class NewInvite(user: User, league: League)
+
+    lazy val form: Form[NewInvite] = Form(
+        NewInvite,
+        (
+            user_n_f:   Field[User],
+            league_n_f: Field[League]
+        ),
+        <div class="block">
+            <h3>Invite someone to a league you administer</h3>
+            <p>League Name: {league_n_f.main & <input id="league" class="blank"/>}</p>
+            <p>User to invite:{user_n_f.main & <input id="user" class="blank"/>}</p>
+            <p>{submit.main & <input/>}</p>
+            <p>{submit.errors}</p>
+        </div>
+    )
+
+    lazy val user_n_f = new UserField("") with FieldErrorRender
+    lazy val league_n_f = new LeagueField(S.param("league").getOrElse(League.defaultName)) with FieldErrorRender
+
+    lazy val submit = Submit(form, "Invite") { case NewInvite(user, league) =>
+        import control.LoginManager._
+
+        try {
+            val u = currentUser
+            u.inviteToLeague(league, user)
+            /* FIXME: */
+            user_n_f.reset
+            Focus("user") & refreshable.refresh
+        } catch {
+            case NotPermitted =>
+                throw BadInput("You are not an Admin of this league.")
+            case AlreadyInLeague  =>
+                throw BadInput("This user is already in this league")
+            case NotLoggedIn =>
+                throw BadInput("You must be logged in to send a league invite.")
+        }
     }
 }
 
@@ -124,7 +166,7 @@ class  LeagueCreator extends Page with Loggable
         currentUser.newLeague(name, cash)
 
         /* FIXME: this sucks. */
-        S.redirectTo("/league-manager?" + HQS.buildQuery(Map("league" -> name), "UTF-8"))
+        redirectTo("/league-manager?" + HQS.buildQuery(Map("league" -> name), "UTF-8"))
     }
 
     lazy val cash_f = new DollarsField(League.defaultStartingCash.no$) with FieldErrorRender
