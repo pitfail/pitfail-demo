@@ -40,7 +40,7 @@ class  LeagueCreator extends Page with Loggable
             name_f: Field[String],
             cash_f: Field[Dollars]
         ),
-        <div class="boxy new-league">
+        <div class="block">
             <h3>Make a league:</h3>
             <p>League Name: {name_f.main & <input id="name" class="blank"/>}</p>
             <p>Starting Cash:{cash_f.main & <input id="cash" class="blank"/>}</p>
