@@ -92,7 +92,35 @@ def apply() {
     systemCheckForDividends()
 }
 
+}
+
 case class AutoTradeItem(name: String, file: String)
+
+object niceTestData extends Loggable {
+//
+
+def apply() {
+    val now = new DateTime
+    
+    // Synthetic history
+    readDB { portfolios.toList map { port =>
+        logger.info("Making synthetic data for " + port.name)
+        val historyStart = now minusWeeks 1 minusDays 1
+        var mark = now
+        var value = port.spotValue
+        while (mark isAfter historyStart) {
+            PeriodicPortfolioEvaluator makeSynthetic (port, mark, value)
+            mark = mark minusHours 6
+            
+            val scale = Scale(1 + Random.nextGaussian/10)
+            logger.info(" scale = " + scale)
+            value = value * scale
+        }
+    }}
+    
+    systemRecalculateRankings()
+    systemCheckForDividends()
+}
 
 }
 

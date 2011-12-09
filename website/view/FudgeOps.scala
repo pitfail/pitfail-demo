@@ -33,8 +33,12 @@ def render = {
         readDB { create_! }
     }
     
-    val insertTestData = FormSubmit.rendered("Insert Test Data") {
+    val insertTestData = FormSubmit.rendered("Insert Test Data (AND DESTROY ALL!!!!)") {
         bootstrap.liftweb.insertTestData()
+    }
+    
+    val niceTestData = FormSubmit.rendered("Insert Test Data Nicely") {
+        bootstrap.liftweb.niceTestData()
     }
     
     val sendNewsletter = FormSubmit.rendered("Send Newsletter") {
@@ -54,6 +58,7 @@ def render = {
     {runChecks}
     {clearDatabase}
     {insertTestData}
+    {niceTestData}
     {sendNewsletter}
     {insertDividends}
     </ul>
