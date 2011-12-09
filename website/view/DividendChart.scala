@@ -29,7 +29,28 @@ object dividendChart extends Loggable {
 def apply(port: Portfolio, modifiable: Boolean): NodeSeq = {
 //
     
-lazy val main = <p/>
+val payments = port.myDividendPayments
+
+lazy val main =
+    <div class="block">
+        <h2>Dividend payments</h2>
+    </div>
+    
+lazy val content =
+    if (payments.isEmpty) <p>None</p>
+    else
+        <table>
+            <tr><td>Date</td><td>Stock</td><td>Amount</td></tr>
+            {rows}
+        </table>
+
+lazy val rows = payments map { pay =>
+    <tr>
+        <td>{pay.date.toNearbyString}</td>
+        <td>{pay.ticker}</td>
+        <td>{pay.dollars}</td>
+    </tr>
+}
 
 main
 }

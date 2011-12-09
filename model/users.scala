@@ -7,7 +7,7 @@ import scala.collection.JavaConversions._
 
 trait UserSchema extends Schema {
     self: StockSchema with DerivativeSchema with AuctionSchema with CommentSchema
-        with DBMagic with SchemaErrors with VotingSchema with AutoTradeSchema =>
+        with DBMagic with SchemaErrors with VotingSchema with AutoTradeSchema with DividendSchema =>
 
     implicit val uCon = User.apply _
     implicit val pCon = Portfolio.apply _
@@ -56,6 +56,7 @@ trait UserSchema extends Schema {
         with PortfolioWithAuctions
         with PortfolioWithVotes
         with PortfolioWithAutoTrades
+        with PortfolioWithDividends
 
     case class PortfolioValue(
             id:        Key = nextID,
