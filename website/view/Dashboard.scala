@@ -1,6 +1,6 @@
 
 package code
-package comet
+package snippet
 
 import net.liftweb.{common, http, util}
 import common.{Loggable}
@@ -20,11 +20,8 @@ import model.schema._
 import stockdata._
 import org.joda.time.Duration
 
-class Dashboard extends Refreshable with Loggable
+class Dashboard extends Page with Loggable
 {
-    // Eh
-    def registerWith = schema.stockAssets
-    
     def render = readDB {
         import control.LoginManager._
         import control.PortfolioSwitcher._
@@ -41,7 +38,7 @@ class Dashboard extends Refreshable with Loggable
                 
                 val body = {
                     if (ports.length == 1) {
-                        snippet.portfolio(currentPortfolio, Some(user), modifiable=true)
+                        portfolio(currentPortfolio, Some(user), modifiable=true)
                     }
                     else {
                         val tabs = ports map { port =>
@@ -60,7 +57,7 @@ class Dashboard extends Refreshable with Loggable
                             {tabs}
                         </div>
                         <div class="tab-pane">
-                            {snippet.portfolio(current, Some(user), modifiable=true)}
+                            {portfolio(current, Some(user), modifiable=true)}
                         </div>
                     }
                 }
@@ -73,5 +70,8 @@ class Dashboard extends Refreshable with Loggable
                 <p>Login to view your portfolio</p>
         }
     }
+}
+object Dashboard {
+    def apply() = new Dashboard
 }
 

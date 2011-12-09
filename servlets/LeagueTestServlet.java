@@ -54,6 +54,19 @@ public class LeagueTestServlet extends HttpServlet {
             // Get assets from the portfolio
             double cash = current.cash().dollars().doubleValue();
             out.printf("Cash: $%.2f\n", cash);
+            for (StockSchema.StockAsset asset : current.getMyStockAssets()) {
+                BigDecimal shares  = asset.shares().shares();
+                BigDecimal price   = asset.price().price();
+                BigDecimal dollars = asset.dollars().dollars();
+                String ticker  = asset.ticker();
+                
+                out.printf("%d shares ($%.2f) of %s at $%.2f/sh\n",
+                    shares.intValue(),
+                    dollars.doubleValue(),
+                    ticker,
+                    price.doubleValue()
+                );
+            }
             
             // Get the league the portfolio belongs to
             UserSchema.League league = current.getLeague();

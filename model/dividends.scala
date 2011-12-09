@@ -55,5 +55,12 @@ trait DividendSchema extends Schema {
                 yield ()
             }
         }.sequence
+    
+    trait PortfolioWithDividends {
+        self: Portfolio =>
+        
+        def myDividendPayments: List[DividendPayment] =
+            dividendPayments where ('owner ~=~ this) toList
+    }
 }
 

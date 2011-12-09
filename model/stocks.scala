@@ -106,6 +106,14 @@ trait StockSchema extends Schema {
         def userCancel()
     }
     
+    case class StockHolding(ticker: String, shares: Shares, dollars: Dollars)
+    
+    def allStockHoldings: List[StockHolding] = (stockAssets.toList
+        groupBy (_.ticker) map { case (ticker, assetGroup) =>
+            val shares = (assetGroup map (_.shares)).summ
+            StockHolding(ticker, shares, shares*Stocks.lastTradePrice(ticker))
+        } toList)
+    
     trait StockAssetOps {
         self: StockAsset =>
             
