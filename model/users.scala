@@ -451,13 +451,11 @@ trait UserSchema extends Schema {
         def toLink = readDB {
             /* XXX: link to the league data or something? */
             val l = self
-            <p>{l.name}</p>
-            
-            /*
-            <a href={"/league-info?" + HQS.buildQuery(Map("league" -> l.name))}>
-                {l.name}
-            </a>
-            */
+            <li>
+                <a href={"/leaderboard?" + HQS.buildQuery(Map("league" -> l.name))}>
+                    {l.name}
+                </a>
+            </li>
         }
     }
     
