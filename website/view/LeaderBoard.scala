@@ -47,6 +47,11 @@ class LeaderPage extends Page with Loggable {
             p <- Portfolio.byLeague(l).sortBy(_.rank).drop(start).take(count)
         } yield p
 
+        val topPlayers = for {
+            l <- ml.toList
+            p <- Portfolio.byLeague(l).sortBy(_.rank).take(5)
+        } yield p
+
         val n : NodeSeq = for {
             p <- p1
         } yield {
@@ -91,6 +96,7 @@ class LeaderPage extends Page with Loggable {
             <div id="leader-page" class="block">
                 {stuff}
             </div>
+            {leaderboardPlot(topPlayers)}
             {holdingsPlot()}
         </lift:children>
 
