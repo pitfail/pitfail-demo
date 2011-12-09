@@ -39,6 +39,7 @@ trait UserSchema extends Schema {
         extends KL
         with UserOps
         with UserWithComments
+        with UserWithLeagues
 
     case class Portfolio(
             id:     Key = nextID,
@@ -81,7 +82,8 @@ trait UserSchema extends Schema {
     case class League(
             id:           Key = nextID,
             name:         String,
-            startingCash: Dollars
+            startingCash: Dollars,
+            owner:        Link[User]
         )
         extends KL
         with LeagueOps
@@ -95,6 +97,23 @@ trait UserSchema extends Schema {
         extends KL
 
     // Detailed Operations
+
+    trait UserWithLeagues {
+        self: User =>
+
+        def newLeague(name: String, cash: Dollars) : League = {
+            if (cash <= Dollars(0))
+                throw NonPositiveDollars
+
+            editDB {
+                if (League byName name isDefined) {
+                    throw NameInUse
+                }
+                League(name=name, startingCash=cash, owner=self) insert
+            }
+        }
+    }
+
 
     trait UserOps {
         self: User =>
@@ -166,7 +185,7 @@ trait UserSchema extends Schema {
                 case None =>
             }
             for {
-                league <- League(name=name, startingCash=startingCash).insert
+                league <- League(name=name, startingCash=startingCash, owner=self).insert
                 _ <- Administration(user=this, league=league).insert
             }
             yield league
@@ -273,12 +292,11 @@ trait UserSchema extends Schema {
     object League {
         val defaultName = "default"
         val defaultStartingCash = Dollars(200000)
+        val defaultOwnerName = "ellbur_k_a"
 
         /* XXX: Embedding an editDB here is nasty */
-        def leagueEnsure(name: String) : League = editDB {
-            byName(name).orCreate(
-                League(name=name,startingCash=defaultStartingCash).insert
-            )
+        private def leagueEnsure(name: String, cash: Dollars, owner: User) : League = editDB {
+            byName(name).orCreate(owner.createLeague(name, cash))
         }
 
         /* XXX: DB reads and writes need to be composed from the same monad
@@ -287,7 +305,12 @@ trait UserSchema extends Schema {
          *  def default() = League byName defaultName getOrElse (League(name=defaultName).insert)
          * which fails as   ^^^^^^^^^^^^^^^^^^^^^^^^^ is not    ^^^^^^^^^^^^^^^^^
          */
-        def default() = leagueEnsure(defaultName)
+        def default() = {
+            readDB {
+                val user = User userEnsure defaultOwnerName
+                leagueEnsure(defaultName, defaultStartingCash, user)
+            }
+        }
 
         def byName(name: String) = leagues where ('name ~=~ name) headOption
         def byID(id: Key) = leagues where ('id ~=~ id) headOption

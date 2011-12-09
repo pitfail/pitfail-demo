@@ -96,7 +96,7 @@ case class Dollars(dollars: BigDecimal)
     extends Ordered[Dollars]
 {
     def this(str: String) = this(BigDecimal(str))
-    
+
     def +(other: Dollars) = Dollars(dollars + other.dollars)
     def -(other: Dollars) = Dollars(dollars - other.dollars)
     def *(scale: Scale)   = Dollars(scale.scale * dollars)
