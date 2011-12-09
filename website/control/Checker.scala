@@ -12,7 +12,8 @@ import model.schema._
 
 object Checker extends Loggable {
     
-    def run(): Unit = periodically(30 minutes) {
+    // TODO: This is only mad frequent cause of the demo being short
+    def run(): Unit = periodically(1 minutes) {
         runChecks()
     }
     

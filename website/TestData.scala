@@ -66,9 +66,11 @@ def apply() {
     pitfail.userSellStock("F", Shares(2))
     
     val now = new DateTime
-    model.Stocks.syntheticDividends ++= List(
-        Dividend("MSFT", now plusMinutes 1, Price("0.30"))
-    )
+    for (offset <- Seq(1, 3, 5, 7, 9, 11, 13)) {
+        model.Stocks.syntheticDividends ++= List(
+            Dividend("MSFT", now plusMinutes offset, Price("0.30"))
+        )
+    }
     
     // Synthetic history
     readDB { portfolios.toList map { port =>
