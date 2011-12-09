@@ -186,6 +186,8 @@ trait UserSchema extends Schema {
         def mySentInvites = leagueInvites where ('sender ~=~ self) toList
         def myReceivedInvites = leagueInvites where ('user ~=~ self) toList
         def invitedTo(league: League) = myReceivedInvites contains league
+        
+        def getMyReceivedInvites: java.util.List[LeagueInvite] = myReceivedInvites
 
         def myAdministrations = administrations where ('user ~=~ self) toList
         def adminOf(league: League) = myAdministrations contains league
@@ -225,6 +227,9 @@ trait UserSchema extends Schema {
 
             LeagueInvite(league=league, user=user, sender=self) insert
         }
+        
+        def inviteToLeague(league: League, user: String): LeagueInvite =
+            inviteToLeague(league, User byName user)
     }
 
 
@@ -255,6 +260,9 @@ trait UserSchema extends Schema {
         def myPortfolioInvites: List[PortfolioInvite] = readDB {
             portfolioInvites where ('to ~=~ this) toList
         }
+        
+        def getMyPortfolioInvites: java.util.List[PortfolioInvite] =
+            myPortfolioInvites
         
         def userAcceptInvite(invite: PortfolioInvite) = editDB(acceptInvite(invite))
         
