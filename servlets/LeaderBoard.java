@@ -59,7 +59,11 @@ public class LeaderBoard extends HttpServlet {
 				//Get the current portfolio
 				UserSchema.Portfolio current = user.getCurrentPortfolio();
 				//Get the league the portfolio belongs to
-				UserSchema.League league = current.getLeague();
+		//		UserSchema.League league = current.getLeague();
+		
+				 UserSchema.League league = operations.getDefaultLeague();
+	  //          out.printf("Default league is %s\n", league.name());
+
 				// Get the 5 highest portfolios for the league
 				List<UserSchema.Portfolio> leaders = league.getLeaders(10);
 				for(UserSchema.Portfolio p : leaders){

@@ -39,7 +39,7 @@ public class LeagueTestServlet extends HttpServlet {
             PrintWriter out = response.getWriter();
             
             // Get a user
-            UserSchema.User user = operations.getUser("Test");
+            UserSchema.User user = operations.getUser("sonu_pillai");
             
             // List the portfolios (teams) a user belongs to
             List<UserSchema.Portfolio> portfolios = user.getPortfolios();
@@ -48,7 +48,7 @@ public class LeagueTestServlet extends HttpServlet {
             }
             
             // Get the current portfolio
-            UserSchema.Portfolio current = user.getCurrentPortfolio();
+           UserSchema.Portfolio current = user.getCurrentPortfolio();
             out.printf("Current portfolio is %s\n", current.name());
             
             // Get assets from the portfolio

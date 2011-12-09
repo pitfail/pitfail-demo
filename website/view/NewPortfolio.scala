@@ -15,7 +15,7 @@ import errors._
 import model.schema._
 
 
-/*
+
 class NewPortfolio extends Page with Loggable {
     def render = refreshable.render
     val refreshable = Refreshable(doRender)
@@ -89,4 +89,4 @@ class NewPortfolio extends Page with Loggable {
     case class Stuff(name: String, invitees: Seq[User], league: League)
 }
 
-*/
+

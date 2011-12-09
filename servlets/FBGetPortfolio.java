@@ -47,7 +47,7 @@ public class FBGetPortfolio extends HttpServlet {
 
 		PrintWriter out = response.getWriter();			
 
-//		String userId = "ellbur_k_a";
+//		String userId = "aur";
 		String userId = request.getParameter("userid");
 		BigDecimal shares;
 		BigDecimal price;
