@@ -584,35 +584,9 @@ tr.deriv-header {
 
 /* Auto trades */
 
-.auto-trade {
-    position: relative;
-    left: 0%;
+.auto-trade-code {
     width: 100%;
-}
-
-.auto-trade-table {
-    position: relative;
-    left: 0%;
-    width: 100%;
-}
-
-.auto-trade-left-col {
-    width: 50%;
-}
-
-.auto-trade-right-col {
-    width: 50%;
-}
-
-.auto-trade-left {
-    text-align: left;
-    vertical-align: top;
-}
-
-.auto-trade-right {
-    text-align: left;
-    vertical-align: top;
-    position: relative;
+    height: 20em;
 }
 
 /* Tab bar */
@@ -636,5 +610,6 @@ tr.deriv-header {
 
 .tab-pane {
     clear: both;
+    position: relative;
 }
 
