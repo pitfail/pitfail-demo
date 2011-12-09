@@ -99,12 +99,39 @@ public class LeagueTestServlet extends HttpServlet {
                 out.printf("Name kmfe is already in use\n");
             }
             
+            // Get my portfolio invites
+            List<UserSchema.PortfolioInvite> portfolioInvites = user.getMyPortfolioInvites();
+            for (UserSchema.PortfolioInvite invite : portfolioInvites) {
+                // Accept or decline
+                if (Math.random() < 0.5) {
+                    user.userAcceptInvite(invite);
+                }
+                else {
+                    user.userDeclineInvite(invite);
+                }
+            }
+            
             // Create a new league
             try {
-                user.userCreateLeague("6203", new Dollars("500000"));
+                UserSchema.League newLeague = user.userCreateLeague("6203", new Dollars("500000"));
+                
+                // Invite someone to it
+                try {
+                    user.inviteToLeague(newLeague, "barack");
+                }
+                catch (SchemaErrors$NoSuchUser$ e) {
+                    out.printf("No such user\n");
+                }
             }
             catch (SchemaErrors$NameInUse$ e) {
                 out.printf("Name 6203 is already taken\n");
+            }
+            
+            // Get my league invites
+            List<UserSchema.LeagueInvite> leagueInvites = user.getMyReceivedInvites();
+            for (UserSchema.LeagueInvite invite : leagueInvites) {
+                // Accept
+                invite.accept();
             }
         }
         catch (RuntimeException e) {
