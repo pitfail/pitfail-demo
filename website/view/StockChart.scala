@@ -40,16 +40,20 @@ lazy val main =
     </div>
 
 lazy val stockTable =
-    <table>
-        <tr>
-            <td>Ticker</td>
-            <td/>
-            <td>Shares</td>
-            <td>Last Price</td>
-            <td>Dividends</td>
-            <td/>
-        </tr>
-        {tableRows}
+    <table class="boxy">
+        <thead>
+            <tr>
+                <th>Ticker</th>
+                <th/>
+                <th>Shares</th>
+                <th>Last Price</th>
+                <th>Dividends</th>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+            {tableRows}
+        </tbody>
     </table>
 
 lazy val tableRows = port.myStockAssets map { asset =>
@@ -92,7 +96,7 @@ lazy val tableRows = port.myStockAssets map { asset =>
         </tr>
     }
     
-    top ++ bought ++ sold ++ <tr><td/><td/><td/><td/><td/><td/></tr>
+    top ++ bought ++ sold ++ <tr class="gap"><td/><td/><td/><td/><td/><td/></tr>
 }
 
 lazy val seller = StockSeller()
