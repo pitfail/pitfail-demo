@@ -148,6 +148,14 @@ trait UserSchema extends Schema {
         def toLink = self.league.toLink
     }
 
+    implicit def toOrCreate[R](already: => Option[R]) = new {
+        def orCreate(trans: => Transaction[R]) =
+            already match {
+                case Some(r) => Transaction(r, Nil)
+                case None => trans
+            }
+    }
+
     trait LeagueInviteOps {
         self: LeagueInvite =>
 
@@ -156,7 +164,7 @@ trait UserSchema extends Schema {
             val league = self.league
 
             for {
-                m <- user membershipIn league orCreate (Membership(user=user, league=league) insert)
+                m <- user.membershipIn(league).orCreate(Membership(user=user, league=league) insert)
                 _ <- self delete
             } yield m
         }
