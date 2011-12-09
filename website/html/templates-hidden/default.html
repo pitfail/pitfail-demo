@@ -15,18 +15,20 @@
 
         <!-- Ohhh yeah -->
         <lift:RefreshHack/>
-
     </head>
     <body>
         <div id="body">
             <h1><a href="/">PitFail</a></h1>
-	    <div id="account">
-		<a href="/auto">Auto Trades</a>
-		-
-		<a href="/new-portfolio">New Portfolio</a>
-		-
-		<a href="/leaderboard">Leaderboard</a>
-		&nbsp; | &nbsp;
+            <ul id="navigation">
+                <li><a href="/subscribe">Newsletter</a></li>
+                <li><a href="/auto">Auto Trades</a></li>
+                <li><a href="/new-portfolio">New Portfolio</a></li>
+                <li><a href="/leaderboard">Leaderboard</a></li>
+                <li><a href="/league-manager">Leagues</a></li>
+                <li><a href="/league-creator">New League</a></li>
+            </ul>
+
+            <div id="account">
                 <lift:LoginStatus.ifLoggedOut>
                 <a href="/twitter/login">Login</a>
                 </lift:LoginStatus.ifLoggedOut>
@@ -41,8 +43,11 @@
                     <lift:bind name="content"/>
                 </div>
             </div>
-            <div id="right-outer" class="sidebar">
-                <lift:embed what="sidebar"/>
+            <div id="right-outer">
+                <div class="sidebar">
+                    <lift:embed what="sidebar"/>
+                </div>
+                <lift:bind name="sidebar-extra"/>
             </div>
             <span style="clear:both;"/>
         </div>

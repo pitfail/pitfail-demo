@@ -4,3 +4,32 @@ are necessary. Obviously those keys should not go in source control.
 
 Hence, a .gitignore file in this directory ignores all *.scala files.
 
+Format of the keys file is like so:
+==== Twitter.scala ====
+
+package code
+package keys
+
+/* API keys for pitfail_app1
+ * Only should be given Read access
+ * Used for authorization of users to the webpage.
+ */
+object Twitter {
+	val consumerKey     = "..."
+	val consumerSecret  = "..."
+}
+
+/* API keys for pf_frontend
+ * Requires Read and Write permissions.
+ * Used for accessing the Application account.
+ */
+object RWTwitter {
+	val consumerKey     = "..."
+	val consumerSecret  = "..."
+
+	val accessToken = "..."
+	val accessTokenSecret = "..."
+	val accessUser = "user_the_keys_are_for"
+}
+
+

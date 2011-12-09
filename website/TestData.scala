@@ -1,6 +1,7 @@
 
 package bootstrap.liftweb
 
+import net.liftweb.common.Loggable
 import code._
 import model._
 import model.schema._
@@ -11,12 +12,12 @@ import org.joda.time.DateTime
 import net.liftweb.json
 import scalaz.Scalaz._
 import scala.io.Source
+import scala.util.Random
 
-object insertTestData {
+object insertTestData extends Loggable {
 //
 
 def apply() {
-    /*
     readDB {
         create_!
     }
@@ -51,13 +52,13 @@ def apply() {
     implicit val _ = json.DefaultFormats
     val demoScripts = (
            "jsapi/demo-scripts/list.json" |> slurpResource _
-        |> json.parse _ ).extract[List[String]]
+        |> json.parse _ ).extract[List[AutoTradeItem]]
         
-    demoScripts foreach { script =>
+    demoScripts foreach { case AutoTradeItem(title, script) =>
         val code = slurpResource("jsapi/demo-scripts/" + script)
         
         val trade = ellbur.userMakeNewAutoTrade()
-        trade.userModify(title=script, code=code)
+        trade.userModify(title=title, code=code)
     }
     
     pitfail.userBuyStock("MSFT", Shares(10))
@@ -69,10 +70,27 @@ def apply() {
         Dividend("MSFT", now plusMinutes 1, Price("0.30"))
     )
     
+    // Synthetic history
+    readDB { portfolios.toList map { port =>
+        logger.info("Making synthetic data for " + port.name)
+        val historyStart = now minusWeeks 1 minusDays 1
+        var mark = now
+        var value = port.spotValue
+        while (mark isAfter historyStart) {
+            PeriodicPortfolioEvaluator makeSynthetic (port, mark, value)
+            mark = mark minusHours 6
+            
+            val scale = Scale(1 + Random.nextGaussian/10)
+            logger.info(" scale = " + scale)
+            value = value * scale
+        }
+    }}
+    
     systemRecalculateRankings()
     systemCheckForDividends()
-    */
 }
+
+case class AutoTradeItem(name: String, file: String)
 
 }
 

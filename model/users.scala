@@ -4,6 +4,7 @@ package model
 import org.joda.time.DateTime
 import spser._
 import scala.collection.JavaConversions._
+import stockdata.{HttpQueryService => HQS}
 
 trait UserSchema extends Schema {
     self: StockSchema with DerivativeSchema with AuctionSchema with CommentSchema
@@ -16,6 +17,9 @@ trait UserSchema extends Schema {
     implicit val pvCon = PortfolioValue.apply _
     implicit val lCon = League.apply _
     implicit val aCon = Administration.apply _
+    implicit val liCon = LeagueInvite.apply _
+    implicit val mCon = Membership.apply _
+    implicit val subCon = Subscription.apply _
             
     implicit val users: Table[User] = table[User]
     implicit val portfolios: Table[Portfolio] = table[Portfolio]
@@ -24,11 +28,14 @@ trait UserSchema extends Schema {
     implicit val portfolioValues: Table[PortfolioValue] = table[PortfolioValue]
     implicit val leagues: Table[League] = table[League]
     implicit val administrations: Table[Administration] = table[Administration]
-    
+    implicit val leagueInvites: Table[LeagueInvite] = table[LeagueInvite]
+    implicit val memberships: Table[Membership] = table[Membership]
+    implicit val subscriptions: Table[Subscription] = table[Subscription]
+
     abstract override def tables = (
            users :: portfolios :: ownerships :: portfolioInvites
-        :: portfolioValues :: leagues :: administrations :: super.tables )
-    
+        :: portfolioValues :: leagues :: administrations :: leagueInvites
+        :: memberships :: subscriptions :: super.tables )
     // Model tables
 
     case class User(
@@ -39,6 +46,7 @@ trait UserSchema extends Schema {
         extends KL
         with UserOps
         with UserWithComments
+        with UserWithLeagues
 
     case class Portfolio(
             id:     Key = nextID,
@@ -82,7 +90,8 @@ trait UserSchema extends Schema {
     case class League(
             id:           Key = nextID,
             name:         String,
-            startingCash: Dollars
+            startingCash: Dollars,
+            owner:        Link[User]
         )
         extends KL
         with LeagueOps
@@ -94,21 +103,161 @@ trait UserSchema extends Schema {
             league: Link[League]
         )
         extends KL
+        with AdministrationOps
 
+    case class LeagueInvite(
+            id:     Key = nextID,
+            user:   Link[User],
+            league: Link[League],
+            sender: Link[User]
+        )
+        extends KL
+        with LeagueInviteOps
+
+    case class Membership(
+            id:     Key = nextID,
+            user:   Link[User],
+            league: Link[League]
+        )
+        extends KL
+        with MembershipOps
+
+    case class Subscription(
+            id:    Key = nextID,
+            user:  Link[User],
+            email: String
+        )
+        extends KL
+        
     // Detailed Operations
+    trait AdministrationOps {
+        self: Administration =>
+
+        def toLink = readDB {
+            val l = self.league
+            <a href={"/league-admin?" + HQS.buildQuery(Map("league" -> l.name))}>
+                {l.name}
+            </a>
+        }
+    }
+
+    trait MembershipOps {
+        self: Membership =>
+
+        /* XXX: allow leaving?? */
+        def toLink = self.league.toLink
+    }
+
+    implicit def toOrCreate[R](already: => Option[R]) = new {
+        def orCreate(trans: => Transaction[R]) =
+            already match {
+                case Some(r) => Transaction(r, Nil)
+                case None => trans
+            }
+    }
+
+    trait LeagueInviteOps {
+        self: LeagueInvite =>
+
+        def accept() : Membership = editDB {
+            val user = self.user
+            val league = self.league
+
+            for {
+                m <- user.membershipIn(league).orCreate(Membership(user=user, league=league) insert)
+                _ <- self delete
+            } yield m
+        }
+        
+        def decline() { editDB(self delete) }
+
+        def toRecieverForm = readDB {
+            /* XXX: allow accept & reject */
+            self.league.toLink
+        }
+
+        def toSenderForm = readDB {
+            /* XXX: allow withdrawing the invite */
+            self.league.toLink
+        }
+    }
+
+    trait UserWithLeagues {
+        self: User =>
+
+        def mySentInvites = leagueInvites where ('sender ~=~ self) toList
+        def myReceivedInvites = leagueInvites where ('user ~=~ self) toList
+        def invitedTo(league: League) = myReceivedInvites contains league
+        
+        def getMyReceivedInvites: java.util.List[LeagueInvite] = myReceivedInvites
+
+        def myAdministrations = administrations where ('user ~=~ self) toList
+        def adminOf(league: League) = myAdministrations contains league
+        def notAdminOf(league: League) : Boolean = (! adminOf(league))
+
+        def myMemberships = memberships.where('user ~=~ self).toList
+        def membershipIn(league: League) = myMemberships filter (_.league ~~ league) headOption
+        def memberOf(league: League) = myMemberships contains league
+        def notMemberOf(league: League) = (! memberOf(league))
+
+        def newLeague(name: String, cash: Dollars) : League = editDB {
+            createLeague(name, cash)
+        }
+
+        private[model] def createLeague(name: String, startingCash: Dollars) = {
+            if (startingCash <= Dollars(0))
+                throw NonPositiveDollars
+
+            League byName name match {
+                case Some(_) => throw NameInUse
+                case None =>
+            }
+            for {
+                league <- League(name=name, startingCash=startingCash, owner=self).insert
+                _ <- Administration(user=this, league=league).insert
+                _ <- Membership(user=this, league=league).insert
+            }
+            yield league
+        }
+
+        def inviteToLeague(league: League, user: User) : LeagueInvite = editDB {
+            if (self notAdminOf league)
+                throw NotPermitted
+
+            if (user memberOf league)
+                throw AlreadyInLeague
+
+            if (user invitedTo league)
+                throw AlreadyInvited
+
+            LeagueInvite(league=league, user=user, sender=self) insert
+        }
+        
+        def inviteToLeague(league: League, user: String): LeagueInvite =
+            inviteToLeague(league, User byName user)
+    }
+
 
     trait UserOps {
         self: User =>
-        
+       
+        def name = username
+
         def myPortfolios: List[Portfolio] = readDB {
             (ownerships where ('user ~=~ this)).toList map (_.portfolio.extract) toList
         }
+        
+        def aPortfolio = myPortfolios head
         
         // Java inter-op
         def getPortfolios: java.util.List[Portfolio] = myPortfolios
         
         def getCurrentPortfolio: Portfolio = lastPortfolio
-        
+       
+        def userCreatePortfolio(name: String, league: League): Portfolio =
+            editDB(createPortfolio(name, league))
+        def userCreatePortfolio(name: String, league: String): Portfolio =
+            editDB(createPortfolio(name, league))
         def userCreatePortfolio(name: String): Portfolio = editDB(createPortfolio(name))
         
         def portfolioByName(name: String) = readDB (
@@ -120,6 +269,9 @@ trait UserSchema extends Schema {
         def myPortfolioInvites: List[PortfolioInvite] = readDB {
             portfolioInvites where ('to ~=~ this) toList
         }
+        
+        def getMyPortfolioInvites: java.util.List[PortfolioInvite] =
+            myPortfolioInvites
         
         def userAcceptInvite(invite: PortfolioInvite) = editDB(acceptInvite(invite))
         
@@ -134,14 +286,22 @@ trait UserSchema extends Schema {
         def doIAdminister(league: League) = !(administrations where ('user ~=~ this)
             where ('league ~=~ league)).headOption.isEmpty
         
-        private[model] def createPortfolio(name: String) = {
-            if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
+        def userSubscribeToNewsletter(email: String) = editDB {
+            Subscription(user=this, email=email).insert
+        }
+        
+        private[model] def createPortfolio(name: String) : Transaction[Portfolio]=
+            createPortfolio(name, League.default)
 
-            val league = League.default
+        private[model] def createPortfolio(name: String, league: String) : Transaction[Portfolio] = {
+            createPortfolio(name, League byName league getOrElse(throw NoSuchLeague) )
+        }
+
+        private [model] def createPortfolio(name: String, league: League) :Transaction[Portfolio] = {
+            if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
             val cash = league.startingCash
 
             for {
-                /* XXX: change to a different league with param. */
                 port <- Portfolio(name=name, league=league, cash=cash, loan=cash, rank=1000).insert
                 _    <- Ownership(user=this, portfolio=port).insert
             }
@@ -160,18 +320,6 @@ trait UserSchema extends Schema {
             
         private [model] def declineInvite(invite: PortfolioInvite) =
             invite.delete
-            
-        private[model] def createLeague(name: String, startingCash: Dollars) = {
-            League byName name match {
-                case Some(_) => throw NameInUse
-                case None =>
-            }
-            for {
-                league <- League(name=name, startingCash=startingCash).insert
-                _ <- Administration(user=this, league=league).insert
-            }
-            yield league
-        }
     }
     
     object User {
@@ -180,39 +328,31 @@ trait UserSchema extends Schema {
             u getOrElse (throw NoSuchUser)
         }
         
-        def userEnsure(name: String) = editDB { ensure(name) }
-        
-        def isNew(name: String) = editDB {
-            try Transaction(OldUser(byName(name)))
-            catch { case NoSuchUser => ensure(name) map (NewUser(_)) }
-        }
-        
-        // If this user doesn't already exist, create it
-        private[model] def ensure(name: String): Transaction[User] =
-            byName(name).orCreate(newUser(name))
-        
-        private[model] def ensureP(name: String): Transaction[Portfolio] = {
-            def port: Portfolio = byName(name).lastPortfolio
-            port orCreate newUserP(name)
-        }
-        
-        // Create a new user
-        // XXX: this duplicates logic in createPortfolio
-        private[model] def newUserAll(name: String) = {
-            val league = League.default
-            val cash = league.startingCash
-            for {
-                port  <- Portfolio(name=name, league=League.default, cash=cash, loan=cash, rank=0).insert
-                user  <- User(username=name, lastPortfolio=port).insertFor('username ~=~ name)
-                _     <- Ownership(user=user, portfolio=port).insert
+        def userEnsure(name: String): User = readDB {
+            try {
+                byName(name)
             }
-            yield (user, port)
+            catch {
+                case NoSuchUser =>
+                    val league = League.default
+                    val cash = league.startingCash
+                    editDB {
+                        for {
+                            port   <- Portfolio(name=name, league=league,
+                                cash=cash, loan=cash, rank=0).insert
+                            user   <- User(username=name, lastPortfolio=port).insert
+                            _      <- Ownership(user=user, portfolio=port).insert
+                            _      <- Membership(user=user, league=league).insert
+                        }
+                        yield user
+                    }
+            }
         }
-
-        private[model] def newUser (name: String) : Transaction[User] =
-            newUserAll(name) map (_._1)
-        private[model] def newUserP(name: String) : Transaction[Portfolio] =
-            newUserAll(name) map (_._2)
+        
+        def isNew(name: String) = {
+            try OldUser(byName(name))
+            catch { case NoSuchUser => NewUser(userEnsure(name)) }
+        }
     }
 
     object Portfolio {
@@ -249,7 +389,7 @@ trait UserSchema extends Schema {
         // Java inter-op
         def getLeague: League = readDB { league }
             
-        def spotValue: Dollars = (
+        def spotValue: Dollars = readDB (
               cash
             + (myStockAssets map (_.dollars)).foldLeft(Dollars(0))(_+_)
             + (myDerivativeAssets map (_.spotValue)).foldLeft(Dollars(0))(_+_)
@@ -274,22 +414,21 @@ trait UserSchema extends Schema {
     object League {
         val defaultName = "default"
         val defaultStartingCash = Dollars(200000)
+        val defaultOwnerName = "nobody"
 
-        /* XXX: Embedding an editDB here is nasty */
-        def leagueEnsure(name: String) : League = editDB {
-            byName(name).orCreate(
-                League(name=name,startingCash=defaultStartingCash).insert
-            )
+        def default = readDB {
+            byName(defaultName) match {
+                case None => editDB {
+                    for {
+                        user   <- User(username=defaultOwnerName, lastPortfolio="").insert
+                        league <- League(name=defaultName, startingCash=defaultStartingCash, owner=user).insert
+                    }
+                    yield league
+                }
+                case Some(league) => league
+            }
         }
-
-        /* XXX: DB reads and writes need to be composed from the same monad
-         * so that I can avoid this unconditional 'get'
-         * initially the code was:
-         *  def default() = League byName defaultName getOrElse (League(name=defaultName).insert)
-         * which fails as   ^^^^^^^^^^^^^^^^^^^^^^^^^ is not    ^^^^^^^^^^^^^^^^^
-         */
-        def default() = leagueEnsure(defaultName)
-
+        
         def byName(name: String) = leagues where ('name ~=~ name) headOption
         def byID(id: Key) = leagues where ('id ~=~ id) headOption
     }
@@ -301,6 +440,15 @@ trait UserSchema extends Schema {
         def getLeaders(n: Int): java.util.List[Portfolio] = readDB {
             (portfolios where ('league ~=~ this)).toList sortBy (_.rank) take n
         }
+        
+        def toLink = readDB {
+            /* XXX: link to the league data or something? */
+            val l = self
+            <a href={"/league-info?" + HQS.buildQuery(Map("league" -> l.name))}>
+                {l.name}
+            </a>
+        }
     }
+    
 }
 

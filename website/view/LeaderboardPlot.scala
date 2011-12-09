@@ -9,9 +9,10 @@ import scala.xml.{NodeSeq}
 import model._
 import model.schema._
 
-object stockPlot {
+object leaderboardPlot {
 
-def apply(portfolio: Portfolio): NodeSeq = readDB {
+
+def apply(portfolios: List[Portfolio]): NodeSeq = readDB {
     import scala.math.{ceil,floor}
     import scala.xml.NodeSeq
     import net.liftweb.http.js.JsCmds._
@@ -22,23 +23,33 @@ def apply(portfolio: Portfolio): NodeSeq = readDB {
     import net.liftweb.http.js._
     import net.liftweb.http.js.JE._
 
-    val begin   = DateTime.now - (7 days)
-    val end     = DateTime.now
-    val history = (schema.PortfolioValues.history(portfolio, begin, end).toList
-        sortBy (_._1.getMillis))
+    val TIME_WINDOW = (7 days)
+    val MIN_SCALE = Scale(0.8)
+    val MAX_SCALE = Scale(1.2)
 
-    val data_to_plot = new FlotSerie() {
-        override val data: List[(Double, Double)] =
-            history map {
-                // TODO: Convert this to the user's timezone.
-                case (updateTime: DateTime, dollars: Dollars) =>
-                    (updateTime.getMillis().toDouble, dollars.dollars.toDouble)
-            }
+    val begin   = DateTime.now - TIME_WINDOW
+    val end     = DateTime.now
+
+    val histories = portfolios map { portfolio =>
+        (schema.PortfolioValues.history(portfolio, begin, end).toList
+            sortBy (_._1.getMillis))
     }
 
-    val prices = history map { case (_, dollars: Dollars) => dollars }
-    val range  = getRange(prices)
-    println(range)
+    val data = (portfolios zip histories) map {
+        case (portfolio, history) => new FlotSerie() {
+            override val data: List[(Double, Double)] =
+                history map {
+                    // TODO: Convert this to the user's timezone.
+                    case (updateTime: DateTime, dollars: Dollars) =>
+                        (updateTime.getMillis().toDouble, dollars.dollars.toDouble)
+                }
+        }
+    }
+
+    // List[List[(DateTime, Dollars)]]
+    val getDollars = (x: List[(Any, Dollars)]) => x map (_._2)
+    val dollarsMin = MIN_SCALE * (histories map { getDollars(_).min }).min
+    val dollarsMax = MAX_SCALE * (histories map { getDollars(_).max }).max
 
     val options:FlotOptions = new FlotOptions () {
         override val series = Full(Map( 
@@ -62,8 +73,8 @@ def apply(portfolio: Portfolio): NodeSeq = readDB {
         })
 
         override val yaxis = Full(new FlotAxisOptions() {
-            override val min = Full(range match { case (min, _) => min })
-            override val max = Full(range match { case (_, max) => max })
+            override val min = Full(dollarsMin.dollars.toDouble)
+            override val max = Full(dollarsMax.dollars.toDouble)
         })
 
         override val legend = Full( new FlotLegendOptions() {
@@ -73,7 +84,7 @@ def apply(portfolio: Portfolio): NodeSeq = readDB {
 
 
     val flot1 = <div/>
-    val flot2 = Flot.render("portfolio_plot", List(data_to_plot), options, Flot.script(flot1))
+    val flot2 = Flot.render("portfolio_plot", data, options, Flot.script(flot1))
 
     (flot1 ++
      flot2 ++

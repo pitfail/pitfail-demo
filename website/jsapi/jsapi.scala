@@ -18,6 +18,8 @@ import http.js._
 import JsCmds._
 import JE._
 
+case class Func(help: String, name: String, body: String)
+
 lazy val jsFuncDefs: NodeSeq =
     <head>
         <script type="text/javascript">
@@ -25,62 +27,124 @@ lazy val jsFuncDefs: NodeSeq =
         </script>
     </head>
 
-lazy val api = Map(
-    "buyDollars" -> func("ticker", "dollars") { result =>
+lazy val api = List[Func](
+    Func(
+    """| Buy a stock in dollars.
+       |
+       | buyDollars('MSFT', 2000)
+       |""".stripMargin,
+    "buyDollars", func("ticker", "dollars") { result =>
         val ticker  = result("ticker")
         val dollars = Dollars(result("dollars"))
         
         me.userBuyStock(ticker, dollars)
         Noop
-    },
+    }),
     
-    "buyShares" -> func("ticker", "shares") { result =>
+    Func(
+    """| Buy a stock in shares.
+       |
+       | buyShares('MSFT', 10)
+       |""".stripMargin,
+    "buyShares", func("ticker", "shares") { result =>
         val ticker = result("ticker")
         val shares = Shares(result("shares"))
         
         me.userBuyStock(ticker, shares)
         Noop
-    },
+    }),
     
-    "sellDollars" -> func("ticker", "dollars") { result =>
+    Func(
+    """| Sell a stock in shares.
+       |
+       | sellDollars('MSFT', 2000)
+       |""".stripMargin,
+    "sellDollars", func("ticker", "dollars") { result =>
         val ticker = result("ticker")
         val dollars = Dollars(result("dollars"))
         
         me.userSellStock(ticker, dollars)
         Noop
-    },
+    }),
     
-    "sellShares" -> func("ticker", "shares") { result =>
+    Func(
+    """| Sell a stock in shares.
+       |
+       | sellShares('MSFT', 10)
+       |""".stripMargin,
+    "sellShares", func("ticker", "shares") { result =>
         val ticker = result("ticker")
         val shares = Shares(result("shares"))
         
         me.userSellStock(ticker, shares)
         Noop
-    },
+    }),
     
-    "sellAll" -> func("ticker") { result =>
+    Func(
+    """| Sell all of the stock that you own.
+       |
+       | sellAll('MSFT')
+       |""".stripMargin,
+    "sellAll", func("ticker") { result =>
         val ticker = result("ticker")
         
         me.userSellAll(ticker)
         Noop
-    },
+    }),
     
-    "stockPrice" -> func("ticker") { result =>
+    Func(
+    """| Get the current price of a stock (in a callback).
+       |
+       | stockPrice('MSFT', function(price) {
+       |     output.append(price)
+       | })
+       |""".stripMargin,
+    "stockPrice", func("ticker") { result =>
         val ticker = result("ticker")
         Num(Stocks.lastTradePrice(ticker).price.doubleValue)
-    },
+    }),
     
-    "howManySharesDoIOwn" -> func("ticker") { result =>
+    Func(
+    """| Get how many shares of a stock you own.
+       |
+       | howManySharesDoIOwn('MSFT', function(shares) {
+       |     output.append(shares)
+       | })
+       |""".stripMargin,
+    "howManySharesDoIOwn", func("ticker") { result =>
         val ticker = result("ticker")
         Num(me.howManyShares(ticker).shares)
-    },
+    }),
     
-    "howManyDollarsDoIOwn" -> func("ticker") { result =>
+    Func(
+    """| Get how many dollars (at last traded price) of a stock you own.
+       |
+       | howManyDollarsDoIOwn('MSFT', function(dollars) {
+       |     output.append(dollars)
+       | })
+       |""".stripMargin,
+    "howManyDollarsDoIOwn", func("ticker") { result =>
         val ticker = result("ticker")
-        Num(me.howManyDollars(ticker).dollars)
-    },
+        val howMany = me.howManyDollars(ticker).double
+        
+        logger.info("Replying %s %s" format (ticker, howMany))
+        Num(howMany)
+    }),
     
-    "news" -> func() { result => JsArray {
+    Func(
+    """| Get recent news events.
+       |
+       | news(function(events) {
+       |     for (i in events) {
+       |         output.append(events[i].action)
+       |         output.append(events[i].trader)
+       |         output.append(events[i].ticker)
+       |         output.append(events[i].dollars)
+       |         output.append(events[i].price)
+       |     }
+       | })
+       |""".stripMargin,
+    "news", func() { result => JsArray {
         recentEvents(10) flatMap { ev =>
             ev.action match {
                 case Bought(buyer, stock, shares, dollars, price) =>
@@ -102,13 +166,13 @@ lazy val api = Map(
                 case Exercised(port, derivative) => None
             }
         }
-    }}
+    }})
 )
 
 def me = control.PortfolioSwitcher.currentPortfolio
 
 lazy val setup = ("$(function () {\n"
-    + (api map { case (name, value) =>
+    + (api map { case Func(help, name, value) =>
         "    self."+name+" = " + value;
     } mkString ";\n")
     + otherLibs
@@ -127,6 +191,7 @@ lazy val otherLibs =
         |    }
         |    catch (e) {
         |        outplace.text(outplace.text() + e + "\n")
+        |        throw e
         |    }
         | })
         |

@@ -1,5 +1,10 @@
 
-<lift:surround with="default" at="content">
-<lift:AutoTrades/>
+<lift:surround with="default">
+<lift:bind-at name="content">
+    <lift:AutoTrades/>
+</lift:bind-at>
+<lift:bind-at name="sidebar-extra">
+    <lift:AutoTradeDocs/>
+</lift:bind-at>
 </lift:surround>
 

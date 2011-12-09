@@ -34,17 +34,25 @@ class LeaderPage extends Page with Loggable {
     val countParam  = paramAsBigInt("count").openOr(BigInt(50))
     val leagueParam = S param "league" openOr "default"
 
-    def render = try readDB {
+    def render = try {
         val start = startParam intValue
         val count = countParam intValue
         val league_n = leagueParam
 
         val last = start + count - 1
 
-        val ml  = League byName league_n
-        val p1 = for {
+        val (p1, ml) = readDB {
+            val ml = League byName league_n
+            val p1 = for {
+                l <- ml.toList
+                p <- Portfolio.byLeague(l).sortBy(_.rank).drop(start).take(count)
+            } yield p
+            (p1, ml)
+        }
+
+        val topPlayers = for {
             l <- ml.toList
-            p <- Portfolio.byLeague(l).sortBy(_.rank).drop(start).take(count)
+            p <- Portfolio.byLeague(l).sortBy(_.rank).take(5)
         } yield p
 
         val n : NodeSeq = for {
@@ -91,6 +99,7 @@ class LeaderPage extends Page with Loggable {
             <div id="leader-page" class="block">
                 {stuff}
             </div>
+            {leaderboardPlot(topPlayers)}
             {holdingsPlot()}
         </lift:children>
 

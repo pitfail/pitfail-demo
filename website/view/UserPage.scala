@@ -50,7 +50,7 @@ val dashboard = Dashboard()
 
 def apply() =
     <lift:children>
-        {PortfolioInvites().render}
+        {Invites().render}
         <lift:comet type="Offers"/>
         {dashboard.render}
         <lift:comet type="OutgoingOffers"/>

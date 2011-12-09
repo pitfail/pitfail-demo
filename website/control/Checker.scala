@@ -17,8 +17,6 @@ object Checker extends Loggable {
     }
     
     def runChecks() {
-        import comet._
-        
         logger.info("Running the derivative checker...")
         systemCheckForExercise()
         

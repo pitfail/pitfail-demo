@@ -79,6 +79,7 @@ object schema
     
 trait SchemaErrors {
     case object NegativeVolume extends BadUser
+    case object NonPositiveDollars extends BadUser
     case class NotEnoughCash(have: Dollars, need: Dollars) extends BadUser
     case class DontOwnStock(ticker: String) extends BadUser
     case class NotEnoughShares(have: Shares, need: Shares) extends BadUser
@@ -90,10 +91,14 @@ trait SchemaErrors {
     case object NoSuchPortfolio extends BadUser
     case object NoSuchDerivativeAsset extends BadUser
     case object NoSuchDerivativeLiability extends BadUser
+    case object NoSuchLeague extends BadUser
     case object NoSuchEvent extends BadUser
     case object NoSuchComment extends BadUser
     case object NameInUse extends BadUser
     case object NoBidders extends BadUser
+    case object NotPermitted extends BadUser
+    case object AlreadyInLeague extends BadUser
+    case object AlreadyInvited extends BadUser
 }
 
 case object NotFound extends BadUser
