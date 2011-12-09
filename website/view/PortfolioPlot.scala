@@ -24,7 +24,8 @@ def apply(portfolio: Portfolio): NodeSeq = readDB {
 
     val begin   = DateTime.now - (7 days)
     val end     = DateTime.now
-    val history = schema.PortfolioValues.history(portfolio, begin, end).toList
+    val history = (schema.PortfolioValues.history(portfolio, begin, end).toList
+        sortBy (_._1.getMillis))
 
     val data_to_plot = new FlotSerie() {
         override val data: List[(Double, Double)] =
@@ -50,7 +51,7 @@ def apply(portfolio: Portfolio): NodeSeq = readDB {
             "lines" -> JsObj(
                 "show"      -> JsTrue,
                 "steps"     -> Num(1),
-                "fill"      -> JsTrue
+                "fill"      -> JsFalse
             )
         ))
 

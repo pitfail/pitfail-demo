@@ -16,6 +16,7 @@ trait UserSchema extends Schema {
     implicit val pvCon = PortfolioValue.apply _
     implicit val lCon = League.apply _
     implicit val aCon = Administration.apply _
+    implicit val subCon = Subscription.apply _
             
     implicit val users: Table[User] = table[User]
     implicit val portfolios: Table[Portfolio] = table[Portfolio]
@@ -24,10 +25,11 @@ trait UserSchema extends Schema {
     implicit val portfolioValues: Table[PortfolioValue] = table[PortfolioValue]
     implicit val leagues: Table[League] = table[League]
     implicit val administrations: Table[Administration] = table[Administration]
+    implicit val subscriptions: Table[Subscription] = table[Subscription]
     
     abstract override def tables = (
            users :: portfolios :: ownerships :: portfolioInvites
-        :: portfolioValues :: leagues :: administrations :: super.tables )
+        :: portfolioValues :: leagues :: administrations :: subscriptions :: super.tables )
     
     // Model tables
 
@@ -95,6 +97,13 @@ trait UserSchema extends Schema {
         )
         extends KL
 
+    case class Subscription(
+            id:    Key = nextID,
+            user:  Link[User],
+            email: String
+        )
+        extends KL
+        
     // Detailed Operations
 
     trait UserOps {
@@ -103,6 +112,8 @@ trait UserSchema extends Schema {
         def myPortfolios: List[Portfolio] = readDB {
             (ownerships where ('user ~=~ this)).toList map (_.portfolio.extract) toList
         }
+        
+        def aPortfolio = myPortfolios head
         
         // Java inter-op
         def getPortfolios: java.util.List[Portfolio] = myPortfolios
@@ -133,6 +144,10 @@ trait UserSchema extends Schema {
         
         def doIAdminister(league: League) = !(administrations where ('user ~=~ this)
             where ('league ~=~ league)).headOption.isEmpty
+        
+        def userSubscribeToNewsletter(email: String) = editDB {
+            Subscription(user=this, email=email).insert
+        }
         
         private[model] def createPortfolio(name: String) = {
             if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
@@ -249,7 +264,7 @@ trait UserSchema extends Schema {
         // Java inter-op
         def getLeague: League = readDB { league }
             
-        def spotValue: Dollars = (
+        def spotValue: Dollars = readDB (
               cash
             + (myStockAssets map (_.dollars)).foldLeft(Dollars(0))(_+_)
             + (myDerivativeAssets map (_.spotValue)).foldLeft(Dollars(0))(_+_)
@@ -302,5 +317,6 @@ trait UserSchema extends Schema {
             (portfolios where ('league ~=~ this)).toList sortBy (_.rank) take n
         }
     }
+    
 }
 
