@@ -32,6 +32,14 @@ class LeagueAdmin extends Page with Loggable
 
 class LeagueManager extends Page with Loggable
 {
+    private def orNone(a : NodeSeq) = {
+        if (a isEmpty) {
+            <li>[none]</li>
+        } else {
+            a
+        }
+    }
+
     def render = {
         import control.LoginManager.currentUser
 
@@ -61,19 +69,19 @@ class LeagueManager extends Page with Loggable
         <div class="block">
             <ul>
                 <lh>{user.name}'s Administered Leagues</lh>
-                {a}
+                {orNone(a)}
             </ul>
             <ul>
                 <lh>{user.name}'s Memberships in Leagues</lh>
-                {m}
+                {orNone(m)}
             </ul>
             <ul>
                 <lh>{user.name}'s recieved invites to Leagues</lh>
-                {ri}
+                {orNone(ri)}
             </ul>
             <ul>
                 <lh>{user.name}'s sent invites for Leagues</lh>
-                {si}
+                {orNone(si)}
             </ul>
         </div>
     }
