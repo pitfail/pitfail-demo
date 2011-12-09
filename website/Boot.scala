@@ -32,7 +32,7 @@ class Boot extends Loggable {
 
         /* Start the twitter server */
         // I'm sorry I take this out for testing
-        // texttrading.twit.run()
+        texttrading.twit.run()
         PeriodicPortfolioEvaluator.run()
 
         val lr = LiftRules.realInstance
