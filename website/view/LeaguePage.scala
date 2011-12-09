@@ -21,7 +21,7 @@ import scala.xml._
 
 import stockdata.{HttpQueryService => HQS}
 
-class LeagueAdmin extends Page with Loggable
+/*class LeagueAdmin extends Page with Loggable
 {
     def render = refreshable.render
     val refreshable = Refreshable(doRender)
@@ -191,3 +191,6 @@ class  LeagueCreator extends Page with Loggable
 object LeagueCreator {
     case class NewLeague(name: String, cash: Dollars)
 }
+
+
+*/

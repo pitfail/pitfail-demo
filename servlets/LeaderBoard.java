@@ -61,7 +61,7 @@ public class LeaderBoard extends HttpServlet {
 				//Get the league the portfolio belongs to
 				UserSchema.League league = current.getLeague();
 				// Get the 5 highest portfolios for the league
-				List<UserSchema.Portfolio> leaders = league.getLeaders(5);
+				List<UserSchema.Portfolio> leaders = league.getLeaders(10);
 				for(UserSchema.Portfolio p : leaders){
 					leaderBoard = leaderBoard.concat(p.rank()+":"+p.name()+",");
 				}

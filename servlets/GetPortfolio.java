@@ -82,7 +82,7 @@ public class GetPortfolio extends HttpServlet {
 				
 			
 				//Get the current portfolio
-				UserSchema.Portfolio current = user.getCurrentPortfolio();
+/*				UserSchema.Portfolio current = user.getCurrentPortfolio();
 				//Get the league the portfolio belongs to
 				UserSchema.League league = current.getLeague();
 				// Get the 5 highest portfolios for the league
@@ -92,7 +92,7 @@ public class GetPortfolio extends HttpServlet {
 					myportfolio = myportfolio.concat(p.rank()+":"+p.name()+",");
 					System.out.printf("#%d %s\n", p.rank(), p.name());
 				}
-				out.printf("%s",myportfolio);
+*/				out.printf("%s",myportfolio);
 
 
 
