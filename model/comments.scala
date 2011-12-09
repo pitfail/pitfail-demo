@@ -28,7 +28,9 @@ trait CommentSchema extends Schema {
         def byID(id: Key) = ((eventComments where ('id~=~id)).headOption
             getOrElse (throw NoSuchComment))
     }
-        
+       
+
+
     trait UserWithComments {
         self: User =>
         
