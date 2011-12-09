@@ -42,7 +42,7 @@ class News extends Refreshable
 }
 
 object News extends Loggable {
-    def eventDescription(ev: NewsEvent, link: Boolean) = {
+    def eventDescription(ev: NewsEvent, link: Boolean) = try {
         def alink(text: String) = if (link) News.link(ev,text) else text
     
         ev.action match {    
@@ -85,6 +85,9 @@ object News extends Loggable {
                 logger warn ("Don't know the event " + other)
                 Nil
         }
+    }
+    catch {
+        case NotFound => <span/>
     }
     
     def link(ev: NewsEvent, text: String) = <a href={"/event?id="+ev.id}>{text}</a>

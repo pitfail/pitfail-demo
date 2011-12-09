@@ -210,13 +210,13 @@ def func(args: String*)(callback: Map[String,String]=>JsCmd) = {
         }
     }
     
-    val catchList = args map (name => "'"+name+"':"+name+"+''") mkString ","
+    val catchList = (args:+"dummy") map (name => "'"+name+"':"+name+"+''") mkString ","
     val argList = (args:+"callback") mkString ", "
     val (id, stuff) = SHtml.jsonCall(JsRaw("{"+catchList+"}"), opFunc _)
     
-    val js = ("liftAjax.lift_ajaxHandler("
+    val js = ("dummy=1;liftAjax.lift_ajaxHandler("
         +"'"+id+"=' + encodeURIComponent(JSON.stringify({"+catchList+"})), "
-        +"function(x) callback(eval(x)), null, null)")
+        +"function(x) { callback(eval(x)) }, null, null)")
     
     "(function("+argList+") { "+js+"});"
 }
