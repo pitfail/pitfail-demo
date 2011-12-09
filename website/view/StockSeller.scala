@@ -31,9 +31,9 @@ class StockSeller extends Loggable {
     def renderSelling(ticker: String) = {
         lazy val main =
             <div class="stock-seller">
-                <p>Selling {ticker}</p>
+                <h2>Selling {ticker}</h2>
+                <p>Enter the number of dollars of {ticker} that you wish to sell.</p>
                 {sellForm.render}
-                {availableBuyers(ticker)}
             </div>
             
         lazy val sellForm: Form[Order] = Form(
@@ -42,10 +42,19 @@ class StockSeller extends Loggable {
                 dollarsField,
                 limitField
             ),
-            <p>Sell ${dollarsField.main & <input class="blank"/>} {dollarsField.errors}
-                {submit.main} {submit.errors}
-            </p>
-            <p>{limitField.main}</p>
+            <div style="float:left;">
+                <p class="price-input">
+                    ${dollarsField.main & <input class="blank"/>}
+                    <span class="error">{submit.errors}{dollarsField.errors}</span>
+                </p>
+            </div>
+            <div style="float:left;">
+                {availableBuyers(ticker)}
+            </div>
+            <p style="clear:both">{limitField.main}</p>
+            <div class="buttons">
+                {submit.main & <input/>} 
+            </div>
         )
         
         lazy val dollarsField = DollarsField(defaultDollars.no$)

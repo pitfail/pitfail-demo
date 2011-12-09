@@ -77,7 +77,10 @@ lazy val api = Map(
     
     "howManyDollarsDoIOwn" -> func("ticker") { result =>
         val ticker = result("ticker")
-        Num(me.howManyDollars(ticker).dollars)
+        val howMany = me.howManyDollars(ticker).double
+        
+        logger.info("Replying %s %s" format (ticker, howMany))
+        Num(howMany)
     },
     
     "news" -> func() { result => JsArray {
@@ -127,6 +130,7 @@ lazy val otherLibs =
         |    }
         |    catch (e) {
         |        outplace.text(outplace.text() + e + "\n")
+        |        throw e
         |    }
         | })
         |

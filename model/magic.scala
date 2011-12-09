@@ -143,7 +143,7 @@ trait DBMagic extends Loggable {
         }
         val affectedTables = Seq(table)
     }
-
+    
     implicit def toOps[R<:KL](rec: R) = new {
         def insert(implicit table: Table[R]) = Transaction(rec, Insert(rec, table) :: Nil)
         def insertFor(loc: Where)(implicit table: Table[R]) = Transaction(rec, InsertFor(rec, loc, table)::Nil)
@@ -157,24 +157,6 @@ trait DBMagic extends Loggable {
         def update(by: R=>R)(implicit table: Table[R]) = Transaction((), Update(link.id, by, table)::Nil)
     }
     
-    implicit def toOrCreate[R](already: => R) = new {
-        def orCreate(trans: => Transaction[R]) =
-            try {
-                Transaction(already, Nil)
-            }
-            catch { case _: BadUser =>
-                trans
-            }
-    }
-
-    implicit def toOrCreateOpt[R](already: => Option[R]) = new {
-        def orCreate(trans: => Transaction[R]) =
-            already match {
-                case Some(r) => Transaction(r, Nil)
-                case None    => trans
-            }
-    }
-
     def mutually[A](op: (Key, Key) => A) = op(nextID, nextID)
     def mutually[A](op: (Key, Key, Key) => A) = op(nextID, nextID, nextID)
 }

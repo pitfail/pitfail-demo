@@ -31,7 +31,7 @@ class Dashboard extends Page with Loggable
             val ports = user.myPortfolios
             
             if (ports.length == 0) {
-                <p>You have no portfolios. <a href="/create-portfolio">Create one</a>.</p>
+                <p>You have no portfolios. <a href="/new-portfolio">Create one</a>.</p>
             }
             else {
                 val current = currentPortfolio

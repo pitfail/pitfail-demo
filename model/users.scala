@@ -19,6 +19,7 @@ trait UserSchema extends Schema {
     implicit val aCon = Administration.apply _
     implicit val liCon = LeagueInvite.apply _
     implicit val mCon = Membership.apply _
+    implicit val subCon = Subscription.apply _
             
     implicit val users: Table[User] = table[User]
     implicit val portfolios: Table[Portfolio] = table[Portfolio]
@@ -29,12 +30,12 @@ trait UserSchema extends Schema {
     implicit val administrations: Table[Administration] = table[Administration]
     implicit val leagueInvites: Table[LeagueInvite] = table[LeagueInvite]
     implicit val memberships: Table[Membership] = table[Membership]
-    
+    implicit val subscriptions: Table[Subscription] = table[Subscription]
+
     abstract override def tables = (
            users :: portfolios :: ownerships :: portfolioInvites
         :: portfolioValues :: leagues :: administrations :: leagueInvites
-        :: memberships :: super.tables )
-    
+        :: memberships :: subscriptions :: super.tables )
     // Model tables
 
     case class User(
@@ -121,6 +122,13 @@ trait UserSchema extends Schema {
         extends KL
         with MembershipOps
 
+    case class Subscription(
+            id:    Key = nextID,
+            user:  Link[User],
+            email: String
+        )
+        extends KL
+        
     // Detailed Operations
     trait AdministrationOps {
         self: Administration =>
@@ -216,6 +224,8 @@ trait UserSchema extends Schema {
             (ownerships where ('user ~=~ this)).toList map (_.portfolio.extract) toList
         }
         
+        def aPortfolio = myPortfolios head
+        
         // Java inter-op
         def getPortfolios: java.util.List[Portfolio] = myPortfolios
         
@@ -245,6 +255,10 @@ trait UserSchema extends Schema {
         
         def doIAdminister(league: League) = !(administrations where ('user ~=~ this)
             where ('league ~=~ league)).headOption.isEmpty
+        
+        def userSubscribeToNewsletter(email: String) = editDB {
+            Subscription(user=this, email=email).insert
+        }
         
         private[model] def createPortfolio(name: String) = {
             if (!(portfolios where ('name ~=~ name)).headOption.isEmpty) throw NameInUse
@@ -293,39 +307,30 @@ trait UserSchema extends Schema {
             u getOrElse (throw NoSuchUser)
         }
         
-        def userEnsure(name: String) = editDB { ensure(name) }
-        
-        def isNew(name: String) = editDB {
-            try Transaction(OldUser(byName(name)))
-            catch { case NoSuchUser => ensure(name) map (NewUser(_)) }
-        }
-        
-        // If this user doesn't already exist, create it
-        private[model] def ensure(name: String): Transaction[User] =
-            byName(name).orCreate(newUser(name))
-        
-        private[model] def ensureP(name: String): Transaction[Portfolio] = {
-            def port: Portfolio = byName(name).lastPortfolio
-            port orCreate newUserP(name)
-        }
-        
-        // Create a new user
-        // XXX: this duplicates logic in createPortfolio
-        private[model] def newUserAll(name: String) = {
-            val league = League.default
-            val cash = league.startingCash
-            for {
-                port  <- Portfolio(name=name, league=League.default, cash=cash, loan=cash, rank=0).insert
-                user  <- User(username=name, lastPortfolio=port).insertFor('username ~=~ name)
-                _     <- Ownership(user=user, portfolio=port).insert
+        def userEnsure(name: String): User = readDB {
+            try {
+                byName(name)
             }
-            yield (user, port)
+            catch {
+                case NoSuchUser =>
+                    val league = League.default
+                    val cash = league.startingCash
+                    editDB {
+                        for {
+                            port   <- Portfolio(name=name, league=league,
+                                cash=cash, loan=cash, rank=0).insert
+                            user   <- User(username=name, lastPortfolio=port).insert
+                            _      <- Ownership(user=user, portfolio=port).insert
+                        }
+                        yield user
+                    }
+            }
         }
-
-        private[model] def newUser (name: String) : Transaction[User] =
-            newUserAll(name) map (_._1)
-        private[model] def newUserP(name: String) : Transaction[Portfolio] =
-            newUserAll(name) map (_._2)
+        
+        def isNew(name: String) = {
+            try OldUser(byName(name))
+            catch { case NoSuchUser => NewUser(userEnsure(name)) }
+        }
     }
 
     object Portfolio {
@@ -362,7 +367,7 @@ trait UserSchema extends Schema {
         // Java inter-op
         def getLeague: League = readDB { league }
             
-        def spotValue: Dollars = (
+        def spotValue: Dollars = readDB (
               cash
             + (myStockAssets map (_.dollars)).foldLeft(Dollars(0))(_+_)
             + (myDerivativeAssets map (_.spotValue)).foldLeft(Dollars(0))(_+_)
@@ -387,26 +392,21 @@ trait UserSchema extends Schema {
     object League {
         val defaultName = "default"
         val defaultStartingCash = Dollars(200000)
-        val defaultOwnerName = "ellbur_k_a"
+        val defaultOwnerName = "nobody"
 
-        /* XXX: Embedding an editDB here is nasty */
-        private def leagueEnsure(name: String, cash: Dollars, owner: User) : League = editDB {
-            byName(name).orCreate(owner.createLeague(name, cash))
-        }
-
-        /* XXX: DB reads and writes need to be composed from the same monad
-         * so that I can avoid this unconditional 'get'
-         * initially the code was:
-         *  def default() = League byName defaultName getOrElse (League(name=defaultName).insert)
-         * which fails as   ^^^^^^^^^^^^^^^^^^^^^^^^^ is not    ^^^^^^^^^^^^^^^^^
-         */
-        def default() = {
-            readDB {
-                val user = User userEnsure defaultOwnerName
-                leagueEnsure(defaultName, defaultStartingCash, user)
+        def default = readDB {
+            byName(defaultName) match {
+                case None => editDB {
+                    for {
+                        user   <- User(username=defaultOwnerName, lastPortfolio="").insert
+                        league <- League(name=defaultName, startingCash=defaultStartingCash, owner=user).insert
+                    }
+                    yield league
+                }
+                case Some(league) => league
             }
         }
-
+        
         def byName(name: String) = leagues where ('name ~=~ name) headOption
         def byID(id: Key) = leagues where ('id ~=~ id) headOption
     }
@@ -427,5 +427,6 @@ trait UserSchema extends Schema {
             </a>
         }
     }
+    
 }
 

@@ -101,6 +101,10 @@ table.boxy thead {
 table.boxy tbody {
 }
 
+table.boxy tbody tr.gap td {
+    border-bottom: 1px solid #000;
+}
+
 table.boxy tfoot th,
 table.boxy tfoot td {
 }
@@ -124,6 +128,18 @@ h1 a {
     right: 2em;
     bottom: 1.5em;
     font-size: 11pt;
+}
+
+/* Navigation */
+ul#navigation {
+    position: absolute;
+    left: 16em;
+    top: 2.25em;
+}
+
+ul#navigation li {
+    float: left;
+    margin-right: 0.5em;
 }
 
 /* Search */
@@ -568,35 +584,9 @@ tr.deriv-header {
 
 /* Auto trades */
 
-.auto-trade {
-    position: relative;
-    left: 0%;
+.auto-trade-code {
     width: 100%;
-}
-
-.auto-trade-table {
-    position: relative;
-    left: 0%;
-    width: 100%;
-}
-
-.auto-trade-left-col {
-    width: 50%;
-}
-
-.auto-trade-right-col {
-    width: 50%;
-}
-
-.auto-trade-left {
-    text-align: left;
-    vertical-align: top;
-}
-
-.auto-trade-right {
-    text-align: left;
-    vertical-align: top;
-    position: relative;
+    height: 20em;
 }
 
 /* Tab bar */
@@ -620,5 +610,6 @@ tr.deriv-header {
 
 .tab-pane {
     clear: both;
+    position: relative;
 }
 

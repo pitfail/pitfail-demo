@@ -67,6 +67,8 @@ class Boot extends Loggable {
             Menu.i("5") / "new-portfolio",
             Menu.i("6") / "my-portfolio",
             Menu.i("7") / "portfolio",
+            Menu.i("9") / "ops",
+            Menu.i("10") / "subscribe",
             Menu.i("Leaderboard") / "leaderboard",
             Menu.i("League Manager") / "league-manager",
             Menu.i("League Admin")   / "league-admin",
@@ -83,11 +85,8 @@ class Boot extends Loggable {
 
         DBSetup()
 
-        // Runs every 30 minutes
+        // Runs periodically and checks things
         control.Checker.run()
-        
-        // Test data
-        insertTestData()
     }
 }
 

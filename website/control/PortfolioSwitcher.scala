@@ -15,7 +15,13 @@ object PortfolioSwitcher extends Loggable {
     
     def currentPortfolio: Portfolio =
         savedPortfolio.is match {
-            case Some(key) => Portfolio byID key
+            case Some(key) =>
+                try {
+                    Portfolio byID key
+                }
+                catch { case NoSuchPortfolio =>
+                    LoginManager.currentUser.aPortfolio
+                }
             case None      =>
                 val port = LoginManager.currentUser.lastPortfolio
                 savedPortfolio := Some(port.id)
@@ -25,9 +31,15 @@ object PortfolioSwitcher extends Loggable {
     def switchPortfolio(name: String) {
         val user = LoginManager.currentUser
         
-        val port = user.portfolioByName(name)
-        savedPortfolio := Some(port.id)
+        val port =
+            try {
+                user.portfolioByName(name)
+            }
+            catch { case NoSuchPortfolio =>
+                user.aPortfolio
+            }
         
+        savedPortfolio := Some(port.id)
         user.userSwitchPortfolio(port)
     }
     

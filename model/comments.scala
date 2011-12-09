@@ -47,8 +47,8 @@ trait CommentSchema extends Schema {
         def numComments = comments.length
         
         def userPostAnonymously(text: String) = editDB {
+            val user = User userEnsure "Anonymous"
             for {
-                user <- User ensure "Anonymous"
                 _ <- user postComment (this, text)
             }
             yield ()

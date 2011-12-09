@@ -20,17 +20,15 @@
     <body>
         <div id="body">
             <h1><a href="/">PitFail</a></h1>
-	    <div id="account">
-		<a href="/auto">Auto Trades</a>
-		-
-		<a href="/new-portfolio">New Portfolio</a>
-		-
-		<a href="/leaderboard">Leaderboard</a>
-		-
-		<a href="/league-manager">Manage Leagues</a>
-		-
-		<a href="/league-creator">New League</a>
-		&nbsp; | &nbsp;
+            <ul id="navigation">
+                <li><a href="/auto">Auto Trades</a></li>
+                <li><a href="/new-portfolio">New Portfolio</a></li>
+                <li><a href="/leaderboard">Leaderboard</a></li>
+                <li><a href="/league-manager">Manage Leagues</a></li>
+                <li><a href="/league-creator">New League</a></li>
+            </ul>
+
+            <div id="account">
                 <lift:LoginStatus.ifLoggedOut>
                 <a href="/twitter/login">Login</a>
                 </lift:LoginStatus.ifLoggedOut>
