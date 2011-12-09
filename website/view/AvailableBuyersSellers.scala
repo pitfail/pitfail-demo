@@ -38,11 +38,16 @@ def apply(ticker: String) = {
     }
     
     <div class="available-sellers">
-        <p>Available sellers for '{ticker}':</p>
-        <table>
-            <tr><td colspan="1"/><td colspan="2">Available</td> <td colspan="1"/></tr>
-            <tr><td>Asking Price</td> <td>Dollars</td> <td>Shares</td> <td>Name</td></tr>
-            {rows}
+        <table class="boxy">
+            <thead>
+                <tr>
+                    <th>Asking Price</th>
+                    <th>Dollars</th>
+                    <th>Shares</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
         </table>
     </div>
 }
@@ -65,11 +70,16 @@ def apply(ticker: String) = {
     }
     
     <div class="available-buyers">
-        <p>Available buyers for '{ticker}':</p>
-        <table>
-            <tr><td colspan="1"/><td colspan="2">Available</td> <td colspan="1"/></tr>
-            <tr><td>Bid Price</td> <td>Dollars</td> <td>Shares</td> <td>Name</td></tr>
-            {rows}
+        <table class="boxy">
+            <thead>
+                <tr>
+                    <th>Bid Price</th>
+                    <th>Dollars</th>
+                    <th>Shares</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
         </table>
     </div>
 }
