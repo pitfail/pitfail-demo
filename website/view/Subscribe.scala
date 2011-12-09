@@ -20,11 +20,16 @@ class Subscribe extends Page with Loggable {
     
     var state: State = Pending
     
-    def doRender: NodeSeq =
-        state match {
+    def doRender: NodeSeq = {
+        val content = state match {
             case Pending    => renderPending
             case Subscribed => renderSubscribed
         }
+        
+        <div class="block">
+            {content}
+        </div>
+    }
     
     def renderPending = {
         lazy val form: Form[Order] = Form(

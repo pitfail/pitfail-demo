@@ -556,6 +556,9 @@ tr.deriv-header {
     padding: 10px;
     border-radius: 6px;
 }
+.sidebar {
+    margin-bottom: 1em;
+}
 
 .sidebar ul {
     margin-bottom: 1em;

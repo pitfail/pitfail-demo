@@ -22,20 +22,27 @@ import model.schema._
 class AutoTrades extends Page with Loggable {
     
     val currentParam = S param "trade"
+    val funcParam = S param "func"
     
     def render = jsapi.jsFuncDefs ++ refreshable.render
     val refreshable = Refreshable(doRender)
     
-    def doRender: NodeSeq = {
+    def doRender: NodeSeq =
+        <lift:children>
+            <div class="block">
+                {top}
+            </div>
+            {bottom}
+        </lift:children>
+    
+    def top = {
         import control.LoginManager._
         import control.PortfolioSwitcher._
         
         try main(currentPortfolio)
         catch { 
             case NotLoggedIn =>
-                <div class="block">
-                    <p>Login to use auto trades</p>
-                </div>
+                <p>Login to use auto trades</p>
         }
     }
     
@@ -114,11 +121,11 @@ class AutoTrades extends Page with Loggable {
             </div>
         
         val all =
-            <div class="block">
+            <lift:children>
                 {createButton(port)}
                 {form.render}
                 {output}
-            </div>
+            </lift:children>
             
         all
     }
@@ -133,5 +140,37 @@ class AutoTrades extends Page with Loggable {
         title: String,
         code: String
     )
+    
+    def bottom = funcParam match {
+        case Full(name) =>
+            <div class="block">
+                {describeFunc(name)}
+            </div>
+        case _ => Nil
+    }
+    
+    def describeFunc(name: String) =
+        jsapi.api filter (_.name == name) headOption match {
+            case None => <p>There is no function named {name}</p>
+            case Some(func) =>
+                <h2>{func.name}</h2>
+                <pre>{func.help}</pre>
+        }
+}
+
+class AutoTradeDocs extends Page with Loggable {
+    
+    def render = {
+        val items = jsapi.api map { case jsapi.Func(help, name, _) =>
+            <li><a href={"?func="+name+"&trade="+(S param "trade" openOr "")}>{name}</a></li>
+        }
+        
+        <div class="sidebar">
+            <h3>API</h3>
+            <ul>
+                {items}
+            </ul>
+        </div>
+    }
 }
 

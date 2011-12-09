@@ -13,6 +13,10 @@ a {
     color: #B9B;
 }
 
+.general-button {
+    background-color: #DBB;
+}
+
 span.input-error span.error {
     background: #FFEBE8;
 }

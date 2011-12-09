@@ -204,7 +204,12 @@ trait UserSchema extends Schema {
                 if (League byName name isDefined) {
                     throw NameInUse
                 }
-                League(name=name, startingCash=cash, owner=self) insert
+                for {
+                    league <- League(name=name, startingCash=cash, owner=self).insert
+                    _ <- Administration(user=this, league=league).insert
+                    _ <- Membership(user=this, league=league).insert
+                }
+                yield league
             }
         }
 
