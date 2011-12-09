@@ -38,6 +38,8 @@ object HttpQueryService {
         (URLEncoder.encode(key, encoding) + "=" + URLEncoder.encode(value, encoding))
     }).mkString("&")
 
+  def buildQuery(params: Iterable[(String, String)]) : String = buildQuery(params, "UTF-8")
+
   def parseQuery(query: String, encoding: String): ListMap[String, String] =
     ListMap((query.split("&") map (_.split("=") match {
         case Array(encodedKey, encodedValue) =>

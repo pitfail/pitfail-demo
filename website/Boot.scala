@@ -71,6 +71,7 @@ class Boot extends Loggable {
             Menu.i("10") / "subscribe",
             Menu.i("Leaderboard") / "leaderboard",
             Menu.i("League Manager") / "league-manager",
+            Menu.i("League Admin")   / "league-admin",
             Menu.i("League Creator") / "league-creator"
         )
         setSiteMap(SiteMap(entries:_*))
