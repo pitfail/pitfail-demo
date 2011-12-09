@@ -29,7 +29,7 @@ trait AutoTradeSchema extends Schema {
         def myAutoTrades = autoTrades where ('owner ~=~ this) toList
         
         private[model] def makeNewAutoTrade =
-            AutoTrade(owner=this, title="", code="").insert
+            AutoTrade(owner=this, title="New", code="").insert
     }
     
     trait AutoTradeOps {
