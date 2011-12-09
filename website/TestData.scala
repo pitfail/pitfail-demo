@@ -52,13 +52,13 @@ def apply() {
     implicit val _ = json.DefaultFormats
     val demoScripts = (
            "jsapi/demo-scripts/list.json" |> slurpResource _
-        |> json.parse _ ).extract[List[String]]
+        |> json.parse _ ).extract[List[AutoTradeItem]]
         
-    demoScripts foreach { script =>
+    demoScripts foreach { case AutoTradeItem(title, script) =>
         val code = slurpResource("jsapi/demo-scripts/" + script)
         
         val trade = ellbur.userMakeNewAutoTrade()
-        trade.userModify(title=script, code=code)
+        trade.userModify(title=title, code=code)
     }
     
     pitfail.userBuyStock("MSFT", Shares(10))
@@ -89,6 +89,8 @@ def apply() {
     systemRecalculateRankings()
     systemCheckForDividends()
 }
+
+case class AutoTradeItem(name: String, file: String)
 
 }
 

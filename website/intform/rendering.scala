@@ -83,7 +83,7 @@ trait SubmitRender extends FieldRender {
     val value: String
     def submitAjax(): JsCmd
     
-    def main = SHtml.ajaxSubmit(value, submitAjax _)
+    def main = SHtml.ajaxSubmit(value, submitAjax _) & <input class="general-button"/>
 }
 
 // -----------------------------------------------------------------
