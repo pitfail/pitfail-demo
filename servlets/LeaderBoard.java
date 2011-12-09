@@ -37,7 +37,7 @@ import com.google.gson.*;
  * @author Roma, Sonu
  * 
  */
-public class FBLeaderBoard extends HttpServlet {
+public class LeaderBoard extends HttpServlet {
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 
@@ -47,6 +47,7 @@ public class FBLeaderBoard extends HttpServlet {
 
 		PrintWriter out = response.getWriter();			
 		
+//		String userId = "sonu_pillai";
 		String userId = request.getParameter("userid");
  		String leaderBoard = "";
        

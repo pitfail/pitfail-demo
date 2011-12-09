@@ -87,6 +87,17 @@ PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
         <url-pattern>/servlet/newportfolio</url-pattern>
     </servlet-mapping>
 
+	<servlet>
+        <servlet-name>FBGetPortfolio</servlet-name>
+        <servlet-class>servlets.FBGetPortfolio</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>FBGetPortfolio</servlet-name>
+        <url-pattern>/servlet/fbgetportfolio</url-pattern>
+    </servlet-mapping>
+
+	
 
 
 	<filter>

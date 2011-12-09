@@ -37,7 +37,7 @@ import com.google.gson.*;
  * @author Roma, Sonu
  * 
  */
-public class GetPortfolio extends HttpServlet {
+public class FBGetPortfolio extends HttpServlet {
 	private static final long serialVersionUID = -7287781887462285268L;
 	
 
@@ -59,15 +59,7 @@ public class GetPortfolio extends HttpServlet {
 		try {
 				// Get a user
 				
-				UserSchema.User user = operations.getUser(userId);
-				// List the portfolios (teams) a user belongs to
-				List<UserSchema.Portfolio> portfolios = user.getPortfolios();
-				for (UserSchema.Portfolio p : portfolios) {
-				myportfolio = myportfolio.concat(p.name()+":");
-			    }
-				
-				myportfolio = myportfolio.concat("-");
-			    
+		    
 				UserSchema.Portfolio port = operations.getUserPortfolio(userId);
 				BigDecimal cash = port.cash().dollars();
 				myportfolio = myportfolio.concat("Cash:"+cash);
@@ -81,24 +73,14 @@ public class GetPortfolio extends HttpServlet {
 				}
 				
 			
-				//Get the current portfolio
-				UserSchema.Portfolio current = user.getCurrentPortfolio();
-				//Get the league the portfolio belongs to
-				UserSchema.League league = current.getLeague();
-				// Get the 5 highest portfolios for the league
-				myportfolio = myportfolio.concat("-");
-				List<UserSchema.Portfolio> leaders = league.getLeaders(5);
-				for(UserSchema.Portfolio p : leaders){
-					myportfolio = myportfolio.concat(p.rank()+":"+p.name()+",");
-					System.out.printf("#%d %s\n", p.rank(), p.name());
-				}
-				out.printf("%s",myportfolio);
+			out.printf("%s",myportfolio);
 
 
 
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			out.printf("failed");
 			
 		}
 

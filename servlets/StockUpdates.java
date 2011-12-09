@@ -49,13 +49,12 @@ public class StockUpdates extends HttpServlet {
 		PrintWriter out = response.getWriter();			
 		
 		String userId = request.getParameter("userid");
-		System.out.println("###############"+userId+"##################");
 		BigDecimal shares;
-//		BigDecimal price;
+		BigDecimal price;
 		BigDecimal dollars;
 		String updatedstocks = "";
 		String ticker = "";
-		String price = "60";
+//		String price = "60";
 		int update = 0;
        
 		try {
@@ -70,7 +69,7 @@ public class StockUpdates extends HttpServlet {
                                         
 				for (StockSchema.StockAsset asset : port.getMyStockAssets()){
 						ticker = asset.ticker();
-		//				price = mehPrice(asset);
+						price = asset.averagePurchasePrice().price();
 						
 
 						/*Check from Yahoo if stock price has changed*/
