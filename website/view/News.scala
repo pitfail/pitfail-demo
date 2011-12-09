@@ -47,10 +47,10 @@ object News extends Loggable {
     
         ev.action match {    
             case Bought(buyer, stock, shares, dollars, price) =>
-                <span>{PortfolioLink(buyer)} {alink("bought")} {dollars.$} of {stock}</span>
+                <span>{PortfolioLink(buyer)} {alink("bought")} {dollars.$} of {stock} at {price.$}/sh</span>
                 
             case Sold(seller, stock, shares, dollars, price) =>
-                <span>{PortfolioLink(seller)} {alink("sold")} {dollars.$} of {stock}</span>
+                <span>{PortfolioLink(seller)} {alink("sold")} {dollars.$} of {stock} at {price.$}/sh</span>
             
             case Offered(from, to, derivative, price) =>
                 <span>{PortfolioLink(from)} {alink("made an offer")} to {PortfolioLink(to)}</span>

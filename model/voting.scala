@@ -54,6 +54,9 @@ trait VotingSchema extends Schema {
         )
         extends KL
     
+    def highestVotedEvents(n: Int): List[NewsEvent] = (newsEvents.toList filter (_.isVotable)
+        sortBy (- _.score) take n)
+    
     trait PortfolioWithVotes {
         self: Portfolio =>
         
@@ -123,6 +126,8 @@ trait VotingSchema extends Schema {
         
         def buyerTally = buyerVotes.length
         def sellerTally = sellerVotes.length
+        
+        def score = buyerTally - sellerTally
     }
 }
 

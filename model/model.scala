@@ -131,6 +131,7 @@ case class Dollars(dollars: BigDecimal)
     def no$: String = "%.2f" format (dollars doubleValue)
     
     def double = dollars.doubleValue
+    def isNegative = this < Dollars(0)
 }
 
 object Dollars {
@@ -153,6 +154,7 @@ case class Shares(shares: BigDecimal) extends Ordered[Shares] {
     override def toString(): String = ###() + (if (shares != 1) " shares" else " share")
     
     def double = shares.doubleValue
+    def isNegative = this < Shares(0)
 }
 object Shares {
     def apply(str: String): Shares = Shares(BigDecimal(str))
@@ -174,6 +176,7 @@ case class Price(price: BigDecimal) extends Ordered[Price] {
         else "$%.2f" format (price doubleValue)
         
     def double = price.doubleValue
+    def isNegative = this < Price(0)
 }
 object Price {
     def apply(str: String): Price = Price(BigDecimal(str))
@@ -191,6 +194,7 @@ case class Scale(scale: BigDecimal) extends Ordered[Scale] {
     def compare(other: Scale) = scale.compare(other.scale)
 
     def %(): String = "%.0f%%" format ((scale doubleValue) * 100)
+    def isNegative = this < Scale(0)
 }
 object Scale {
     def apply(str: String): Scale = Scale(BigDecimal(str))

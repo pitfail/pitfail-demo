@@ -58,4 +58,7 @@ class PortfolioInvites extends Page with Loggable {
         </div>
     }
 }
+object PortfolioInvites {
+    def apply() = new PortfolioInvites
+}
 

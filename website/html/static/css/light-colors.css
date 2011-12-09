@@ -1,0 +1,156 @@
+
+html {
+    color: #C55;
+    background: #FEE;
+}
+
+.sidebar {
+    color: #C55;
+    background: #FFE;
+}
+
+a {
+    color: #B9B;
+}
+
+span.input-error span.error {
+    background: #FFEBE8;
+}
+
+.inputError {
+    color: #900;
+}
+
+.inputSuccess {
+    color: #090;
+}
+
+.field-annotation {
+    color: #999;
+}
+
+table.boxy {
+    background: #FFF;
+    border: 1px solid #C88;
+}
+
+table.boxy thead {
+    color: #FFF;
+}
+
+table.boxy tbody {
+    background: #FFF;
+}
+
+table.boxy tfoot th,
+table.boxy tfoot td {
+    border-top: 1px solid #000;
+}
+
+h1 a {
+    color: #C99;
+}
+
+#account {
+    color: #D8CBC4;
+}
+
+#search-query #search-query-button {
+    background: #EEE;
+}
+
+.block {
+    background: #FFE;
+}
+
+.block h2 {
+    color: #B99;
+}
+
+.block a,
+.block a:active,
+.block a:hover,
+.block a:visited {
+    color: #000;
+}
+
+.page-error {
+    background: #dd8;
+}
+
+#search-derivative h3 {
+    color: #dd8;
+}
+
+.portfolio-block {
+    background: #fff;
+}
+
+#portfolio a {
+    color: #000;
+}
+
+table.tchart th {
+    color: #000;
+}
+
+.tchart-ticker {
+    color: #333;
+}
+
+.tchart-dollars {
+    color: #090;
+}
+
+.tchart-section {
+    background-color: #FFE;
+}
+
+.auction th {
+    color: #FFF;
+}
+.auction td {
+    color: #000;
+    background: #D8CBC4;
+}
+
+.auto-trade-right {
+    background-color: #ddd;
+}
+
+.active {
+    background-color: #fee;
+}
+.active p {
+    font-weight: bold;
+}
+
+.inactive {
+    background-color: #aaa;
+}
+.inactive p, .inactive a {
+    color: #fff;
+}
+
+.tab-pane {
+    border-top: 10px solid #FAA;
+}
+
+.tab {
+    margin-bottom: -0.5em;
+    float: left;
+    border-top:   2px solid #FCC;
+    border-right: 2px solid #FCC;
+    border-left:  2px solid #FCC;
+    padding: 0.5em;
+    border-radius: 5px;
+}
+
+table.tchart {
+    background: transparent;
+}
+
+.tchart-half {
+    background: transparent;
+}
+

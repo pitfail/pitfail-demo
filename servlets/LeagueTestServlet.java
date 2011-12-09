@@ -54,6 +54,19 @@ public class LeagueTestServlet extends HttpServlet {
             // Get assets from the portfolio
             double cash = current.cash().dollars().doubleValue();
             out.printf("Cash: $%.2f\n", cash);
+            for (StockSchema.StockAsset asset : current.getMyStockAssets()) {
+                BigDecimal shares  = asset.shares().shares();
+                BigDecimal price   = asset.price().price();
+                BigDecimal dollars = asset.dollars().dollars();
+                String ticker  = asset.ticker();
+                
+                out.printf("%d shares ($%.2f) of %s at $%.2f/sh\n",
+                    shares.intValue(),
+                    dollars.doubleValue(),
+                    ticker,
+                    price.doubleValue()
+                );
+            }
             
             // Get the league the portfolio belongs to
             UserSchema.League league = current.getLeague();
@@ -67,6 +80,30 @@ public class LeagueTestServlet extends HttpServlet {
             // Get the "default" league
             UserSchema.League defaultLeague = operations.getDefaultLeague();
             out.printf("Default league is %s\n", defaultLeague.name());
+            
+            // Create a new portfolio (team)
+            try {
+                UserSchema.Portfolio newPort = user.userCreatePortfolio("kmfe");
+                
+                // Invite someone to it
+                try {
+                    newPort.userInviteUser("sonu_pillai");
+                }
+                catch (SchemaErrors$NoSuchUser$ e) {
+                    out.printf("No user named sonu_pillai\n");
+                }
+            }
+            catch (SchemaErrors$NameInUse$ e) {
+                out.printf("Name kmfe is already in use\n");
+            }
+            
+            // Create a new league
+            try {
+                user.userCreateLeague("6203", new Dollars("500000"));
+            }
+            catch (SchemaErrors$NameInUse$ e) {
+                out.printf("Name 6203 is already taken\n");
+            }
         }
         catch (RuntimeException e) {
             e.printStackTrace();

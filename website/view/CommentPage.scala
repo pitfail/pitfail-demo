@@ -65,6 +65,7 @@ object commentPage {
             import control.LoginManager._
             
             try {
+                postForm.reset()
                 currentUser.userPostComment(ev, text)
             }
             catch {

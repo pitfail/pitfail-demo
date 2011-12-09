@@ -6,6 +6,7 @@
         <link rel="stylesheet" type="text/css" href="/static/css/font_cuprum.css"/>
         <link rel="stylesheet" type="text/css" href="/static/css/structure.css"/>
         <link rel="stylesheet" type="text/css" href="/static/css/appearance.css"/>
+        <link rel="stylesheet" type="text/css" href="/static/css/light-colors.css"/>
         <script id="jquery" src="/classpath/jquery.js" type="text/javascript"></script>
         <script type="text/javascript">
         $(function () { $("#search-query-field").focus() } )
@@ -19,7 +20,13 @@
     <body>
         <div id="body">
             <h1><a href="/">PitFail</a></h1>
-            <div id="account">
+	    <div id="account">
+		<a href="/auto">Auto Trades</a>
+		-
+		<a href="/new-portfolio">New Portfolio</a>
+		-
+		<a href="/leaderboard">Leaderboard</a>
+		&nbsp; | &nbsp;
                 <lift:LoginStatus.ifLoggedOut>
                 <a href="/twitter/login">Login</a>
                 </lift:LoginStatus.ifLoggedOut>

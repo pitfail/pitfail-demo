@@ -55,8 +55,8 @@ class LeaderPage extends Page with Loggable {
         } yield {
             <tr>
                 <td>{p.rank}</td>
-                <td>{p.name}</td>
-                <td>{p.cash.$}</td>
+                <td>{PortfolioLink(p)}</td>
+                <td>{p.spotValue.$}</td>
             </tr>
         }
 
@@ -90,9 +90,12 @@ class LeaderPage extends Page with Loggable {
             <p>No such league {league_n}</p>
         }
 
-        <div id="leader-page" class="block">
-            {stuff}
-        </div>
+        <lift:children>
+            <div id="leader-page" class="block">
+                {stuff}
+            </div>
+            {holdingsPlot()}
+        </lift:children>
 
     } catch {
         case e => <p>Sorry, {standardMessage(e)}</p>

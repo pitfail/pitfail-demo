@@ -8,7 +8,7 @@ import net.liftweb.json._
 
 package object spser {
 //
-    
+
 sealed trait HProd
 case class HTimes[+H,+T<:HProd](head: H, tail: T) extends HProd
 case class HOne() extends HProd
@@ -247,7 +247,6 @@ trait Schema {
         def lookup(id: String) = this where ('id ~=~ id) headOption
         
         private def prepareStatement(s: String) = {
-            logger.info(s)
             con.prepareStatement(s)
         }
         

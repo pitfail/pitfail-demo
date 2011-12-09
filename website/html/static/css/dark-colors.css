@@ -1,0 +1,152 @@
+
+#right-container {
+    color: #D8CBC4;
+    background: #7F6152;
+}
+
+a {
+    color: #FFF;
+}
+
+span.input-error span.error {
+    background: #FFEBE8;
+}
+
+.inputError {
+    color: #900;
+}
+
+.inputSuccess {
+    color: #090;
+}
+
+.field-annotation {
+    color: #999;
+}
+
+html {
+    color: #000;
+    background: url('/static/images/woven.png') repeat;
+}
+
+table.boxy {
+    background: #EEE;
+    background: #7F6152;
+    border: 1px solid #000;
+}
+
+table.boxy thead {
+    color: #FFF;
+}
+
+table.boxy tbody {
+    background: #D8CBC4;
+}
+
+table.boxy tfoot th,
+table.boxy tfoot td {
+    border-top: 1px solid #000;
+}
+
+h1 a {
+    color: #FFF;
+}
+
+#account {
+    color: #D8CBC4;
+}
+
+#search-query #search-query-button {
+    background: #EEE;
+}
+
+.block {
+    background: #D8CBC4;
+}
+
+.block h2 {
+    color: #413129;
+}
+
+.block a,
+.block a:active,
+.block a:hover,
+.block a:visited {
+    color: #000;
+}
+
+.page-error {
+    background: #dd8;
+}
+
+#search-derivative h3 {
+    color: #413129;
+}
+
+.portfolio-block {
+    background: #fff;
+}
+
+#portfolio a {
+    color: #000;
+}
+
+table.tchart th {
+    color: #000;
+}
+
+.tchart-ticker {
+    font-color: #333;
+}
+
+.tchart-dollars {
+    color: #090;
+}
+
+.tchart-section {
+    background-color: #eee;
+}
+
+.sidebar {
+    color: #D8CBC4;
+    background: #7F6152;
+}
+
+.sidebar h3 {
+    color: #FFF;
+}
+
+.auction th {
+    color: #FFF;
+}
+.auction td {
+    color: #000;
+    background: #D8CBC4;
+}
+
+.auto-trade-right {
+    background-color: #ddd;
+}
+
+.active {
+    background-color: #fee;
+}
+
+.inactive {
+    background-color: #aaa;
+}
+
+.tab-pane {
+    border: 1px solid #000;
+}
+
+#account {
+    color: #D8CBC4;
+}
+
+.tab {
+    float: left;
+    border: 1px solid #000;
+    padding: 0.5em;
+}
+
