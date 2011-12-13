@@ -1,4 +1,6 @@
 
+// Written by: Owen Healy
+
 package texttrading
 
 // Console frontend (for testing!)

@@ -1,4 +1,6 @@
 
+// Written by: Owen Healy
+
 package stockdata
 
 import org.joda.time.{DateTime,Duration}

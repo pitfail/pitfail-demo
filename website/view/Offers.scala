@@ -1,4 +1,7 @@
 
+// Written by: Owen Healy
+// Written by: Michael Koval
+
 package code
 package comet
 

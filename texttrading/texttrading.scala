@@ -1,4 +1,7 @@
 
+// Written by: Cody Schaefer
+// Written by: Owen Healy
+
 package texttrading
 
 trait Backend {

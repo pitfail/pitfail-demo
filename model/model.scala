@@ -1,4 +1,6 @@
 
+// Written by: Michael Koval
+
 import scala.math.{BigDecimal}
 import java.math.{MathContext,RoundingMode}
 

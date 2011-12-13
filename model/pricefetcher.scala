@@ -1,4 +1,6 @@
 
+// Written by: Michael Koval
+
 package model
 
 import model.schema._

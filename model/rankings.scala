@@ -1,4 +1,6 @@
 
+// Written by: Owen Healy
+
 package model
 
 import scalaz.Scalaz._

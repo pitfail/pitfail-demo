@@ -1,4 +1,7 @@
 
+// This file is not actually used (we only support OAuth login)
+// Written by: Owen Healy
+
 package code
 package control
 

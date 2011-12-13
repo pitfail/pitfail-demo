@@ -1,4 +1,7 @@
 
+// Written by: Michael Koval
+// Written by: Cody Schaefer
+
 package code
 package snippet
 

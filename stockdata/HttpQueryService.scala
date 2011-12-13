@@ -1,4 +1,6 @@
 
+// Written by: Michael Koval
+
 package stockdata
 
 import java.io.IOException

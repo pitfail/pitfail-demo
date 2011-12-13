@@ -1,4 +1,6 @@
 
+// Written by: Owen Healy
+
 package formats;
 
 import org.apache.log4j.spi.ThrowableRenderer;

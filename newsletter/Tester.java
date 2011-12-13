@@ -1,3 +1,6 @@
+
+// Written by: Brian Goodacre
+
 package newsletter;
 
 import javax.mail.MessagingException;

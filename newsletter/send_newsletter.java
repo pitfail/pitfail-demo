@@ -1,3 +1,6 @@
+
+// Written by: Brian Goodacre
+
 package newsletter;
 
 import java.io.File;

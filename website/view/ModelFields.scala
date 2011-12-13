@@ -1,4 +1,6 @@
 
+// Written by: Michael Koval
+
 package code
 package snippet
 

@@ -18,6 +18,7 @@ includeFilter in Compile in unmanagedSources <<=
 			(
                    ! path.contains("test" + java.io.File.separator)
                 && ! path.startsWith("project")
+                && ! path.startsWith("android")
             )
 		})
 	}

@@ -1,3 +1,6 @@
+
+// Written by: Michael Koval
+
 package stockdata
 
 import org.joda.time.{DateTime,Duration}

@@ -1,4 +1,7 @@
 
+// Written by: Michael Koval
+// Written by: Owen Healy
+
 package stockdata
 
 import java.io.IOException

@@ -1,3 +1,6 @@
+
+// Written by: Michael Koval
+
 package stockdata
 
 trait StockDatabase {

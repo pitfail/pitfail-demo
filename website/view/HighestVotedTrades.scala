@@ -1,4 +1,7 @@
 
+// Written by: Owen Healy
+// You can't actually see this anywhere can you?
+
 package code
 package snippet
 

@@ -1,4 +1,6 @@
 
+// Written by: Owen Healy
+
 import net.liftweb.{common, http}
 import common.Loggable
 

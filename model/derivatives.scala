@@ -1,4 +1,6 @@
 
+// Written by: Owen Healy
+
 package model
 
 // Joda time
@@ -260,7 +262,7 @@ trait DerivativeSchema extends Schema {
                 _ <- offer.delete
                 event <- Accepted(offer.from, offer.to, offer.derivative,
                         price=offer.price, buyerAside=buyerAside, sellerAside=sellerAside).report
-                offer.delete
+                _ <- offer.delete
             }
             yield event
         }
