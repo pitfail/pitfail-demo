@@ -1,4 +1,6 @@
 
+// written by: Owen Healy
+
 package model
 
 import java.sql.{Array=>_, _}
@@ -16,13 +18,13 @@ case class HTimes[+H,+T<:HProd](head: H, tail: T) extends HProd
 // ref_220
 case class HOne() extends HProd
 
+// Nice syntactic sugar for HProds
 implicit def hBuild[H<:HProd](h: H) = new {
     def :+:[A](x: A) = HTimes[A,H](x, h)
 }
 object :+: {
     def unapply[H,T<:HProd](p: HTimes[H,T]) = Some((p.head, p.tail))
 }
-
 type :+:[H,T<:HProd] = HTimes[H,T]
 
 trait Equivalence[A] {
@@ -31,17 +33,20 @@ trait Equivalence[A] {
     def compose(b: B): A
 }
 
+// This is a hack to get around Scala's type annotations.
+// It has a nonrepresentable type so it should always be passed call-by-need.
 def a[T]: T = sys.error("This got called")
 
 def as[T](a: Any) = a.asInstanceOf[T]
 
 trait SQLType[A] {
-    type CT
-    val typeName: String
-    def encode(a: A): CT
-    def decode(a: CT): A
+    type CT // JDBC type
+    val typeName: String // SQL type eg INT
+    def encode(a: A): CT // convert to JDBC
+    def decode(a: CT): A // decode from JDBC
 }
 
+// One-way form of SQLType
 trait SQLEncode[-A] {
     type CT
     def encode(a: A): CT
@@ -54,6 +59,9 @@ implicit def typeEncode[A](implicit typ: SQLType[A]) = new SQLEncode[A] {
 
 def sqlEncode[A:SQLType](a: A) = implicitly[SQLType[A]].encode(a)
 def sqlDecode[A,C](c: C)(implicit sql: SQLType[A]{type CT=C}) = sql.decode(c)
+
+// --------------------------------------------------
+// Some specific SQL Types
 
 implicit val sqlInt = new SQLType[Int] {
     type CT = Int
@@ -99,6 +107,9 @@ implicit val sqlBoolean = new SQLType[Boolean] {
     def encode(b: Boolean) = b.toString
     def decode(b: String) = java.lang.Boolean.parseBoolean(b)
 }
+
+// ----------------------------------------------------
+// Building tables out of products
 
 // ref_231
 trait SQLParameters[A] {

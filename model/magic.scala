@@ -166,6 +166,7 @@ trait DBMagic extends Loggable {
     def mutually[A](op: (Key, Key, Key) => A) = op(nextID, nextID, nextID)
 }
 
+// This is to allow the comet actors to be refreshed when things change
 trait RefreshHub extends LiftActor
     with ListenerManager
     with Loggable
