@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/widget30"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_gravity="center_horizontal">
+	<TextView android:id="@+id/label"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="Ticker To Sell"
+		android:layout_gravity="center_horizontal">
+	</TextView>
+	<EditText android:id="@+id/sellticker" android:layout_width="100px"
+		android:layout_height="wrap_content" android:textSize="18sp"
+		android:layout_gravity="center_horizontal">
+	</EditText>
+
+	<RelativeLayout android:id="@+id/widget30"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_gravity="center_horizontal" android:layout_marginLeft="13px">
+		<Button android:id="@+id/cancelSellButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Cancel"
+			android:layout_alignParentTop="true"
+			android:layout_toRightOf="@+id/sellButton"
+			android:layout_gravity="center_horizontal">
+		</Button>
+		<Button android:id="@+id/sellButton" android:layout_width="50px"
+			android:layout_height="wrap_content" android:text="Sell"
+			android:layout_alignParentTop="true"
+			android:layout_alignParentLeft="true"
+			android:layout_gravity="center_horizontal">
+		</Button>
+	</RelativeLayout>
+
+
+</LinearLayout>

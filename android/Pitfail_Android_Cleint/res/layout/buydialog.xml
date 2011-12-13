@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/widget30"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_gravity="center_horizontal">
+	<TextView android:id="@+id/label"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="Volume to buy ($)"
+		android:layout_gravity="center_horizontal">
+	</TextView>
+	<EditText android:id="@+id/buyvolume" android:layout_width="100px"
+		android:layout_height="wrap_content" android:textSize="18sp"
+		android:layout_gravity="center_horizontal">
+	</EditText>
+
+	<RelativeLayout android:id="@+id/widget30"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_gravity="center_horizontal" android:paddingLeft="15px">
+		<Button android:id="@+id/cancelBuyButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Cancel"
+			android:layout_alignParentTop="true"
+			android:layout_toRightOf="@+id/buyButton"  >
+		</Button>
+		<Button android:id="@+id/buyButton" android:layout_width="50px"
+			android:layout_height="wrap_content" android:text="Buy"
+			android:layout_alignParentTop="true"
+			android:layout_alignParentLeft="true">
+		</Button>
+	</RelativeLayout>
+</LinearLayout>
