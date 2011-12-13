@@ -1,3 +1,6 @@
+/* Authors:
+ * Cody Schafer <cpschafer@gmail.com>
+ */
 
 package texttrading
 
