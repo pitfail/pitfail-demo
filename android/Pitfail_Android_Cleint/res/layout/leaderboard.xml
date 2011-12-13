@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/leaderboardLayout"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical" xmlns:android="http://schemas.android.com/apk/res/android">
+	<TextView android:id="@+id/leaderboardText" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="LeaderBoard"
+		android:textSize="20sp" android:textColor="#ff00CC33" android:textStyle="bold"
+		android:layout_gravity="center">
+	</TextView>
+
+	<TableLayout android:id="@+id/leaderboardTable"
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:stretchColumns="*">
+	</TableLayout>
+</LinearLayout>

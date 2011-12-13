@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/widgetmain"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical" xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@+id/stockchart" android:src="@drawable/icon" android:layout_width="wrap_content" 
+     android:layout_height="wrap_content"
+     android:layout_marginTop="2dip"
+     android:layout_gravity="center">
+ 	</ImageView>
+	
+	
+	<TextView android:id="@+id/ticketname" android:layout_width="100px"
+		android:layout_height="wrap_content" android:text="Ticker Name"
+		android:textColor="#ff00CC33"
+		android:textSize="20sp"
+		android:textStyle="bold">
+	</TextView>
+
+	<!-- Table Layout here -->
+	<TableLayout android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:stretchColumns="*"
+		android:background="#000000">
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Name" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"
+		        android:textStyle="bold"/>
+			<TextView android:id="@+id/name" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"/>
+		</TableRow>
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Symbol" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"
+		        android:textStyle="bold"/>
+			<TextView android:id="@+id/symbol" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"/>
+		</TableRow>
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Last Trade" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"
+		        android:textStyle="bold"/>
+			<TextView android:id="@+id/lastTrade" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"/>
+		</TableRow>
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Day's High" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000"
+				android:textSize="15sp"
+		        android:textStyle="bold" />
+			<TextView android:id="@+id/daysHigh" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"/>
+		</TableRow>
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Day's Low" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"
+		        android:textStyle="bold"/>
+			<TextView android:id="@+id/daysLow" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" />
+		</TableRow>
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Change in Percent"
+				android:background="#ffffff" android:layout_margin="0.5dip"
+				android:textColor="#000000" 
+				android:textSize="15sp"
+		        android:textStyle="bold"/>
+			<TextView android:id="@+id/changeInPercent"
+				android:background="#ffffff" android:layout_margin="0.5dip"
+				android:textColor="#000000" 
+				/>
+		</TableRow>
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Open" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"
+		        android:textStyle="bold"/>
+			<TextView android:id="@+id/open" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" />
+		</TableRow>
+		<TableRow android:layout_margin="0.5dip">
+			<TextView android:text="Previous Close" android:background="#ffffff"
+				android:layout_margin="0.5dip" android:textColor="#000000" 
+				android:textSize="15sp"
+		        android:textStyle="bold"/>
+			<TextView android:id="@+id/previousClose" android:background="#ffffff" 
+				android:layout_margin="0.5dip" android:textColor="#000000" />
+		</TableRow>
+	</TableLayout>
+
+	<Button android:id="@+id/buy" android:layout_width="100px"
+		android:layout_height="wrap_content" android:text="Buy"
+		android:layout_gravity="center"
+		android:layout_marginTop="5dip">
+	</Button>
+</LinearLayout>

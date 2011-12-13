@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/widget30"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical" xmlns:android="http://schemas.android.com/apk/res/android">
+	<TextView android:id="@+id/widget33" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="Search Ticker"
+		android:textStyle="bold" android:textSize="20sp" android:textColor="#000000">
+	</TextView>
+
+	<RelativeLayout android:id="@+id/widget30"
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		xmlns:android="http://schemas.android.com/apk/res/android">
+		<Button android:id="@+id/search" android:text="Go"
+			android:layout_alignBaseline="@+id/tickersymbol"
+			android:layout_toRightOf="@+id/tickersymbol" android:layout_height="wrap_content"
+			android:layout_width="wrap_content">
+		</Button>
+
+		<AutoCompleteTextView android:layout_height="wrap_content"
+			android:id="@+id/tickersymbol" android:text="" android:layout_width="200dip"
+			android:layout_alignParentTop="true" android:layout_alignParentLeft="true">
+		</AutoCompleteTextView>
+
+
+		<!-- <EditText android:id="@+id/tickersymbol" android:layout_height="wrap_content" 
+			android:text="" android:textSize="20sp" android:layout_alignParentTop="true" 
+			android:layout_alignParentLeft="true" android:layout_width="180dip"> </EditText> -->
+	</RelativeLayout>
+	<View android:layout_height="2dip" android:layout_width="fill_parent"
+		android:background="#FF909090" />
+
+	<TextView android:id="@+id/widget38" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="Portfolio"
+		android:textColor="#000000" android:textStyle="bold">
+	</TextView>
+	<Spinner android:id="@+id/spinner" android:layout_width="wrap_content"
+		android:layout_height="wrap_content">
+	</Spinner>
+
+	<RelativeLayout android:layout_width="wrap_content"
+		android:id="@+id/relativeLayout1" android:layout_height="wrap_content">
+		<TextView android:id="@+id/widget33" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Cash"
+			android:textSize="15sp" android:textColor="#000000"
+			android:textStyle="bold">
+		</TextView>
+		<TextView android:id="@+id/money" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:textStyle="bold"
+			android:textSize="15sp" android:textColor="#000000"
+			android:layout_alignBaseline="@+id/widget33"
+			android:layout_alignParentRight="true">
+		</TextView>
+	</RelativeLayout>
+	<View android:layout_height="2dip" android:layout_width="fill_parent"
+		android:background="#FF909090" />
+	<TextView android:id="@+id/sharesLabel" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="Shares Held"
+		android:textSize="15sp" android:textStyle="bold" android:textColor="#000000">
+	</TextView>
+
+	<TableLayout android:id="@+id/myTableLayout"
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:stretchColumns="*">
+
+		<!-- <TableRow android:layout_width="fill_parent" android:layout_height="wrap_content"> 
+			<TextView android:id="@+id/sharesName" android:layout_width="wrap_content" 
+			android:layout_column="1" android:layout_height="wrap_content" android:text="" 
+			android:textStyle="bold" android:textSize="15sp" android:textColor="#000000" 
+			android:layout_weight="1.0"> </TextView> <TextView android:id="@+id/sharesPrice" 
+			android:layout_width="wrap_content" android:layout_height="wrap_content" 
+			android:text="" android:textStyle="bold" android:textSize="15sp" android:textColor="#000000" 
+			android:layout_weight="1.0"> </TextView> </TableRow> -->
+	</TableLayout>
+
+
+	<Button android:id="@+id/sell" android:layout_width="100px"
+		android:layout_height="wrap_content" android:text="Sell"
+		android:layout_gravity="center">
+	</Button>
+
+	<View android:layout_height="2dip" android:layout_width="fill_parent"
+		android:background="#FF909090" />
+
+	
+	<View android:layout_height="2dip" android:layout_width="fill_parent"
+		android:background="#FF909090" />
+
+	<RelativeLayout android:layout_width="wrap_content"
+		android:id="@+id/relativeLayout2" android:layout_height="wrap_content">
+		<Button android:id="@+id/newTeam" android:layout_width="100px"
+			android:layout_height="wrap_content" android:text="New Team"
+			android:layout_alignParentRight="true">
+		</Button>
+
+		<Button android:id="@+id/leaderboard" android:layout_width="100px"
+			android:layout_height="wrap_content" android:text="Leader Board"
+			android:layout_alignParentLeft="true">
+		</Button>
+	</RelativeLayout>
+	<!-- <ImageView android:src="@drawable/pitfail" android:layout_width="wrap_content" 
+		android:layout_height="wrap_content" android:id="@+id/imageView1" android:layout_gravity 
+		= "center"></ImageView> -->
+</LinearLayout>

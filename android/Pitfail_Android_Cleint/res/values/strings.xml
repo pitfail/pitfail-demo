@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, HomeScreen!</string>
+    <string name="app_name">PitFail</string>
+    <string name="server">wonton.rutgers.edu</string>
+    <string name="user">sonu_pillai</string>
+</resources>
