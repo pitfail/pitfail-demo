@@ -1,3 +1,6 @@
+/* written by: Owen Healy
+ * written by: Cody Schafer <cpschafer@gmail.com>
+ */
 
 package object texttrading {
     val commandIntro =

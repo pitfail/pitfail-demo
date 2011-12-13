@@ -1,3 +1,6 @@
+/* written by: Cody Schafer <cpschafer@gmail.com>
+ * written by: Owen Healy
+ */
 
 package texttrading
 
