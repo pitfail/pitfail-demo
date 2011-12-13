@@ -9,8 +9,11 @@ import net.liftweb.json._
 package object spser {
 //
 
+// ref_718
 sealed trait HProd
+// ref_464
 case class HTimes[+H,+T<:HProd](head: H, tail: T) extends HProd
+// ref_220
 case class HOne() extends HProd
 
 implicit def hBuild[H<:HProd](h: H) = new {
@@ -97,6 +100,7 @@ implicit val sqlBoolean = new SQLType[Boolean] {
     def decode(b: String) = java.lang.Boolean.parseBoolean(b)
 }
 
+// ref_231
 trait SQLParameters[A] {
     def encode(a: A): List[Any]
     def decode(ls: List[Any]): A
@@ -117,9 +121,11 @@ implicit def oneParameters = new SQLParameters[HOne] {
 implicit def timesParameters[H,T<:HProd](implicit sql: SQLType[H], rest: SQLParameters[T]) =
     new SQLParameters[HTimes[H,T]]
 {
+    // ref_984
     def encode(p: HTimes[H,T]) = p match {
         case HTimes(h, t) => sqlEncode(h) :: makeSQLParameters(t)
     }
+    // ref_704
     def decode(ls: List[Any]) = ls match {
         case h :: t => sql.decode(as[sql.CT](h)) :+: rest.decode(t)
         case _      => sys.error("yeah...")
@@ -209,6 +215,7 @@ trait Schema {
         sys.error("Not in a transaction (use readDB)")
     }
     
+    // ref_629
     class Table[A](table: SQLTable[A]) extends RefreshHub {
         def create_!() = {
             val stat = con.createStatement
@@ -359,11 +366,13 @@ implicit def caseProd1[A<:Product,X1]
         (implicit con: (X1) => A) = new Equivalence[A]
 {
     type B = X1:+:HOne
+    // ref_997
     def extract(a: A) = a.productIterator.toList match {
         case x1::Nil =>
             as[X1](x1):+:HOne()
         case _ => sys.error("Wrong product arity " + a)
     }
+    // ref_662
     def compose(b: B) = b match {
         case x1:+:HOne() =>
             con(x1)

@@ -101,7 +101,7 @@ object niceTestData extends Loggable {
 
 def apply() {
     val now = new DateTime
-    
+
     // Synthetic history
     readDB { portfolios.toList map { port =>
         logger.info("Making synthetic data for " + port.name)

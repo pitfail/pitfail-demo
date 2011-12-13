@@ -77,6 +77,7 @@ class StockSeller extends Loggable {
             }
             catch {
                 case NotLoggedIn => throw BadInput("You need to be logged in")
+                // ref_736
                 case NoBidders   => throw BadInput("There are not enough bidders"
                     + " to accomodate your order")
                 case NotEnoughShares(have, need) => throw BadInput("You only have %s"
@@ -100,6 +101,7 @@ class StockSeller extends Loggable {
 object StockSeller {
     def apply() = new StockSeller()
     
+    // ref_104
     sealed trait State
     case object Idle extends State
     case class Selling(ticker: String) extends State

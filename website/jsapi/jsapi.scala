@@ -41,12 +41,14 @@ lazy val api = List[Func](
         Noop
     }),
     
+    // ref_405
     Func(
     """| Buy a stock in shares.
        |
        | buyShares('MSFT', 10)
        |""".stripMargin,
     "buyShares", func("ticker", "shares") { result =>
+        // ref_645
         val ticker = result("ticker")
         val shares = Shares(result("shares"))
         
@@ -101,6 +103,7 @@ lazy val api = List[Func](
        |""".stripMargin,
     "stockPrice", func("ticker") { result =>
         val ticker = result("ticker")
+        // ref_18
         Num(Stocks.lastTradePrice(ticker).price.doubleValue)
     }),
     
@@ -145,6 +148,7 @@ lazy val api = List[Func](
        | })
        |""".stripMargin,
     "news", func() { result => JsArray {
+        // ref_618
         recentEvents(10) flatMap { ev =>
             ev.action match {
                 case Bought(buyer, stock, shares, dollars, price) =>
@@ -179,6 +183,7 @@ lazy val setup = ("$(function () {\n"
     + "\n} )"
 )
 
+// ref_188
 lazy val otherLibs =
      """|
         | self.runAutoTrade = (function(key) {
@@ -214,6 +219,7 @@ def func(args: String*)(callback: Map[String,String]=>JsCmd) = {
     val argList = (args:+"callback") mkString ", "
     val (id, stuff) = SHtml.jsonCall(JsRaw("{"+catchList+"}"), opFunc _)
     
+    // ref_867
     val js = ("dummy=1;liftAjax.lift_ajaxHandler("
         +"'"+id+"=' + encodeURIComponent(JSON.stringify({"+catchList+"})), "
         +"function(x) { callback(eval(x)) }, null, null)")

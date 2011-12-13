@@ -48,6 +48,7 @@ trait UserSchema extends Schema {
         with UserWithComments
         with UserWithLeagues
 
+    // ref_204
     case class Portfolio(
             id:     Key = nextID,
             league: Link[League],
@@ -390,6 +391,7 @@ trait UserSchema extends Schema {
     case class NewUser(user: User)
     case class OldUser(user: User)
 
+    // ref_782
     trait PortfolioOps {
         self: Portfolio with PortfolioWithStocks with PortfolioWithDerivatives =>
 

@@ -27,6 +27,7 @@ trait DividendSchema extends Schema {
         )
         extends KL
     
+    // ref_789  
     def systemCheckForDividends() = editDB(checkForDividends)
         
     private[model] def checkForDividends =
@@ -59,6 +60,7 @@ trait DividendSchema extends Schema {
     trait PortfolioWithDividends {
         self: Portfolio =>
         
+        // ref_489
         def myDividendPayments: List[DividendPayment] =
             dividendPayments where ('owner ~=~ this) toList
     }

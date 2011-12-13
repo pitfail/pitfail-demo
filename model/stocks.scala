@@ -65,6 +65,7 @@ trait StockSchema extends Schema {
         )
         extends KL
         
+    // ref_225
     case class BuyLimitOrder(
             id:       Key = nextID,
             ticker:   String,
@@ -115,6 +116,7 @@ trait StockSchema extends Schema {
             StockHolding(ticker, shares, shares*Stocks.lastTradePrice(ticker))
         } toList)
 
+    // ref_158
     def allStockHoldings: List[StockHolding] = (stockAssets.toList
         groupBy (_.ticker) map { case (ticker, assetGroup) =>
             val shares = (assetGroup map (_.shares)).summ
@@ -143,17 +145,21 @@ trait StockSchema extends Schema {
         }
     }
     
+    // ref_569
     trait PortfolioWithStocks {
         self: Portfolio =>
         
+        // ref_937
         def myStockAssets = stockAssets where ('owner ~=~ self) toList
         
+        // ref_407
         def haveTicker(ticker: String): Option[StockAsset] =
             stockAssets where ('owner ~=~ this) where ('ticker ~=~ ticker) headOption
         
         // Java interop
         def getMyStockAssets: java.util.List[StockAsset] = readDB(myStockAssets)
         
+        // ref_666
         def howManyShares(ticker: String) = readDB {
             haveTicker(ticker) match {
                 case Some(a) => a.shares
@@ -161,36 +167,45 @@ trait StockSchema extends Schema {
             }
         }
         
+        // ref_873
         def howManyDollars(ticker: String) =
             howManyShares(ticker) * Stocks.lastTradePrice(ticker)
         
+        // ref_850
         def userBuyStock(ticker: String, shares: Shares) =
             editDB(buyStock(ticker, shares))
         
         def userBuyStock(ticker: String, dollars: Dollars) =
             editDB(buyStock(ticker, dollars))
         
+        // ref_620
         def userSellStock(ticker: String, shares: Shares) =
             editDB(sellStock(ticker, shares))
         
         def userSellStock(ticker: String, dollars: Dollars) =
             editDB(sellStock(ticker, dollars))
         
+        // ref_306
         def userSellAll(ticker: String) = editDB(sellAll(ticker))
         
+        // ref_184
         def userMakeBuyLimitOrder(ticker: String, shares: Shares, limit: Price) = editDB {
             makeBuyLimitOrder(ticker, shares, limit)
         }
         
+        // ref_939
         def userMakeSellLimitOrder(ticker: String, shares: Shares, limit: Price) = editDB {
             makeSellLimitOrder(ticker, shares, limit)
         }
         
+        // ref_734
         def myBuyLimitOrders = buyLimitOrders where ('owner ~=~ this) toList
         
+        // ref_680
         def mySellLimitOrders = sellLimitOrders where ('owner ~=~ this) toList
         
         // There could be multiple sources of margin. Right now we have only this one
+        // ref_224
         def margin: Dollars = myBuyLimitOrders map (_.setAside) summ
         
         // Buy a stock in dollars
@@ -277,6 +292,7 @@ trait StockSchema extends Schema {
             
             val buyers = buyersFor(ticker)
             for {
+                // ref_745
                 trades <- processTradeables(buyers, okShares)
                 dollars = Dollars((trades map (_.dollars.dollars)).sum)
                 _      <- sellEach(trades)
@@ -304,6 +320,7 @@ trait StockSchema extends Schema {
             else tradeables match {
                 // Maybe we should queue this as some kind of order?
                 // There are reasons I don't want to do that.
+                // ref_478
                 case Nil => throw NoBidders
                 case tradeable :: rest =>
                     if (tradeable.available > sharesRemaining)
@@ -320,7 +337,7 @@ trait StockSchema extends Schema {
                         yield s
             }
         }
-        
+    
         // Sell all of a single stock
         private[model] def sellAll(ticker: String): Transaction[Unit] = {
             val asset = 
@@ -552,6 +569,7 @@ trait StockSchema extends Schema {
                         if (shares >= order.shares) order.delete
                         else order update (o => o copy (shares=o.shares-shares))
                         
+                    // ref_325
                     val dollars = shares*price
                         
                     for {

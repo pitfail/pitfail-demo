@@ -18,6 +18,7 @@ import scalaz.Scalaz._
 // ---------------------------------------------------------------------------
 // AggregateField
 
+// ref_575
 class AggregateField[+A, F <: HList](
         constructor: F => A,
         fields: KList[Field, F],

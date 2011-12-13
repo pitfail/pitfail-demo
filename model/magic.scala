@@ -75,6 +75,7 @@ trait DBMagic extends Loggable {
         }
     }
     
+    // ref_650
     case class Transaction[+A](result: A, ops: Seq[EditOp]) {
         def flatMap[B](f: A => Transaction[B]) = {
             val next = f(result)
@@ -92,6 +93,7 @@ trait DBMagic extends Loggable {
         def apply[A](result: A) = new Transaction(result, Seq())
     }
     
+    // ref_853
     implicit val TransactionPure: Pure[Transaction] = new Pure[Transaction] {
         def pure[A](a: => A) = Transaction(a)
     }

@@ -61,11 +61,13 @@ object commentPage {
         
         lazy val commentField = TextAreaField()
         
+        // ref_524
         lazy val postSubmit = Submit(postForm, "Post") { case text =>
             import control.LoginManager._
             
             try {
                 postForm.reset()
+                // ref_458
                 currentUser.userPostComment(ev, text)
             }
             catch {

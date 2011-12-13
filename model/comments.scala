@@ -34,6 +34,7 @@ trait CommentSchema extends Schema {
     trait UserWithComments {
         self: User =>
         
+        // ref_494
         def userPostComment(event: NewsEvent, text: String) = editDB(postComment(event, text))
         
         private[model] def postComment(event: NewsEvent, text: String) =
@@ -43,9 +44,10 @@ trait CommentSchema extends Schema {
     trait NewsEventWithComments {
         self: NewsEvent =>
         
+        // ref_449
         def comments = eventComments where ('event ~=~ this) toList
         def numComments = comments.length
-        
+            
         def userPostAnonymously(text: String) = editDB {
             val user = User userEnsure "Anonymous"
             for {

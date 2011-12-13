@@ -60,9 +60,11 @@ trait VotingSchema extends Schema {
     trait PortfolioWithVotes {
         self: Portfolio =>
         
+        // ref_805
         def userVoteUp(ev: NewsEvent, aside: DerivativeBuyerSetAside) =
             editDB(this.refetch.voteUp(ev, aside.refetch))
         
+        // ref_940
         def userVoteDown(ev: NewsEvent, aside: DerivativeSellerSetAside) =
             editDB(this.refetch.voteDown(ev, aside.refetch))
         
@@ -121,7 +123,9 @@ trait VotingSchema extends Schema {
                 case _  => None
             }
         
+        // ref_146
         def buyerVotes  = derivativeBuyerVotes  where ('event ~=~ this) toList
+        // ref_405
         def sellerVotes = derivativeSellerVotes where ('event ~=~ this) toList
         
         def buyerTally = buyerVotes.length

@@ -49,10 +49,12 @@ trait AuctionSchema extends Schema {
             if (bids isEmpty) self.price
             else bids map (_.price) max
         
+        // ref_188
         def highBid: Option[AuctionBid] =
             if (bids isEmpty) None
             else Some(bids maxBy (_.price))
         
+        // ref_870
         def userClose() = editDB {
             val deletion =
                 for {
@@ -82,12 +84,14 @@ trait AuctionSchema extends Schema {
         )
     }
     
+    // ref_823
     trait PortfolioWithAuctions {
         self: Portfolio =>
         
         def auctionOffers: Seq[AuctionOffer] = schema.auctionOffers where
             ('offerer ~=~ this) toList
             
+        // ref_861
         def userCastBid(auction: AuctionOffer, price: Dollars) = editDB {
             if (price <= auction.goingPrice)
                 throw BidTooSmall(auction.goingPrice)

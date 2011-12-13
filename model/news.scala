@@ -14,6 +14,7 @@ trait NewsSchema extends Schema {
     object newsHub extends RefreshHub
     
     sealed trait Action {
+        // ref_121
         protected[model] def report() = reportEvent(this)
     }
     
@@ -27,11 +28,11 @@ trait NewsSchema extends Schema {
     case class Declined(from: Link[Portfolio], to: Link[Portfolio], derivative: Derivative, price: Dollars) extends Action
     case class Auctioned(from: Link[Portfolio], derivative: Derivative, price: Dollars) extends Action
     case class Bid(from: Link[Portfolio], on: Link[AuctionOffer], price: Dollars) extends Action
+    case class Closed(offerer: Link[Portfolio], offer: Link[AuctionOffer]) extends Action
     case class Won(buyer: Link[Portfolio], seller: Link[Portfolio], derivative: Derivative,
         buyerAside: Link[DerivativeBuyerSetAside], sellerAside: Link[DerivativeSellerSetAside]) extends Action
     case class BuyOrdered(buyer: Link[Portfolio], stock: String, shares: Shares, limit: Price) extends Action
     case class SellOrdered(seller: Link[Portfolio], stock: String, shares: Shares, limit: Price) extends Action
-    case class Closed(offerer: Link[Portfolio], offer: Link[AuctionOffer]) extends Action
     case class Exercised(user: Link[Portfolio], derivative: Derivative) extends Action
     
     case class NewsEvent(
@@ -48,6 +49,7 @@ trait NewsSchema extends Schema {
     }
         
     // Get the n most recent events!
+    // ref_531
     def recentEvents(n: Int) = newsEvents.toList sortBy (- _.when.getMillis) take n toList
         
     // Actually adding events

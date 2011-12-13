@@ -26,6 +26,7 @@ trait DerivativeSchema extends Schema {
     
     // Model tables
     
+    // ref_807
     case class DerivativeAsset(
             id:     Key = nextID,
             peer:   Link[DerivativeLiability],
@@ -59,6 +60,7 @@ trait DerivativeSchema extends Schema {
     
     // Operations
         
+    // 
     def systemCheckForExercise() = editDB {
         val now = new DateTime
         derivativeAssets.toList map { asset =>
@@ -74,9 +76,12 @@ trait DerivativeSchema extends Schema {
         
         // When a user wants to exercise a derivative early.
         // Not all derivatives can be exercised early.
+        // ref_583
         def userExecuteManually() { editDB(executeManually) }
+        // ref_289
         def systemExecuteOnSchedule() { editDB(executeOnSchedule) }
             
+        // ref_319
         def spotValue: Dollars = derivative.spotValue * scale
         
         private[model] def executeManually =
@@ -117,6 +122,7 @@ trait DerivativeSchema extends Schema {
             yield ()
         }
         
+        // ref_519
         private[model] def actuallyExecute(deriv: Derivative) = {
             val seller: Portfolio = peer.owner
             
@@ -147,12 +153,14 @@ trait DerivativeSchema extends Schema {
         // --------------------------------------------------
         // The direction switches
             
+        // ref_392
         private[model] def transferCash(seller: Portfolio, dollars: Dollars) = {
             logger.info("Transfering %s" format dollars)
             if (dollars.isNegative) seller.takeCash(this, -dollars)
             else takeCash(seller, dollars)
         }
         
+        // ref_411
         private[model] def transferStock(seller: Portfolio, ticker: String, shares: Shares) = {
             if (shares.isNegative) seller.takeStock(this, ticker, -shares)
             else takeStock(seller, ticker, shares)
@@ -211,13 +219,18 @@ trait DerivativeSchema extends Schema {
             getOrElse(throw NoSuchDerivativeLiability) )
     }
     
+    // ref_789
     trait PortfolioWithDerivatives extends ExerciseOfDoom {
         self: Portfolio =>
         
+        // ref_74
         def myDerivativeAssets = derivativeAssets where ('owner ~=~ this) toList
+        // ref_484
         def myDerivativeLiabilities = derivativeLiabilities where ('owner ~=~ this) toList
+        // ref_462
         def myDerivativeOffers = derivativeOffers where ('to ~=~ this) toList
         
+        // ref_6
         def userOfferDerivativeTo(recip: Portfolio, deriv: Derivative, price: Dollars) =
             editDB {
                 for {
@@ -228,6 +241,7 @@ trait DerivativeSchema extends Schema {
                 yield offer
             }
         
+        // ref_674
         def userOfferDerivativeAtAuction(deriv: Derivative, price: Dollars, expires: DateTime) =
             editDB {
                 for {
@@ -238,6 +252,7 @@ trait DerivativeSchema extends Schema {
                 yield ()
             }
         
+        // ref_699
         def userAcceptOffer(id: String) = editDB {
             val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
             for {
@@ -245,10 +260,12 @@ trait DerivativeSchema extends Schema {
                 _ <- offer.delete
                 event <- Accepted(offer.from, offer.to, offer.derivative,
                         price=offer.price, buyerAside=buyerAside, sellerAside=sellerAside).report
+                offer.delete
             }
             yield event
         }
         
+        // ref_650
         def userDeclineOffer(id: String) = editDB {
             val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
             for {

@@ -19,6 +19,7 @@ import scala.math._
 import intform._
 import model._
 
+// ref_717
 class DollarsField(initText: String)
     extends TextField[Dollars](initText)
 {

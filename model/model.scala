@@ -92,6 +92,7 @@ trait Add[A] {
     def add(a1: A, a2: A): A
 }
 
+// ref_868
 case class Dollars(dollars: BigDecimal)
     extends Ordered[Dollars]
 {

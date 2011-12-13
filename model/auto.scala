@@ -24,8 +24,10 @@ trait AutoTradeSchema extends Schema {
     trait PortfolioWithAutoTrades {
         self: Portfolio =>
     
+        // ref_168
         def userMakeNewAutoTrade() = editDB(makeNewAutoTrade)
         
+        // ref_900
         def myAutoTrades = autoTrades where ('owner ~=~ this) toList
         
         private[model] def makeNewAutoTrade =
@@ -35,9 +37,11 @@ trait AutoTradeSchema extends Schema {
     trait AutoTradeOps {
         self: AutoTrade =>
         
+        // ref_337
         def userModify(title: String, code: String) =
             editDB(modify(title, code))
         
+        // ref_309
         def userDelete() = editDB(this.delete)
         
         private[model] def modify(title: String, code: String) =

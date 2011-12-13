@@ -44,10 +44,13 @@ object Form {
 // ------------------------------------------------------------------
 // Field
 
+// ref_727
 abstract class Field[+A]
     extends BasicErrors
 {
     def produce(): SubmitResult[A]
+    
+    // ref_997
     def process(): Option[A] = produce() match {
         case OK(a) =>
             error = None
@@ -63,6 +66,7 @@ abstract class Field[+A]
     def reset(): Unit
 }
 
+// ref_293
 trait BasicErrors {
     var error: Option[String] = None
 

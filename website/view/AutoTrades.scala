@@ -96,6 +96,7 @@ class AutoTrades extends Page with Loggable {
             )
         )
         
+        // ref_73
         lazy val executeButton = Submit(form, "Run", refresh=false) {
             case AutoTradeSubmit(title, code) =>
                 current.userModify(title, code)
