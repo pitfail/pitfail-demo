@@ -28,7 +28,7 @@ includeFilter in Test in unmanagedSources <<=
 		ff && new SimpleFileFilter({ file =>
 			val path = Path.relativizeFile(baseDir, file).get.getPath
 			val test = "test" + java.io.File.separator
-			path.contains(test) && ! path.startsWith("project")
+			path.contains(test) && ! path.startsWith("project") && ! path.startsWith("android")
 		})
 	}
 

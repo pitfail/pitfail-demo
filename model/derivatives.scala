@@ -259,7 +259,6 @@ trait DerivativeSchema extends Schema {
             val offer = derivativeOffers lookup id getOrElse (throw NoSuchOffer)
             for {
                 (buyerAside, sellerAside) <- enterContractWithVotes(offer.from, offer.derivative, offer.price)
-                _ <- offer.delete
                 event <- Accepted(offer.from, offer.to, offer.derivative,
                         price=offer.price, buyerAside=buyerAside, sellerAside=sellerAside).report
                 _ <- offer.delete
