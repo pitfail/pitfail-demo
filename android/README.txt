@@ -5,7 +5,7 @@ Pre-requisite:
 
 Instructions to complie Android Code using Eclipse IDE.
 
-1. Import the 'Pitfail_Android_Client' as a new project in eclipse.
+1. Import the 'android' as a new project in eclipse.
 2. click properties of the Project and set Adroid Target as 2.2
 3. Right click the project and select "Run as android application"
 4. It would generate the .apk file in the 'bin' folder which can be installed on Android mobile devices if required
