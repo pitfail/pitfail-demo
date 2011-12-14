@@ -1,5 +1,5 @@
 #! /bin/sh
 
 
-$(dirname "$0")/server/sbt '~jetty-run'
+cd $(dirname "$0")/server && ./sbt '~jetty-run'
 
