@@ -39,7 +39,9 @@ traceLevel in Compile := 0
 scalacOptions ++= Seq(
     "-deprecation",
     "-unchecked",
-    "-Xexperimental"
+    "-Xexperimental",
+    "-Xplugin:lib/sxr_2.9.0-1-0.2.8-SNAPSHOT.jar",
+    "-P:sxr:base-directory:browsable-doc"
 )
 
 // For scalaz

@@ -41,13 +41,13 @@ public class TestServlet extends HttpServlet {
 			throws ServletException, IOException {
 		
 
-/*		String userId = request.getParameter("userid");
+		String userId = request.getParameter("userid");
 		String stockSymbol = request.getParameter("ticker");
 		String volume = request.getParameter("volume");
 
 		try {
 			
-/*				User user = ensureUser(userId);
+				User user = ensureUser(userId);
 				Portfolio port = user.mainPortfolio().fetch(portfolios());
 				port.buyStock(stockSymbol, new Dollars(volume));
 
